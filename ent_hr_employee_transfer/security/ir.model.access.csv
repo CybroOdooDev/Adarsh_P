@@ -1,0 +1,4 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_employee_transfer_officer,access.employee.transfer.officer,model_employee_transfer,hr.group_hr_user,1,1,0,0
+access_employee_transfer_manager,access.employee.transfer.manager,model_employee_transfer,hr.group_hr_manager,1,1,1,0
+access_res_company_manager,access.res.company.manager,base.model_res_company,hr.group_hr_manager,1,1,1,0
