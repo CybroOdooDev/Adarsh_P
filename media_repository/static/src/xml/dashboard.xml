@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<templates>
+    <t t-name="media_type_dashboard.MediaTypeDashboard">
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; padding-top: 60px; padding-left: 30px; padding-right: 30px;">
+            <t t-foreach="this.result.count.slice(0,3)" t-as="count" t-key="count">
+                <div style="flex: 1; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center;">
+                    <a href="#" t-on-click.prevent="() => this.actionService.doAction({
+                        name: this.result.name[count_index],
+                        res_model: 'media.asset',
+                        type: 'ir.actions.act_window',
+                        views: [[false, 'list'], [false, 'form']],
+                        domain: [['media_type', '=', this.result.name[count_index].toLowerCase()]],
+                    })">
+                        <h3 t-out="this.result.name[count_index]" style="margin: 0 0 10px 0; color: #333;"/>
+                    </a>
+                    <span t-out="count" style="color: #666; font-size: 14px;"/>
+                </div>
+            </t>
+        </div>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; padding-left: 240px; padding-right: 240px;">
+            <t t-foreach="this.result.count.slice(3,5)" t-as="count" t-key="count">
+                <div style="flex: 1; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); text-align: center;">
+                    <a href="#" t-on-click.prevent="() => this.actionService.doAction({
+                        name: this.result.name[count_index],
+                        res_model: 'media.asset',
+                        type: 'ir.actions.act_window',
+                        views: [[false, 'list'], [false, 'form']],
+                        domain: [['media_type', '=', this.result.name[count_index].toLowerCase()]],
+                    })">
+                        <h3 t-out="this.result.name[count_index+3]" style="margin: 0 0 10px 0; color: #333;"/>
+                    </a>
+                    <span t-out="count" style="color: #666; font-size: 14px;"/>
+                </div>
+            </t>
+        </div>
+   </t>
+</templates>

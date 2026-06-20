@@ -1,0 +1,32 @@
+<odoo>
+    <data>
+     <!--category-->
+    <record id="media_repository_category" model="ir.module.category">
+        <field name="name">media repository category</field>
+        <field name="description">media repository access right security</field>
+    </record>
+
+    <!--privilege -->
+    <record id="privilege_access" model="res.groups.privilege">
+        <field name="name">Media Repository</field>
+        <field name="category_id" ref="media_repository_category"/>
+    </record>
+
+    <!-- defines groups-->
+    <record  model="res.groups" id="group_user">
+        <field name="name">User</field>
+        <field name="privilege_id" ref="privilege_access"/>
+    </record>
+
+    <record  model="res.groups" id="group_manager">
+        <field name="name">Manager</field>
+        <field name="privilege_id" ref="privilege_access"/>
+         <field name="implied_ids" eval="[(4, ref('group_user'))]"/>
+
+    </record>
+
+
+</data>
+
+
+</odoo>
