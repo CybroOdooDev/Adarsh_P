@@ -98,41 +98,41 @@
         <field name="model">media.asset</field>
         <field name="arch" type="xml">
             <kanban>
-                <field name="name"/>
-                <field name="media_type"/>
-                <field name="category_id"/>
-                <field name="state"/>
-                <field name="create_uid"/>
                 <templates>
-                    <t t-name="card">
-                        <div class="oe_kanban_global_click o_kanban_record">
-                            <div class="o_kanban_card_header">
-                                <strong>
-                                    <field name="name"/>
-                                </strong>
-                            </div>
-                            <div class="o_kanban_card_body">
-                                <div>
-                                    <strong>Type:</strong>
-                                    <field name="media_type"/>
+                    <t t-name="card" class="o_kanban_attachment flex-row">
+                        <aside class="o_kanban_image m-1">
+                            <div style="padding-left:10px;"  class="o_kanban_image_wrapper d-flex align-items-center justify-content-center">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" invisible="media_type !='image'"
+                                 style="width: 60px; height: 60px; background-color: #eff6ff;">
+                                <i class="fa fa-picture-o text-primary" style="font-size: 24px;"/>
                                 </div>
-
-                            <div>
-                                <strong>Category:</strong>
-                                <field name="category_id"/>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                                 style="width: 60px; height: 60px; background-color: #fff1f2;" invisible="media_type !='video'">
+                                <i class="fa fa-video-camera" style="font-size: 24px; color: #f43f5e;"/>
+                            `   </div>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3"
+                                 style="width: 60px; height: 60px; background-color: #ecfdf5;" invisible="media_type !='document'">
+                                <i class="fa fa-file-text" style="font-size: 24px; color: #10b981;"/>
+                                </div>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" invisible="media_type !='audio'"
+                                 style="width: 60px; height: 60px; background-color: #f5f3ff;">
+                                <i class="fa fa-music" style="font-size: 24px; color: #8b5cf6;"/>
+                                </div>
+                                <div class="rounded-circle d-flex align-items-center justify-content-center mb-3" invisible="media_type !='url'"
+                                 style="width: 60px; height: 60px; background-color: #fffbeb;">
+                                <i class="fa fa-link" style="font-size: 24px; color: #f59e0b;"/>
+                                </div>
                             </div>
-                            <div>
-                                <strong>State:</strong>
-                                <field name="state"/>
-                            </div>
-                        </div>
-                        <div class="o_kanban_card_footer text-muted mt-2">
-                            <small>
-                                Created by:
-                                <field name="create_uid"/>
-                            </small>
-                        </div>
-                        </div>
+                        </aside>
+                        <main class="ms-1">
+                                <div class="o_kanban_details_wrapper d-flex flex-column">
+                                    <field name="name" class="text-truncate fw-bold fs-5"/>
+                                    <div class="d-flex" style="padding-top:10px;">
+                                        <field name="media_type"/>
+                                        <field name="create_uid" widget="many2one_avatar_user" class="ms-auto"/>
+                                    </div>
+                                </div>
+                        </main>
                     </t>
                 </templates>
             </kanban>

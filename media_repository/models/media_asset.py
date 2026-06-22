@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 import base64
-from email.mime import audio
-
 from odoo import api, fields, models
 
 class MediaAsset(models.Model):

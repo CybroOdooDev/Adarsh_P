@@ -20,3 +20,4 @@ class MediaTypeDashboard extends Component {
 }
 MediaTypeDashboard.template = "media_type_dashboard.MediaTypeDashboard";
 actionRegistry.add("media_type_dashboard_tag", MediaTypeDashboard);
+
