@@ -15,8 +15,9 @@
     'data': [],
     'assets': {
         'web.assets_frontend': [
-            'website_slides_security/static/src/css/prevent_screenshot.css',
-            'website_slides_security/static/src/js/prevent_screenshot.js',
+            'website_slides_security/static/src/css/website_slides_protection.css',
+            'website_slides_security/static/src/js/website_slides_protection.js',
+            'website_slides_security/static/src/js/website_slides_protection_window.js',
         ],
     },
     'installable': True,

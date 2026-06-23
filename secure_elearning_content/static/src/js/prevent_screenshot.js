@@ -35,15 +35,6 @@
                 fsContainer.appendChild(overlay);
             }
         }
-
-        // 2. Prevent right-click context menu
-        document.addEventListener('contextmenu', function(e) {
-            if (isSlidePage()) {
-                e.preventDefault();
-                alert("Right-click is disabled on course contents.");
-            }
-        });
-
         // 3. Prevent dragging images/elements
         document.addEventListener('dragstart', function(e) {
             if (isSlidePage()) {
@@ -111,6 +102,12 @@
             if ((e.ctrlKey || e.metaKey) && (e.key === 'c' || e.key === 'C' || e.keyCode === 67)) {
                 e.preventDefault();
                 alert("Copying text is disabled on this course.");
+                return false;
+            }
+
+            // Block Ctrl+Shift+Alt+R / Cmd+Shift+Alt+R
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.altKey && (e.key === 'r' || e.key === 'R' || e.keyCode === 82)) {
+                e.preventDefault();
                 return false;
             }
         });
