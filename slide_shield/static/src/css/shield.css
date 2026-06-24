@@ -1,0 +1,74 @@
+/*
+ * Slide Shield – CSS protection layer
+ * Applied globally; JS further restricts to the lesson content area when needed.
+ *
+ * FIX: added .o_wslides_lesson_content (the real Odoo 19 non-fullscreen
+ * lesson container, confirmed against website_slides_templates_lesson.xml)
+ * alongside the fullscreen container so select/drag/print protections also
+ * apply outside fullscreen, matching the JS-side CONTENT_SELECTOR fix.
+ */
+
+/* Prevent text / image selection inside the slide player */
+.o_wslides_fs_content,
+.o_wslides_lesson_content,
+.o_slide_player,
+#slide_iframe_wrapper,
+.o_wslides_fs_content *,
+.o_wslides_lesson_content *,
+.o_slide_player * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+}
+
+/* Block dragging of images / media */
+.o_wslides_fs_content img,
+.o_wslides_fs_content video,
+.o_wslides_lesson_content img,
+.o_wslides_lesson_content video,
+.o_slide_player img,
+.o_slide_player video {
+    -webkit-user-drag: none !important;
+    user-drag: none !important;
+    pointer-events: none !important;
+}
+
+/* The watermark canvas must always be on top and non-interactive */
+#ss-watermark {
+    pointer-events: none !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+}
+
+/* Capture confuser layer */
+#ss-capture-confuser {
+    pointer-events: none !important;
+}
+
+/* Smooth blur transition for focus-loss guard */
+.o_wslides_fs_content,
+.o_wslides_lesson_content,
+.o_slide_player,
+#slide_iframe_wrapper {
+    transition: filter 0.25s ease;
+}
+
+/* Disable print – content area becomes invisible on Ctrl+P */
+@media print {
+    .o_wslides_fs_content,
+    .o_wslides_lesson_content,
+    .o_slide_player,
+    #slide_iframe_wrapper,
+    #ss-watermark {
+        display: none !important;
+    }
+    body::before {
+        content: "Printing this content is not permitted.";
+        display: block;
+        padding: 40px;
+        font-size: 18px;
+        color: #333;
+    }
+}
+

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="slide_channel_view_form_shield" model="ir.ui.view">
+        <field name="name">slide.channel.form.shield</field>
+        <field name="model">slide.channel</field>
+        <field name="inherit_id" ref="website_slides.view_slide_channel_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Content Protection" name="shield_settings">
+                    <group string="Slide Shield – Capture Prevention">
+                        <group>
+                            <field name="shield_enabled" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not shield_enabled">
+
+                        <group string="Watermark">
+                            <field name="shield_watermark_enabled" widget="boolean_toggle"/>
+                            <field
+                                name="shield_watermark_opacity"
+                                invisible="not shield_watermark_enabled"
+                                widget="float"
+                            />
+                        </group>
+
+                        <group string="Capture Guards">
+                            <field name="shield_block_keyboard"    widget="boolean_toggle"/>
+                            <field name="shield_block_devtools"    widget="boolean_toggle"/>
+                            <field name="shield_blur_on_focus_loss" widget="boolean_toggle"/>
+                            <field name="shield_block_context_menu" widget="boolean_toggle"/>
+                        </group>
+
+                    </group>
+
+                    <div
+                        class="alert alert-info"
+                        role="alert"
+                        invisible="not shield_enabled"
+                    >
+                        <strong>Note:</strong> These protections run entirely in the
+                        learner's browser. They raise the bar significantly but cannot
+                        guarantee absolute prevention on all devices.  Individual slides
+                        can override this setting in their own form.
+                    </div>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
