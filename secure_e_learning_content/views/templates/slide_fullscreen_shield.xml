@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo><data>
+
+    <!--
+        Extend the fullscreen sidebar list item to pass shield data
+        attributes to the frontend JS.  The Fullscreen widget's
+        _getSlides() method reads all data-* attributes from these
+        <li> elements, so adding data-shield-active and
+        data-shield-video-protected here automatically makes them
+        available in the slide dict consumed by _renderSlide().
+
+        NOTE: We match via t-att-data-is-quiz="0" instead of
+        hasclass() because the <li> uses t-attf-class (not class),
+        and Odoo's hasclass() xpath only inspects the `class` attr.
+    -->
+    <template id="slide_fullscreen_sidebar_shield"
+              name="Slide Shield – Fullscreen Sidebar Data"
+              inherit_id="website_slides.slide_fullscreen_sidebar_category"
+              priority="100">
+
+        <!-- Main slide list item (the one with data-is-quiz="0") -->
+        <xpath expr="//li[@t-att-data-is-quiz='0']" position="attributes">
+            <attribute name="t-att-data-shield-active">1 if slide.shield_active else 0</attribute>
+            <attribute name="t-att-data-shield-video-protected">1 if slide.shield_video_protected else 0</attribute>
+        </xpath>
+
+    </template>
+
+</data></odoo>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List view ────────────────────────────────────────────────────── -->
+    <record id="view_shield_video_access_log_list" model="ir.ui.view">
+        <field name="name">shield.video.access.log.list</field>
+        <field name="model">shield.video.access.log</field>
+        <field name="arch" type="xml">
+            <list string="Video Access Logs" default_order="timestamp desc"
+                  create="false" edit="false">
+                <field name="timestamp"/>
+                <field name="action" widget="badge"
+                    decoration-success="action in ('video_init', 'video_stream', 'heartbeat', 'complete')"
+                    decoration-danger="action in ('access_denied', 'token_invalid', 'session_invalid', 'enrollment_denied', 'suspicious')"/>
+                <field name="user_id"/>
+                <field name="slide_id"/>
+                <field name="channel_id"/>
+                <field name="ip_address"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search view ──────────────────────────────────────────────────── -->
+    <record id="view_shield_video_access_log_search" model="ir.ui.view">
+        <field name="name">shield.video.access.log.search</field>
+        <field name="model">shield.video.access.log</field>
+        <field name="arch" type="xml">
+            <search string="Video Access Logs">
+                <field name="user_id"/>
+                <field name="slide_id"/>
+                <field name="channel_id"/>
+                <filter string="Denied" name="denied"
+                        domain="[('action', 'in', ['access_denied', 'token_invalid', 'session_invalid', 'enrollment_denied'])]"/>
+                <filter string="Suspicious" name="suspicious"
+                        domain="[('action', '=', 'suspicious')]"/>
+                <filter string="Streams" name="streams"
+                        domain="[('action', '=', 'video_stream')]"/>
+                <group>
+                    <filter string="Action" name="group_action"
+                            context="{'group_by': 'action'}"/>
+                    <filter string="User" name="group_user"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter string="Course" name="group_course"
+                            context="{'group_by': 'channel_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ───────────────────────────────────────────────────────── -->
+    <record id="action_shield_video_access_log" model="ir.actions.act_window">
+        <field name="name">Video Access Logs</field>
+        <field name="res_model">shield.video.access.log</field>
+        <field name="view_mode">list</field>
+        <field name="search_view_id" ref="view_shield_video_access_log_search"/>
+    </record>
+
+</odoo>

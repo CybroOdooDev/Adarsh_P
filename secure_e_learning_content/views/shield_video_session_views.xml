@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── List view ────────────────────────────────────────────────────── -->
+    <record id="view_shield_video_session_list" model="ir.ui.view">
+        <field name="name">shield.video.session.list</field>
+        <field name="model">shield.video.session</field>
+        <field name="arch" type="xml">
+            <list string="Video Playback Sessions" default_order="last_seen desc">
+                <field name="user_id"/>
+                <field name="slide_id"/>
+                <field name="channel_id"/>
+                <field name="state" widget="badge"
+                    decoration-success="state == 'active'"
+                    decoration-warning="state == 'expired'"
+                    decoration-danger="state == 'blocked'"/>
+                <field name="ip_address"/>
+                <field name="started_at"/>
+                <field name="last_seen"/>
+                <field name="request_count"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Form view ────────────────────────────────────────────────────── -->
+    <record id="view_shield_video_session_form" model="ir.ui.view">
+        <field name="name">shield.video.session.form</field>
+        <field name="model">shield.video.session</field>
+        <field name="arch" type="xml">
+            <form string="Video Playback Session">
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="active,blocked,expired,closed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="user_id"/>
+                            <field name="channel_id"/>
+                            <field name="slide_id"/>
+                        </group>
+                        <group>
+                            <field name="ip_address"/>
+                            <field name="user_agent"/>
+                            <field name="device_hash"/>
+                            <field name="session_hash"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="started_at"/>
+                            <field name="last_seen"/>
+                            <field name="expires_at"/>
+                        </group>
+                        <group>
+                            <field name="request_count"/>
+                            <field name="blocked_reason"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── Search view ──────────────────────────────────────────────────── -->
+    <record id="view_shield_video_session_search" model="ir.ui.view">
+        <field name="name">shield.video.session.search</field>
+        <field name="model">shield.video.session</field>
+        <field name="arch" type="xml">
+            <search string="Video Playback Sessions">
+                <field name="user_id"/>
+                <field name="slide_id"/>
+                <field name="channel_id"/>
+                <filter string="Active" name="active"
+                        domain="[('state', '=', 'active')]"/>
+                <filter string="Blocked" name="blocked"
+                        domain="[('state', '=', 'blocked')]"/>
+                <filter string="Expired" name="expired"
+                        domain="[('state', '=', 'expired')]"/>
+                <group>
+                    <filter string="State" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                    <filter string="User" name="group_user"
+                            context="{'group_by': 'user_id'}"/>
+                    <filter string="Course" name="group_course"
+                            context="{'group_by': 'channel_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ───────────────────────────────────────────────────────── -->
+    <record id="action_shield_video_session" model="ir.actions.act_window">
+        <field name="name">Video Sessions</field>
+        <field name="res_model">shield.video.session</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_shield_video_session_search"/>
+    </record>
+
+</odoo>

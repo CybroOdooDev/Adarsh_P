@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="slide_channel_view_form_shield" model="ir.ui.view">
+        <field name="name">slide.channel.form.shield</field>
+        <field name="model">slide.channel</field>
+        <field name="inherit_id" ref="website_slides.view_slide_channel_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Content Protection" name="shield_settings">
+                    <group string="Slide Shield – Capture Prevention">
+                        <group>
+                            <field name="shield_enabled" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+
+                    <group invisible="not shield_enabled">
+
+                        <group string="Watermark">
+                            <field name="shield_watermark_enabled" widget="boolean_toggle"/>
+                            <field
+                                name="shield_watermark_opacity"
+                                invisible="not shield_watermark_enabled"
+                                widget="float"
+                            />
+                        </group>
+
+                        <group string="Capture Guards">
+                            <field name="shield_block_keyboard"    widget="boolean_toggle"/>
+                            <field name="shield_block_devtools"    widget="boolean_toggle"/>
+                            <field name="shield_blur_on_focus_loss" widget="boolean_toggle"/>
+                            <field name="shield_block_context_menu" widget="boolean_toggle"/>
+                        </group>
+
+                    </group>
+
+                    <group string="Video Protection" invisible="not shield_enabled">
+                        <group>
+                            <field name="shield_video_token_ttl"/>
+                            <field name="shield_video_one_session" widget="boolean_toggle"/>
+                            <field name="shield_video_one_device"  widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <div class="text-muted">
+                                <p><strong>Token Lifetime:</strong> How long a signed video URL remains valid (seconds). Shorter = more secure.</p>
+                                <p><strong>One Session:</strong> Starting a new browser session blocks previous sessions for this user.</p>
+                                <p><strong>One Device:</strong> Only one device fingerprint can have an active session at a time.</p>
+                            </div>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

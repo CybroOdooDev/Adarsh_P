@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem
+        id="menu_shield_video_root"
+        name="Video Protection"
+        parent="website_slides.website_slides_menu_courses"
+        sequence="50"
+        groups="base.group_system"/>
+
+    <menuitem
+        id="menu_shield_video_sessions"
+        name="Video Sessions"
+        parent="menu_shield_video_root"
+        action="action_shield_video_session"
+        sequence="10"
+        groups="base.group_system"/>
+
+    <menuitem
+        id="menu_shield_video_logs"
+        name="Access Logs"
+        parent="menu_shield_video_root"
+        action="action_shield_video_access_log"
+        sequence="20"
+        groups="base.group_system"/>
+
+</odoo>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Individual slide form: per-slide protection override ─────────────── -->
+    <record id="slide_slide_view_form_shield" model="ir.ui.view">
+        <field name="name">slide.slide.form.shield</field>
+        <field name="model">slide.slide</field>
+        <field name="inherit_id" ref="website_slides.view_slide_slide_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet" position="inside">
+                <group string="Content Protection" name="shield_override_group">
+                    <field name="shield_active" invisible="1"/>
+                    <field name="shield_override" widget="radio"/>
+                    <field name="shield_video_filename" invisible="1"/>
+                    <field name="shield_video_file" filename="shield_video_filename"
+                           string="Protected Video File (MP4)"
+                           invisible="slide_category != 'video' or not shield_active"
+                           widget="binary"/>
+                    <div class="alert alert-info" role="alert"
+                          invisible="slide_category != 'video' or not shield_active or not shield_video_file">
+                        <strong>&#x1f512; Video Protection Active:</strong>
+                        This video will be served through secure signed URLs.
+                        Viewers must be enrolled, have a valid session, and the
+                        video will display a dynamic watermark with their identity.
+                    </div>
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>

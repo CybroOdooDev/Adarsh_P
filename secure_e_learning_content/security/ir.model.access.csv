@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_shield_video_session_admin,shield.video.session admin,model_shield_video_session,base.group_system,1,1,1,1
+access_shield_video_session_user,shield.video.session user,model_shield_video_session,base.group_user,0,0,0,0
+access_shield_video_access_log_admin,shield.video.access.log admin,model_shield_video_access_log,base.group_system,1,0,1,1
+access_shield_video_access_log_user,shield.video.access.log user,model_shield_video_access_log,base.group_user,0,0,0,0

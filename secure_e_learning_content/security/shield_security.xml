@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Admins can see all sessions -->
+        <record id="rule_shield_video_session_admin" model="ir.rule">
+            <field name="name">Shield Video Session: Admin</field>
+            <field name="model_id" ref="model_shield_video_session"/>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+
+        <!-- Admins can see all logs -->
+        <record id="rule_shield_video_access_log_admin" model="ir.rule">
+            <field name="name">Shield Video Log: Admin</field>
+            <field name="model_id" ref="model_shield_video_access_log"/>
+            <field name="groups" eval="[(4, ref('base.group_system'))]"/>
+            <field name="perm_write" eval="False"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+    </data>
+</odoo>
