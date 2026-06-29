@@ -1,0 +1,215 @@
+2026-06-20 06:40:28,552 144870 WARNING ? odoo.tools.config: missing --http-interface/http_interface, using 0.0.0.0 by default, will change to 127.0.0.1 in 20.0 
+2026-06-20 06:40:28,553 144870 INFO ? odoo: Odoo version 19.0 
+2026-06-20 06:40:28,553 144870 INFO ? odoo: Using configuration file at /home/cybrosys/Desktop/odoo19/odoo19/odoo.conf 
+2026-06-20 06:40:28,553 144870 INFO ? odoo: addons paths: _NamespacePath(['/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons', '/home/cybrosys/.local/share/Odoo/addons/19.0', '/home/cybrosys/Desktop/odoo19/odoo19/addons', '/home/cybrosys/Desktop/odoo19/odoo19/19.0', '/home/cybrosys/Desktop/odoo19/odoo19/custom_work']) 
+2026-06-20 06:40:28,553 144870 INFO ? odoo: database: odoo@localhost:5433 
+2026-06-20 06:40:28,846 144870 INFO odooV91 odoo.modules.loading: loading 1 modules... 
+2026-06-20 06:40:28,852 144870 INFO odooV91 odoo.modules.loading: 1 modules loaded in 0.01s, 0 queries (+0 extra) 
+2026-06-20 06:40:28,880 144870 INFO odooV91 odoo.modules.loading: updating modules list 
+2026-06-20 06:40:28,883 144870 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.update_list on [] to user __system__ #1 via n/a 
+2026-06-20 06:40:29,279 144870 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 06:40:29,279 144870 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 06:40:29,324 144870 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 06:40:29,324 144870 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 06:40:31,236 144870 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.button_upgrade on ['Pharmaceutical ERP'] to user __system__ #1 via n/a 
+2026-06-20 06:40:31,236 144870 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.update_list on ['Pharmaceutical ERP'] to user __system__ #1 via n/a 
+2026-06-20 06:40:31,620 144870 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 06:40:31,694 144870 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 06:40:33,133 144870 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.button_install on [] to user __system__ #1 via n/a 
+2026-06-20 06:40:33,165 144870 INFO odooV91 odoo.modules.loading: loading 114 modules... 
+2026-06-20 06:40:33,806 144870 INFO odooV91 odoo.modules.loading: Loading module pharmaceutical_erp (112/114) 
+2026-06-20 06:40:34,078 144870 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 06:40:34,078 144870 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 06:40:34,079 144870 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 06:40:34,127 144870 INFO odooV91 odoo.registry: module pharmaceutical_erp: creating or updating database tables 
+2026-06-20 06:40:34,209 144870 WARNING odooV91 odoo.addons.base.models.ir_model: Two fields (employee_count, employee_ids) of pharma.sop() have the same label: Assigned Employees. [Modules: pharmaceutical_erp and pharmaceutical_erp] 
+2026-06-20 06:40:34,333 144870 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/security/pharma_groups.xml 
+2026-06-20 06:40:34,438 144870 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/security/ir.model.access.csv 
+2026-06-20 06:40:34,490 144870 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/data/pharma_sequences_data.xml 
+2026-06-20 06:40:34,499 144870 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/data/mail_template_data.xml 
+2026-06-20 06:40:34,516 144870 INFO odooV91 odoo.addons.mail.models.mail_render_mixin: Failed to render template: <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear <t t-out="object.vendor_id.name or ''">Vendor</t>,
+                    <br/>
+                    <br/>
+                    As part of our vendor qualification process for
+                    <strong t-out="object.product_id.name or ''">Product</strong>
+                    , we kindly ask you to complete the following qualification questionnaire.
+                    <br/>
+                    <br/>
+                    Please click the button below to access the questionnaire portal:
+                    <div style="margin: 16px 0px 16px 0px; text-align: center;">
+                        <a href="%7B%7B%20object.get_base_url()%20%7D%7D/pharma/vendor/questionnaire/%7B%7B%20object.id%20%7D%7D?access_token=%7B%7B%20object.access_token%20%7D%7D" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            Start Questionnaire
+                        </a>
+                    </div>
+                    If you have any questions, feel free to contact us.
+                    <br/>
+                    <br/>
+                    Best regards,
+                    <br/>
+                    <t t-out="user.signature or ''">QA Department</t>
+                </div>
+             
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 756, in _render_iterall
+    for item in frame.iterator:
+  File "<None>", line 86, in template_etree_1
+  File "<None>", line 33, in template_etree_1_content
+AttributeError: 'pharma.vendor.qualification' object has no attribute 'product_id'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 367, in _render_template_qweb
+    render_result = self.env['ir.qweb']._render(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 728, in _render
+    return Markup(''.join(iterator))
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 850, in _render_iterall
+    raise QWebError(qweb_error_info) from error
+odoo.addons.base.models.ir_qweb.QWebError: Error while rendering the template:
+    AttributeError: 'pharma.vendor.qualification' object has no attribute 'product_id'
+    Reference: <Element div at 0x76b531d989a0>
+    Path: /div/div/strong
+    Element: <strong t-out="object.product_id.name or \'\'"/>
+    From: (None, '/div/div/strong', '<strong t-out="object.product_id.name or \\\'\\\'"/>')
+2026-06-20 06:40:34,521 144870 ERROR odooV91 odoo.addons.mail.models.mail_template: Error while checking if template can be rendered for field body_html 
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 756, in _render_iterall
+    for item in frame.iterator:
+  File "<None>", line 86, in template_etree_1
+  File "<None>", line 33, in template_etree_1_content
+AttributeError: 'pharma.vendor.qualification' object has no attribute 'product_id'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 367, in _render_template_qweb
+    render_result = self.env['ir.qweb']._render(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 728, in _render
+    return Markup(''.join(iterator))
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py", line 850, in _render_iterall
+    raise QWebError(qweb_error_info) from error
+odoo.addons.base.models.ir_qweb.QWebError: Error while rendering the template:
+    AttributeError: 'pharma.vendor.qualification' object has no attribute 'product_id'
+    Reference: <Element div at 0x76b531d989a0>
+    Path: /div/div/strong
+    Element: <strong t-out="object.product_id.name or \'\'"/>
+    From: (None, '/div/div/strong', '<strong t-out="object.product_id.name or \\\'\\\'"/>')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_template.py", line 222, in _check_can_be_rendered
+    template._render_field(fname, record.ids, options=render_options)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 783, in _render_field
+    return {
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 786, in <dictcomp>
+    for res_id, rendered in template._render_template(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 651, in _render_template
+    rendered = self._render_template_qweb(template_src, model, res_ids,
+  File "/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py", line 382, in _render_template_qweb
+    raise UserError(
+odoo.exceptions.UserError: Failed to render QWeb template: <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear <t t-out="object.vendor_id.name or ''">Vendor</t>,
+                    <br/>
+                    <br/>
+                    As part of our vendor qualification process for
+                    <strong t-out="object.product_id.name or ''">Product</strong>
+                    , we kindly ask you to complete the following qualification questionnaire.
+                    <br/>
+                    <br/>
+                    Please click the button below to access the questionnaire portal:
+                    <div style="margin: 16px 0px 16px 0px; text-align: center;">
+                        <a href="%7B%7B%20object.get_base_url()%20%7D%7D/pharma/vendor/questionnaire/%7B%7B%20object.id%20%7D%7D?access_token=%7B%7B%20object.access_token%20%7D%7D" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            Start Questionnaire
+                        </a>
+                    </div>
+                    If you have any questions, feel free to contact us.
+                    <br/>
+                    <br/>
+                    Best regards,
+                    <br/>
+                    <t t-out="user.signature or ''">QA Department</t>
+                </div>
+            
+
+Traceback (most recent call last):
+  File &#34;/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py&#34;, line 756, in _render_iterall
+    for item in frame.iterator:
+  File &#34;&lt;None&gt;&#34;, line 86, in template_etree_1
+  File &#34;&lt;None&gt;&#34;, line 33, in template_etree_1_content
+AttributeError: &#39;pharma.vendor.qualification&#39; object has no attribute &#39;product_id&#39;
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File &#34;/home/cybrosys/Desktop/odoo19/odoo19/addons/mail/models/mail_render_mixin.py&#34;, line 367, in _render_template_qweb
+    render_result = self.env[&#39;ir.qweb&#39;]._render(
+  File &#34;/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py&#34;, line 728, in _render
+    return Markup(&#39;&#39;.join(iterator))
+  File &#34;/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons/base/models/ir_qweb.py&#34;, line 850, in _render_iterall
+    raise QWebError(qweb_error_info) from error
+odoo.addons.base.models.ir_qweb.QWebError: Error while rendering the template:
+    AttributeError: &#39;pharma.vendor.qualification&#39; object has no attribute &#39;product_id&#39;
+    Reference: &lt;Element div at 0x76b531d989a0&gt;
+    Path: /div/div/strong
+    Element: &lt;strong t-out=&#34;object.product_id.name or \&#39;\&#39;&#34;/&gt;
+    From: (None, &#39;/div/div/strong&#39;, &#39;&lt;strong t-out=&#34;object.product_id.name or \\\&#39;\\\&#39;&#34;/&gt;&#39;)
+)
+2026-06-20 06:40:34,523 144870 WARNING odooV91 odoo.modules.loading: Transient module states were reset 
+2026-06-20 06:40:34,524 144870 ERROR odooV91 odoo.registry: Failed to load registry 
+2026-06-20 06:40:34,524 144870 CRITICAL odooV91 odoo.service.server: Failed to initialize database `odooV91`. 
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/service/server.py", line 1510, in preload_registries
+    registry = Registry.new(dbname, update_module=update_module, install_modules=config['init'], upgrade_modules=config['update'], reinit_modules=config['reinit'])
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/func.py", line 88, in locked
+    return func(inst, *args, **kwargs)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/orm/registry.py", line 199, in new
+    load_modules(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 456, in load_modules
+    load_module_graph(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 216, in load_module_graph
+    load_data(env, idref, mode, kind='data', package=package)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 59, in load_data
+    convert_file(env, package.name, filename, idref, mode, noupdate=kind == 'demo')
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 693, in convert_file
+    convert_xml_import(env, module, fp, idref, mode, noupdate)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 792, in convert_xml_import
+    obj.parse(doc.getroot())
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 663, in parse
+    self._tag_root(de)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 605, in _tag_root
+    f(rec)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 616, in _tag_root
+    raise ParseError(msg) from None  # Restart with "--log-handler odoo.tools.convert:DEBUG" for complete traceback
+odoo.tools.convert.ParseError: while parsing /home/cybrosys/Desktop/odoo19/odoo19/custom_work/pharmaceutical_erp/data/mail_template_data.xml:6
+Oops! We couldn&#39;t save your template due to an issue with this value: <div style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Dear <t t-out="object.vendor_id.name or ''">Vendor</t>,
+                    <br/>
+                    <br/>
+                    As part of our vendor qualification process for
+                    <strong t-out="object.product_id.name or ''">Product</strong>
+                    , we kindly ask you to complete the following qualification questionnaire.
+                    <br/>
+                    <br/>
+                    Please click the button below to access the questionnaire portal:
+                    <div style="margin: 16px 0px 16px 0px; text-align: center;">
+                        <a href="%7B%7B%20object.get_base_url()%20%7D%7D/pharma/vendor/questionnaire/%7B%7B%20object.id%20%7D%7D?access_token=%7B%7B%20object.access_token%20%7D%7D" style="background-color: #875A7B; padding: 8px 16px 8px 16px; text-decoration: none; color: #fff; border-radius: 5px; font-size:13px;">
+                            Start Questionnaire
+                        </a>
+                    </div>
+                    If you have any questions, feel free to contact us.
+                    <br/>
+                    <br/>
+                    Best regards,
+                    <br/>
+                    <t t-out="user.signature or ''">QA Department</t>
+                </div>
+            . Correct it and try again.
+
+View error context:
+'-no context-'
+
+2026-06-20 06:40:34,524 144870 INFO odooV91 odoo.service.server: Initiating shutdown 
+2026-06-20 06:40:34,524 144870 INFO odooV91 odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-06-20 06:40:34,525 144870 INFO odooV91 odoo.sql_db: ConnectionPool(read/write;used=0/count=0/max=64): Closed 1 connections  

@@ -419,23 +419,28 @@ template {
 
 
 .app_container {
-  background-color: #5069aa;
-  height: 100vh;
+  background: radial-gradient(circle at center, #123e4a 0%, #0a1a27 100%);
+  min-height: 100vh;
   width: 100%;
+  overflow-y: auto;
+  padding: 40px 0;
 }
 
 .app_container .wrapper {
   display: flex;
-  justify-content: space-around;
+  justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: calc(100vh - 80px);
+  width: 100%;
 }
 
 .app_container .app_list {
   display: grid;
   row-gap: 20px;
   grid-template-columns: repeat(5, 1fr);
-  width: 60%;
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
 .app_container .app_list .app_wrapp {
@@ -664,16 +669,15 @@ template {
 
 .sidebar {
   height: 100%;
-  width: auto;
+  width: 90px;
+  max-width: 90px;
   background-color: var(--white-color);
   box-shadow: 0 2px 4px 0px rgba(0, 109, 111, 0.1);
-  padding: 20px 20px;
-  padding-left: 0;
-  padding-top: 60px;
+  padding: 60px 0 20px 0;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
-  transition: all 0.4s;
+  transition: none;
 }
 
 .sidebar ::-webkit-scrollbar {
@@ -685,19 +689,15 @@ template {
 }
 
 .sidebar span {
-  display: none;
-  padding-right: 15px;
-  transition: all 0.4s;
+  display: none !important;
 }
 
 .sidebar:hover {
   scrollbar-color: rgb(219, 219, 219) rgb(218, 218, 218);
-  transition: all 0.4s;
 }
 
 .sidebar:hover span {
-  display: block;
-  transition: all 0.4s;
+  display: none !important;
 }
 
 .sidebar .sidebar_links {
@@ -769,16 +769,21 @@ template {
 .sidebar .sidbar-item {
   position: relative;
   margin-bottom: unset !important;
-  padding: 15px;
-  margin-left: 25px;
-  height: 55px;
+  margin-left: 15px;
+  margin-right: 15px;
+  padding: 12px 0px;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
 }
 
 .sidebar .sidbar-item a {
   width: 100%;
   display: flex;
-  justify-content: start;
-  column-gap: 15px;
+  justify-content: center;
+  column-gap: 0px;
   align-items: center;
   color: var(--secondary-color) !important;
   padding-bottom: 0px;
@@ -800,15 +805,16 @@ template {
   stroke: var(--primary-color);
 }
 
-.sidebar .sidbar-item:hover ::before {
+.sidebar .sidbar-item:hover::before,
+.sidebar .sidbar-item.active::before {
   position: absolute;
   content: "";
   height: 100%;
-  width: 8px;
+  width: 5px;
   background-color: var(--primary-color);
-  left: -28px;
+  left: -15px;
   top: 0;
-  border-radius: 10px;
+  border-radius: 0 4px 4px 0;
 }
 
 .form-check-input:checked {
@@ -1082,6 +1088,10 @@ body {
     padding-left: 0px;
   }
 
+  .o_main_navbar .o_menu_toggle {
+    margin-left: 15px !important;
+  }
+
   .o_action_manager .o-mail-Discuss {
     margin-top: 50px;
   }
@@ -1127,33 +1137,24 @@ body {
   border: 1px solid var(--primary-color) !important;
 }
 
-@media(max-width:990px) {
+@media (max-width: 990px) {
   .app_container .app_list {
     grid-template-columns: repeat(4, 1fr);
   }
 }
 
-@media(max-width:1680px) {
+@media (max-width: 768px) {
   .app_container .app_list {
-    margin-top: 20rem;
+    grid-template-columns: repeat(3, 1fr);
   }
-
-  .app_container {
-    overflow: scroll;
+  .sidebar {
+    display: none !important;
   }
 }
 
-@media(max-width:768px) {
+@media (max-width: 480px) {
   .app_container .app_list {
-    margin-top: 40rem;
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    width: auto;
-    gap: 20px;
-  }
-
-  .wrapper {
-    overflow: scroll;
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -1194,4 +1195,27 @@ body {
 .bg-action,
 .text-bg-action {
   background-color: var(--diwy-blue) !important;
+}
+
+.diwy-back-btn {
+  margin-left: 15px !important;
+  position: relative;
+  top: -4px !important;
+}
+
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_menu_sections,
+.o_main_navbar .oe_topbar_name,
+.o_main_navbar .navbar-brand,
+.o_menu_systray,
+.o_user_menu {
+  position: relative;
+  top: -4px !important;
+}
+
+@media (max-width: 1024px) {
+  .o_main_navbar .navbar-brand,
+  .o_main_navbar .o_menu_brand {
+    display: none !important;
+  }
 }

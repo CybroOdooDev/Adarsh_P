@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- QWeb templates for external vendor portal questionnaires. -->
+
+    <!-- Questionnaire Form Template -->
+    <template id="portal_vendor_questionnaire" name="Vendor Qualification Questionnaire">
+        <!-- QWeb template for the Vendor Qualification Questionnaire portal page. Allows external vendors to answer pre-defined QA questions to qualify for supplying pharmaceutical products. -->
+        <t t-call="web.frontend_layout">
+            <div id="wrap" class="container mt-5 mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-8">
+                        <div class="card shadow-sm border-0">
+                            <div class="card-header text-white" style="background-color: #006D6F !important;">
+                                <h3 class="mb-0">Vendor Qualification Questionnaire</h3>
+                            </div>
+                            <div class="card-body">
+                                <p class="lead">
+                                    Welcome, <strong><t t-out="qualification.vendor_id.name"/></strong>. 
+                                    Please complete the following questionnaire regarding the qualification of 
+                                    <strong><t t-out="', '.join(qualification.product_ids.mapped('name'))"/></strong>.
+                                </p>
+                                <hr/>
+
+                                <form t-attf-action="/pharma/vendor/questionnaire/#{qualification.id}/submit"
+                                      method="post" enctype="multipart/form-data">
+                                    <input type="hidden" name="access_token" t-att-value="access_token"/>
+
+                                    <t t-set="current_section" t-value="None"/>
+                                    <t t-foreach="qualification.response_ids" t-as="response">
+                                        <!-- Section Header -->
+                                        <t t-if="response.section and response.section != current_section">
+                                            <h4 class="mt-4 mb-3 text-secondary"><t t-out="response.section"/></h4>
+                                            <t t-set="current_section" t-value="response.section"/>
+                                        </t>
+
+                                        <!-- Question Block -->
+                                        <div class="mb-4 p-3 bg-light rounded">
+                                            <label class="form-label fw-bold">
+                                                <t t-out="response.question_text"/>
+                                            </label>
+
+                                            <!-- Yes/No Question -->
+                                            <t t-if="response.answer_type == 'yes_no'">
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio"
+                                                           t-attf-name="answer_yes_no_#{response.id}"
+                                                           t-attf-id="yes_#{response.id}" value="True"
+                                                           t-att-checked="response.answer_yes_no == True"
+                                                           required="required"/>
+                                                    <label class="form-check-label" t-attf-for="yes_#{response.id}">Yes</label>
+                                                </div>
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" t-attf-name="answer_yes_no_#{response.id}"
+                                                           t-attf-id="no_#{response.id}" value="False"
+                                                           t-att-checked="response.answer_yes_no == False"
+                                                           required="required"/>
+                                                    <label class="form-check-label" t-attf-for="no_#{response.id}">No</label>
+                                                </div>
+                                            </t>
+
+                                            <!-- Text Question -->
+                                            <t t-elif="response.answer_type == 'text'">
+                                                <textarea class="form-control" t-attf-name="answer_text_#{response.id}"
+                                                          rows="3"
+                                                          required="required">
+                                                    <t t-out="response.answer_text or ''"/></textarea>
+                                            </t>
+
+                                            <!-- Number Question -->
+                                            <t t-elif="response.answer_type == 'number'">
+                                                <input type="number" step="any" class="form-control"
+                                                       t-attf-name="answer_number_#{response.id}"
+                                                       t-att-value="response.answer_number" required="required"/>
+                                            </t>
+                                        </div>
+                                    </t>
+
+                                    <div class="mt-4 text-end">
+                                        <button type="submit" class="btn text-white btn-lg" style="background-color: #006D6F !important; border-color: #006D6F !important;">Submit Questionnaire</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Success Confirmation Template -->
+    <template id="portal_vendor_questionnaire_success" name="Questionnaire Submitted">
+        <!-- QWeb template displaying the success confirmation screen after a vendor successfully submits their qualification questionnaire. -->
+        <t t-call="web.frontend_layout">
+            <div id="wrap" class="container mt-5 mb-5">
+                <div class="row justify-content-center">
+                    <div class="col-lg-6 text-center">
+                        <div class="card shadow-sm border-0 p-5">
+                            <i class="fa fa-check-circle text-success" style="font-size: 5rem;"></i>
+                            <h2 class="mt-4">Thank You!</h2>
+                            <p class="lead text-muted mt-3">
+                                Your questionnaire has been successfully submitted to our QA Department for review. 
+                                We appreciate your cooperation.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+</odoo>

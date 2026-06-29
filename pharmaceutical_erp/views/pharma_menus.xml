@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Main menu items and hierarchical structure for the Pharmaceutical ERP module. -->
+
+    <menuitem
+        id="menu_pharma_root"
+        name="Pharmaceutical ERP"
+        sequence="50"
+        groups="base.group_user"
+        web_icon="pharmaceutical_erp,static/description/icon.png"
+    />
+
+    <record id="action_pharma_dashboard" model="ir.actions.client">
+        <field name="name">Dashboard</field>
+        <field name="tag">pharma_dashboard_action</field>
+    </record>
+
+    <menuitem id="menu_pharma_dashboard" name="Dashboard"
+        parent="menu_pharma_root" action="action_pharma_dashboard"
+        groups="base.group_user" sequence="5"/>
+
+    <menuitem id="menu_pharma_procurement" name="Procurement"
+        parent="menu_pharma_root" groups="base.group_user" sequence="20"/>
+
+    <menuitem id="menu_pharma_vendor_qualification" name="Vendor Qualification"
+        parent="menu_pharma_procurement"
+        action="pharmaceutical_erp.pharma_vendor_qualification_action"
+        groups="pharmaceutical_erp.group_vendor_qualification"
+        sequence="10"/>
+
+    <menuitem id="menu_pharma_avl" name="Approved Vendor List"
+        parent="menu_pharma_procurement"
+        action="pharmaceutical_erp.pharma_avl_action"
+        groups="base.group_user" sequence="20"/>
+
+    <menuitem id="menu_pharma_rfq" name="Requests for Quotation"
+        parent="menu_pharma_procurement"
+        action="pharmaceutical_erp.pharma_rfq_action"
+        groups="pharmaceutical_erp.group_pharma_procurement,pharmaceutical_erp.group_pharma_admin"
+        sequence="30"/>
+
+    <menuitem id="menu_pharma_po" name="Purchase Orders"
+        parent="menu_pharma_procurement"
+        action="pharmaceutical_erp.pharma_po_action"
+        groups="base.group_user" sequence="40"/>
+
+    <menuitem id="menu_pharma_inventory" name="Inventory"
+        parent="menu_pharma_root" groups="base.group_user" sequence="30"/>
+
+    <menuitem id="menu_pharma_manufacturing" name="Manufacturing"
+        parent="menu_pharma_root" groups="base.group_user" sequence="40"/>
+
+    <menuitem id="menu_pharma_production_orders" name="Production Orders"
+        parent="menu_pharma_manufacturing"
+        action="mrp.mrp_production_action"
+        groups="base.group_user" sequence="10"/>
+
+    <menuitem id="menu_pharma_bmr" name="Batch Manufacturing Records"
+        parent="menu_pharma_manufacturing"
+        action="pharmaceutical_erp.pharma_bmr_action"
+        groups="base.group_user" sequence="20"/>
+
+    <menuitem id="menu_pharma_products" name="Products"
+        parent="menu_pharma_manufacturing"
+        action="product.product_template_action_all"
+        groups="base.group_user" sequence="30"/>
+
+    <menuitem id="menu_pharma_lots" name="Lots/Serial Numbers"
+        parent="menu_pharma_manufacturing"
+        action="stock.action_production_lot_form"
+        groups="stock.group_production_lot" sequence="35"/>
+
+    <menuitem id="menu_pharma_bom" name="Formulas / BOM"
+        parent="menu_pharma_manufacturing"
+        action="mrp.mrp_bom_form_action"
+        groups="base.group_user" sequence="40"/>
+
+    <menuitem id="menu_pharma_qc_specs" name="QC Specifications"
+        parent="menu_pharma_manufacturing"
+        action="pharmaceutical_erp.pharma_qc_spec_action"
+        groups="base.group_user" sequence="50"/>
+
+    <menuitem id="menu_pharma_coa_top" name="Certificates of Analysis"
+        parent="menu_pharma_root"
+        action="pharmaceutical_erp.action_pharma_coa"
+        groups="base.group_user"
+        sequence="45"/>
+
+    <menuitem id="menu_pharma_quality" name="Quality Control"
+        parent="menu_pharma_root" groups="base.group_user" sequence="50"/>
+
+    <menuitem id="menu_pharma_qc_test_order" name="QC Test Orders"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_qc_test_order"
+        groups="pharmaceutical_erp.group_pharma_qc_analyst"
+        sequence="10"/>
+
+    <menuitem id="menu_pharma_oos_investigation" name="OOS Investigations"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_oos_investigation_action"
+        groups="pharmaceutical_erp.group_pharma_qc_analyst"
+        sequence="20"/>
+
+    <menuitem id="menu_pharma_deviations" name="Deviations"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_deviation_action"
+        groups="pharmaceutical_erp.group_pharma_operator"
+        sequence="30"/>
+
+    <menuitem id="menu_pharma_capas" name="CAPAs"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_capa_action"
+        groups="pharmaceutical_erp.group_pharma_capa_management"
+        sequence="40"/>
+
+    <menuitem id="menu_pharma_qa_release_queue" name="QA Release Queue"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_qa_release_action"
+        groups="pharmaceutical_erp.group_pharma_qa_manager"
+        sequence="50"/>
+
+    <menuitem id="menu_pharma_quarantine" name="Quarantine Queue"
+        parent="menu_pharma_quality"
+        action="pharmaceutical_erp.pharma_quarantine_queue_action"
+        groups="base.group_user" sequence="60"/>
+
+    <menuitem id="menu_pharma_sops_top" name="SOPs &amp; Training"
+        parent="menu_pharma_root"
+        groups="pharmaceutical_erp.group_pharma_sop_training_feature"
+        sequence="60"/>
+
+    <menuitem id="menu_pharma_sops" name="SOPs"
+        parent="menu_pharma_sops_top"
+        action="pharmaceutical_erp.pharma_sop_action"
+        groups="pharmaceutical_erp.group_pharma_sop_training_feature"
+        sequence="10"/>
+
+    <menuitem id="menu_pharma_training_records" name="Training Records"
+        parent="menu_pharma_sops_top"
+        action="pharmaceutical_erp.pharma_training_action"
+        groups="pharmaceutical_erp.group_pharma_sop_training_feature"
+        sequence="20"/>
+
+    <menuitem id="menu_pharma_my_training" name="My Trainings"
+        parent="menu_pharma_sops_top"
+        action="pharmaceutical_erp.pharma_training_my_action"
+        groups="pharmaceutical_erp.group_pharma_sop_training_feature"
+        sequence="30"/>
+
+    <menuitem id="menu_pharma_traceability" name="Traceability"
+        parent="menu_pharma_root" groups="base.group_user" sequence="70"/>
+
+    <menuitem id="menu_pharma_audit_trail" name="Audit Trail"
+        parent="menu_pharma_traceability"
+        action="pharmaceutical_erp.action_pharma_audit_trail"
+        groups="pharmaceutical_erp.group_audit_trail_feature"
+        sequence="10"/>
+
+    <menuitem id="menu_pharma_batch_genealogy" name="Batch Genealogy"
+        parent="menu_pharma_traceability"
+        action="pharmaceutical_erp.pharma_batch_genealogy_action"
+        groups="base.group_user"
+        sequence="20"/>
+
+    <menuitem id="menu_pharma_configuration" name="Configuration"
+        parent="menu_pharma_root" groups="base.group_system" sequence="100"/>
+
+    <menuitem id="menu_pharma_settings" name="Settings"
+        parent="menu_pharma_configuration"
+        action="pharmaceutical_erp.pharma_config_settings_action"
+        groups="base.group_system" sequence="10"/>
+
+    <menuitem id="menu_pharma_vendor_config" name="Vendor Management"
+        parent="menu_pharma_configuration"
+        groups="base.group_system" sequence="20"/>
+
+    <menuitem id="menu_pharma_questionnaire_template" name="Questionnaire Templates"
+        parent="menu_pharma_vendor_config"
+        action="pharmaceutical_erp.pharma_questionnaire_template_action"
+        groups="base.group_system" sequence="10"/>
+</odoo>

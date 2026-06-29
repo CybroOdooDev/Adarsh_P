@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── purchase.order — inherit form to add pharma fields ───────────── -->
+    <record id="purchase_order_form_pharma" model="ir.ui.view">
+        <field name="name">purchase.order.form.pharma</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_form"/>
+        <field name="arch" type="xml">
+
+            <!-- 1. Hide the native state statusbar widget -->
+            <xpath expr="//header/field[@name='state']" position="attributes">
+                <attribute name="invisible">1</attribute>
+            </xpath>
+
+            <!-- 2. Inject the pharma 4-stage statusbar before the buttons -->
+            <xpath expr="//header/button[1]" position="before">
+                <field name="pharma_po_state" widget="statusbar"
+                       statusbar_visible="rfq,sent,waiting_approval,purchase"
+                       readonly="1"/>
+            </xpath>
+
+            <!-- 3. Workflow buttons -->
+            <xpath expr="//header/button[@name='button_confirm']" position="before">
+
+                <!-- Step 1: Procurement submits for QA approval (visible in RFQ / Sent RFQ) -->
+                <button name="action_submit_pharma_approval" type="object"
+                        string="Submit for Approval" class="btn-primary"
+                        invisible="pharma_approval_state != 'draft' or state not in ('draft', 'sent')"/>
+<!--                        groups="pharmaceutical_erp.group_pharma_procurement,pharmaceutical_erp.group_pharma_admin"/>-->
+
+                <!-- Step 2a: QA Director approves (visible when waiting) -->
+                <button name="action_pharma_approve" type="object"
+                        string="Approve PO" class="btn-primary"
+                        invisible="pharma_approval_state != 'waiting_approval'"/>
+<!--                        groups="pharmaceutical_erp.group_pharma_qa_director"/>-->
+
+                <!-- Step 2b: QA Director rejects (visible when waiting) -->
+                <button name="action_pharma_reject" type="object"
+                        string="Reject"
+                        invisible="pharma_approval_state != 'waiting_approval'"/>
+<!--                        groups="pharmaceutical_erp.group_pharma_qa_director"/>-->
+
+                <!-- Step 3: Reset to draft after rejection (Procurement) -->
+                <button name="action_pharma_reset_draft" type="object"
+                        string="Revise PO"
+                        invisible="pharma_approval_state != 'rejected'"
+                        groups="pharmaceutical_erp.group_pharma_procurement,pharmaceutical_erp.group_pharma_admin"/>
+
+            </xpath>
+
+            <!-- 4. Hide the standard Confirm Order buttons unless QA approved -->
+            <xpath expr="//header/button[@name='button_confirm' and @id='bid_confirm']" position="attributes">
+                <attribute name="invisible">state != 'sent' or pharma_approval_state != 'approved'</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='button_confirm' and @id='draft_confirm']" position="attributes">
+                <attribute name="invisible">state != 'draft' or pharma_approval_state != 'approved'</attribute>
+            </xpath>
+
+            <!-- 5. Pharma approval status badge below partner -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">[('id', 'in', approved_vendor_ids)]</attribute>
+                <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
+                <attribute name="widget">many2one</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="after">
+                <field name="approved_vendor_ids" invisible="1"/>
+                <field name="pharma_approval_state" widget="badge" readonly="1"
+                       decoration-success="pharma_approval_state == 'approved'"
+                       decoration-warning="pharma_approval_state in ('draft', 'waiting_approval')"
+                       decoration-danger="pharma_approval_state == 'rejected'"/>
+                <field name="pharma_approved_by"
+                       invisible="pharma_approval_state != 'approved'"/>
+                <field name="pharma_approval_date"
+                       invisible="pharma_approval_state != 'approved'"/>
+            </xpath>
+            
+            <xpath expr="//field[@name='order_line']//field[@name='product_id']" position="attributes">
+                <attribute name="domain">[('avl_ids.vendor_id', '=', parent.partner_id), ('avl_ids.status', '=', 'approved')]</attribute>
+                <attribute name="options">{'no_create': True, 'no_create_edit': True, 'no_open': True}</attribute>
+            </xpath>
+
+            <!-- 6. Pharma / QA notes tab -->
+            <xpath expr="//notebook" position="inside">
+                <page name="pharma_po" string="Pharma / QA">
+                    <group>
+                        <group string="Approval Status">
+                            <field name="pharma_approval_state" readonly="1"/>
+                            <field name="pharma_approved_by"/>
+                            <field name="pharma_approval_date"/>
+                        </group>
+                    </group>
+                    <group string="QA Notes">
+                        <field name="pharma_notes" nolabel="1"
+                               placeholder="QA remarks, special conditions, or AVL waiver justification…"/>
+                    </group>
+                </page>
+            </xpath>
+
+        </field>
+    </record>
+
+    <!-- ─── purchase.order — list view addition ──────────────────────────── -->
+    <record id="purchase_order_list_pharma" model="ir.ui.view">
+        <field name="name">purchase.order.list.pharma</field>
+        <field name="model">purchase.order</field>
+        <field name="inherit_id" ref="purchase.purchase_order_tree"/>
+        <field name="arch" type="xml">
+            <field name="state" position="after">
+                <field name="pharma_po_state" widget="badge"
+                       decoration-success="pharma_po_state == 'purchase'"
+                       decoration-warning="pharma_po_state in ('rfq', 'sent', 'waiting_approval')"
+                       optional="show"
+                       string="Pharma Status"/>
+            </field>
+        </field>
+    </record>
+
+    <!-- ─── Dedicated Pharma Purchase Window Actions ─────────────────────────
+         These replace the built-in purchase.purchase_rfq / purchase_form_action
+         references so the module controls the domain and waiting_approval
+         records are correctly included in the RFQ list.
+
+         IMPORTANT: 'waiting_approval' is a pharma_approval_state value, NOT
+         a native Odoo state. Native state values are: draft, sent, purchase,
+         done, cancel. So the RFQ list must use "state not in (purchase, done,
+         cancel)" to capture draft + sent + any pharma-submitted orders.
+    ──────────────────────────────────────────────────────────────────────── -->
+
+    <record id="pharma_rfq_action" model="ir.actions.act_window">
+        <field name="name">Requests for Quotation</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'not in', ('purchase', 'done', 'cancel'))]</field>
+        <field name="context">{'search_default_todo': 1}</field>
+    </record>
+
+    <record id="pharma_po_action" model="ir.actions.act_window">
+        <field name="name">Purchase Orders</field>
+        <field name="res_model">purchase.order</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ('purchase', 'done', 'cancel'))]</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="action_report_pharma_coa" model="ir.actions.report">
+        <field name="name">Certificate of Analysis</field>
+        <field name="model">pharma.coa</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">pharmaceutical_erp.report_pharma_coa_document</field>
+        <field name="report_file">pharmaceutical_erp.report_pharma_coa_document</field>
+        <field name="print_report_name">'CoA - %s' % (object.name)</field>
+        <field name="binding_model_id" ref="model_pharma_coa"/>
+        <field name="binding_type">report</field>
+    </record>
+
+    <!-- Defines the strictly compliant QWeb HTML structure for the official Certificate of Analysis PDF report. -->
+    <template id="report_pharma_coa_document">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.basic_layout">
+                    <div class="page" style="font-family: Arial, sans-serif; font-size: 14px;">
+                        
+                        <div class="mb-4">
+                            <h6 class="mb-3"><t t-esc="doc.env.company.name"/></h6>
+                            <h5 class="mb-4">CERTIFICATE OF ANALYSIS (CoA)</h5>
+                        </div>
+                        
+                        <hr style="border-top: 1px solid #ccc;"/>
+                        
+                        <div class="mb-4" style="line-height: 2;">
+                            <span>CoA Number : <span t-field="doc.name"/></span> 
+                            <span class="ms-4">Release Date : <span t-field="doc.release_date"/></span>
+                        </div>
+
+                        <hr style="border-top: 1px solid #ccc;"/>
+
+                        <div class="mt-4 mb-3">
+                            <strong>PRODUCT INFORMATION</strong>
+                        </div>
+                        
+                        <div class="mb-4" style="line-height: 2;">
+                            <div>
+                                <span>Product Name : <span t-field="doc.product_id.name"/></span> 
+                                <span class="ms-4">Product Code : <span t-field="doc.product_id.default_code"/></span> 
+                                <span class="ms-4">Product Type : Finished Goods</span>
+                            </div>
+                            <div>
+                                <span>Batch Number : <span t-field="doc.batch_id.name"/></span> 
+                                <span class="ms-4">Lot Number : <span t-field="doc.lot_id.name"/></span>
+                            </div>
+                            <div>
+                                <span>Manufacturing Date : <span t-field="doc.lot_id.manufacture_date"/></span> 
+                                <span class="ms-4">Expiry Date : <span t-field="doc.lot_id.expiry_date"/></span>
+                            </div>
+                            <div>
+                                <span>Shelf Life : 24 Months</span> 
+                                <span class="ms-4">Storage Conditions : <span t-field="doc.product_id.storage_conditions"/></span>
+                            </div>
+                            <div>
+                                <span>Pharmacopoeial Standard : <span t-field="doc.product_id.pharmacopoeial_ref"/></span>
+                            </div>
+                        </div>
+
+                        <hr style="border-top: 1px solid #ccc;"/>
+
+                        <div class="mt-4 mb-3">
+                            <h4 style="font-weight: bold;">QUALITY CONTROL RESULTS</h4>
+                        </div>
+                        
+                        <table class="table table-sm table-borderless" style="width: 100%;">
+                            <thead style="border-top: 2px solid black; border-bottom: 2px solid black;">
+                                <tr>
+                                    <th>Test Order</th>
+                                    <th>Parameter</th>
+                                    <th>Specification</th>
+                                    <th>Actual Result</th>
+                                    <th>Unit</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody style="border-bottom: 2px solid black;">
+                                <t t-foreach="doc.qc_result_ids" t-as="line">
+                                    <tr>
+                                        <td><span t-field="line.test_order_id.name"/></td>
+                                        <td><span t-field="line.parameter"/></td>
+                                        <td>
+                                            <t t-if="line.expected_min and line.expected_max">
+                                                <span t-field="line.expected_min"/> - <span t-field="line.expected_max"/>
+                                            </t>
+                                            <t t-elif="line.expected_min">
+                                                &#8805; <span t-field="line.expected_min"/>
+                                            </t>
+                                            <t t-elif="line.expected_max">
+                                                &#8804; <span t-field="line.expected_max"/>
+                                            </t>
+                                        </td>
+                                        <td><span t-field="line.actual_value"/></td>
+                                        <td><span t-field="line.uom"/></td>
+                                        <td>
+                                            <t t-if="line.status == 'pass'">Pass</t>
+                                            <t t-elif="line.status == 'fail'">Fail</t>
+                                            <t t-else="">OOS</t>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        
+                        <t t-if="doc.oos_ids">
+                            <div class="mt-4 mb-3">
+                                <h4 style="font-weight: bold;">OOS INVESTIGATIONS</h4>
+                            </div>
+                            <table class="table table-sm table-borderless" style="width: 100%;">
+                                <thead style="border-top: 2px solid black; border-bottom: 2px solid black;">
+                                    <tr>
+                                        <th>Investigation No</th>
+                                        <th>Phase</th>
+                                        <th>Conclusion</th>
+                                        <th>Disposition</th>
+                                        <th>Closed On</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="border-bottom: 2px solid black;">
+                                    <t t-foreach="doc.oos_ids" t-as="oos">
+                                        <tr>
+                                            <td><span t-field="oos.name"/></td>
+                                            <td><span t-field="oos.phase"/></td>
+                                            <td><span t-field="oos.conclusion"/></td>
+                                            <td><span t-field="oos.disposition"/></td>
+                                            <td><span t-field="oos.closed_on"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <t t-if="doc.deviation_ids">
+                            <div class="mt-4 mb-3">
+                                <h4 style="font-weight: bold;">DEVIATIONS</h4>
+                            </div>
+                            <table class="table table-sm table-borderless" style="width: 100%;">
+                                <thead style="border-top: 2px solid black; border-bottom: 2px solid black;">
+                                    <tr>
+                                        <th>Deviation No</th>
+                                        <th>Stage</th>
+                                        <th>Classification</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="border-bottom: 2px solid black;">
+                                    <t t-foreach="doc.deviation_ids" t-as="dev">
+                                        <tr>
+                                            <td><span t-field="dev.name"/></td>
+                                            <td><span t-field="dev.stage"/></td>
+                                            <td><span t-field="dev.classification"/></td>
+                                            <td><span t-field="dev.status"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <t t-if="doc.capa_ids">
+                            <div class="mt-4 mb-3">
+                                <h4 style="font-weight: bold;">CAPAs</h4>
+                            </div>
+                            <table class="table table-sm table-borderless" style="width: 100%;">
+                                <thead style="border-top: 2px solid black; border-bottom: 2px solid black;">
+                                    <tr>
+                                        <th>CAPA No</th>
+                                        <th>Type</th>
+                                        <th>Assigned To</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody style="border-bottom: 2px solid black;">
+                                    <t t-foreach="doc.capa_ids" t-as="capa">
+                                        <tr>
+                                            <td><span t-field="capa.name"/></td>
+                                            <td><span t-field="capa.capa_type"/></td>
+                                            <td><span t-field="capa.assigned_to.name"/></td>
+                                            <td><span t-field="capa.status"/></td>
+                                        </tr>
+                                    </t>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <hr style="border-top: 1px solid #ccc; margin-top: 30px;"/>
+
+                        <div class="mt-4 mb-3">
+                            <h4 style="font-weight: bold;">QUALITY CONCLUSION</h4>
+                        </div>
+                        <p style="line-height: 1.5;">All tests have been performed according to the approved quality
+                            control specification and comply with the applicable pharmacopoeial requirements.</p>
+                        <p style="margin-top: 20px;">RESULT: APPROVED FOR RELEASE</p>
+
+                        <hr style="border-top: 1px solid #ccc; margin-top: 30px;"/>
+
+                        <div class="mt-4 mb-3" style="page-break-inside: avoid;">
+                            <h4 style="font-weight: bold;">RELEASE AUTHORIZATION</h4>
+                        </div>
+                        <div style="line-height: 2; page-break-inside: avoid;">
+                            <div>Released By : <span t-field="doc.released_by.name"/> Designation : QA Manager</div>
+                            <div>Release Date : <span t-field="doc.release_date"/></div>
+                            <div style="margin-top: 40px;">Signature : ______________________</div>
+                        </div>
+
+                        <hr style="border-top: 1px solid #ccc; margin-top: 30px;"/>
+
+                        <div class="mt-4 mb-3" style="page-break-inside: avoid;">
+                            <h4 style="font-weight: bold;">SYSTEM INFORMATION</h4>
+                        </div>
+                        <div style="line-height: 2; page-break-inside: avoid;">
+                            <p>Source QC Test Order : <span t-field="doc.qc_test_order_id.name"/>
+                                Generated From : Pharmaceutical ERP</p>
+                            <p>This Certificate of Analysis is system generated from approved quality control
+                                results and becomes read-only immediately after release.</p>
+                            <p>No manual modification is permitted.</p>
+                            <p style="margin-top: 20px;">END OF CERTIFICATE</p>
+                        </div>
+
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

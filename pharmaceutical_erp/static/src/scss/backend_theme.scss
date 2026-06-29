@@ -1,0 +1,706 @@
+// Pharmaceutical ERP Theme - Dark Navy (#0F2A44) + Orange (#FF6A00)
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
+@import url("https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.4.0/font/bootstrap-icons.min.css");
+
+:root {
+    --pharma-primary: #006D6F;
+    --pharma-secondary: #CCDFE0;
+    --pharma-navy: #0F2A44;
+    --pharma-navy-light: #1A3A5C;
+    --pharma-navy-lighter: #234B6E;
+    --pharma-text-color: #5A6068;
+    --pharma-white: #ffffff;
+    --pharma-grey: #C4C4C4;
+    --pharma-bg: #F4F6FC;
+}
+
+// ==========================================
+// GLOBAL
+// ==========================================
+* {
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    background-color: var(--pharma-bg);
+    overscroll-behavior: none;
+}
+
+// ==========================================
+// NAVBAR
+// ==========================================
+.o_main_navbar {
+    background-color: var(--pharma-primary) !important;
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    z-index: 1030;
+    height: 46px;
+    min-height: 46px;
+
+    .navbar-brand,
+    .pharma-brand {
+        color: var(--pharma-secondary) !important;
+
+        span {
+            color: var(--pharma-secondary) !important;
+            opacity: 1 !important;
+            max-width: none !important;
+            display: inline !important;
+        }
+
+        i,
+        .bi {
+            color: var(--pharma-secondary) !important;
+        }
+    }
+
+    .o_menu_brand {
+        color: var(--pharma-secondary) !important;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+    }
+
+    // Current module name shown right after the arrow
+    .pharma-current-app {
+        color: var(--pharma-secondary) !important;
+        font-weight: 600;
+        font-size: 20px;
+        letter-spacing: 0.3px;
+        padding: 0 10px !important;
+        text-decoration: none !important;
+        display: flex !important;
+        align-items: center;
+        margin-left: 4px;
+
+        // Pipe separator between arrow and module name
+        &::before {
+            content: "|";
+            color: rgba(255, 255, 255, 0.25);
+            margin-right: 10px;
+            font-weight: 300;
+        }
+
+        &:hover {
+            text-decoration: none !important;
+        }
+    }
+
+    .oe_topbar_name {
+        color: var(--pharma-white) !important;
+    }
+
+    .o_menu_sections .dropdown-toggle {
+        background-color: transparent !important;
+        color: var(--pharma-white) !important;
+        opacity: 0.9;
+
+        &:hover {
+            background-color: rgba(204, 223, 224, 0.15) !important;
+            color: var(--pharma-white) !important;
+            opacity: 1;
+        }
+
+        &:focus {
+            color: var(--pharma-secondary) !important;
+            opacity: 1;
+        }
+    }
+
+    .o_menu_sections .o_nav_entry {
+        background: transparent !important;
+        color: var(--pharma-white) !important;
+        opacity: 0.9;
+
+        &:hover,
+        &:focus {
+            background-color: rgba(204, 223, 224, 0.15) !important;
+            color: var(--pharma-white) !important;
+            opacity: 1;
+        }
+    }
+
+    .o_menu_systray {
+
+        .fa:not(.text-success):not(.text-warning):not(.text-danger):not(.text-muted):not(.o_icon_employee_absent):not(.o-yellow):not(.text-700),
+        .oi:not(.text-success):not(.text-warning):not(.text-danger):not(.text-muted):not(.o_icon_employee_absent):not(.o-yellow):not(.text-700) {
+            color: #ccc !important;
+        }
+    }
+
+    .container-fluid {
+        height: 100%;
+        align-items: center;
+        padding-left: 0 !important;
+    }
+
+    .o_menu_sections {
+        height: 100%;
+        align-items: center;
+    }
+
+    // Force orange on both nav arrows — overrides the global grey .oi rule above
+    .pharma-nav-arrow {
+
+        .oi,
+        .bi {
+            color: var(--pharma-secondary) !important;
+        }
+    }
+}
+
+.navbar {
+    background: var(--pharma-primary) !important;
+    border-bottom: none !important;
+    margin-bottom: 0 !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+// ==========================================
+// HOME PAGE — hide module name label only
+// ==========================================
+// The apps toggle visibility is now controlled in nav_bar_panel.xml.
+// We only need to hide the module name label on the home page.
+body:has(.app_container) {
+    .o_main_navbar {
+
+        .pharma-current-app,
+        .o_menu_brand {
+            display: none !important;
+        }
+    }
+}
+
+// PHARMA ERP brand shown on the home page (after the right arrow)
+.pharma-home-brand {
+    gap: 0;
+    padding: 0 4px 0 8px;
+    pointer-events: none; // decorative — not a button
+
+    &:first-child {
+        padding-left: 14px;
+    }
+
+    .bi-droplet-fill {
+        color: var(--pharma-primary) !important;
+        font-size: 20px;
+        margin-right: 7px;
+        flex-shrink: 0;
+    }
+
+    .pharma-home-brand-text {
+        color: var(--pharma-primary) !important;
+        font-weight: 700;
+        font-size: 20px;
+        letter-spacing: 0.3px;
+    }
+}
+
+// Navigation arrows — home icon (module page) and grid icon (home page)
+.pharma-nav-arrow {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center;
+    align-self: stretch; // stretches to exact height of navbar for perfect centering
+    padding: 0 14px !important;
+    margin: 0 !important;
+    flex-shrink: 0;
+    cursor: pointer;
+    background: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    margin-left: 10px !important;
+
+    .oi,
+    .bi {
+        font-size: 20px;
+        color: var(--pharma-primary) !important;
+        transition: opacity 0.2s ease;
+        line-height: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    &:hover,
+    &:focus {
+        background: transparent !important;
+        outline: none !important;
+        box-shadow: none !important;
+
+        .oi,
+        .bi {
+            opacity: 0.75;
+        }
+    }
+}
+
+.o_user_menu .dropdown-toggle .o_user_avatar {
+    border-radius: 50% !important;
+}
+
+// Icon colors - content area gets orange, navbar gets grey
+.o_action_manager .fa,
+.o_action_manager .oi {
+    color: var(--pharma-primary) !important;
+}
+
+// Exclude status colors from the navbar grey override
+.o_main_navbar .fa:not(.text-success):not(.text-warning):not(.text-danger):not(.text-muted):not(.o_icon_employee_absent):not(.o-yellow):not(.text-700),
+.o_main_navbar .oi:not(.text-success):not(.text-warning):not(.text-danger):not(.text-muted):not(.o_icon_employee_absent):not(.o-yellow):not(.text-700) {
+    color: #ccc !important;
+}
+
+
+html .o_web_client>.o_action_manager {
+    transition: margin-left 0.4s ease-in-out;
+    overflow-x: hidden;
+}
+
+html .o_web_client>.o_action_manager:has(.app_container) {
+    padding-top: 0 !important;
+    height: calc(100vh - 46px);
+    min-height: calc(100vh - 46px);
+    overflow: hidden;
+}
+
+.o_control_panel {
+    padding-top: 4px !important;
+    padding-bottom: 4px !important;
+}
+
+// ==========================================
+// HOME MENU / APP CONTAINER
+// ==========================================
+.app_container {
+    height: 100%;
+    min-height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    margin-top: 0;
+    padding-top: 0;
+    overflow: hidden;
+
+    .wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        height: 100%;
+        padding-top: 10vh;
+        width: 100%;
+    }
+
+    .app_list {
+        display: grid;
+        row-gap: 25px;
+        column-gap: 15px;
+        grid-template-columns: repeat(5, 1fr);
+        width: 65%;
+        max-width: 900px;
+    }
+
+    .app_list .app_wrapp {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        text-decoration: none;
+
+        .app {
+            background: linear-gradient(135deg, var(--pharma-white), var(--pharma-white));
+            border-radius: 14px;
+            height: 80px;
+            width: 80px;
+            box-shadow: 0px 10px 30px rgba(15, 42, 68, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+
+            i {
+                font-size: 30px;
+                color: var(--pharma-primary) !important;
+                transition: transform 0.3s ease;
+            }
+
+            img.app-icon {
+                width: 70px !important;
+                height: 70px !important;
+                border-radius: 10px !important;
+                margin: 5px;
+            }
+
+            &:hover {
+                transform: translateY(-6px);
+                box-shadow: 0px 15px 35px rgba(0, 109, 111, 0.3);
+                border-color: var(--pharma-primary);
+
+                i {
+                    transform: scale(1.15);
+                    color: var(--pharma-primary) !important;
+                }
+            }
+        }
+
+        span {
+            padding-top: 8px;
+            color: var(--pharma-white) !important;
+            font-size: 16px;
+            font-weight: 400;
+            text-align: center;
+            opacity: 1 !important;
+            max-width: none !important;
+            display: block !important;
+        }
+    }
+}
+
+// ==========================================
+// BUTTONS
+// ==========================================
+.btn-primary {
+    background-color: var(--pharma-primary) !important;
+    border-color: var(--pharma-primary) !important;
+    color: var(--pharma-white) !important;
+    font-weight: 600;
+    border-radius: 5px;
+
+    .fa,
+    .oi {
+        color: white !important;
+    }
+
+    &:hover,
+    &:focus,
+    &:active,
+    &.active {
+        background-color: var(--pharma-white) !important;
+        border-color: var(--pharma-primary) !important;
+        color: var(--pharma-navy) !important;
+
+        .fa,
+        .oi {
+            color: var(--pharma-navy) !important;
+        }
+    }
+}
+
+.btn-outline-secondary {
+    border: 1px solid var(--pharma-primary) !important;
+}
+
+.btn.active {
+    background-color: var(--pharma-primary) !important;
+    color: white !important;
+
+    .fa,
+    .oi {
+        color: white !important;
+    }
+}
+
+// ==========================================
+// SEARCH
+// ==========================================
+.o_searchview {
+    border-color: transparent;
+}
+
+.o_cp_searchview {
+    border-color: transparent;
+    box-shadow: 0 2px 8px rgba(15, 42, 68, 0.08);
+}
+
+.o_searchview_facet_label .fa {
+    color: var(--pharma-white) !important;
+}
+
+// ==========================================
+// BADGES
+// ==========================================
+.o_form_sheet .badge,
+.o_action_manager .badge {
+    padding: 5px 8px !important;
+}
+
+.text-bg-primary,
+.bg-primary {
+    background-color: rgba(0, 109, 111, 0.15) !important;
+}
+
+.bg-action,
+.text-bg-action {
+    background-color: var(--pharma-navy) !important;
+}
+
+// ==========================================
+// FORM VIEW - Header & Statusbar
+// ==========================================
+.o_form_view {
+    .o_form_statusbar {
+        position: relative;
+        z-index: 1;
+        flex-wrap: wrap;
+        gap: 4px;
+
+        .o_statusbar_buttons {
+            flex-wrap: wrap;
+            gap: 4px;
+
+            >.btn {
+                white-space: nowrap;
+            }
+        }
+
+        .o_statusbar_status {
+            flex-wrap: wrap;
+        }
+    }
+}
+
+// ==========================================
+// FORM ELEMENTS
+// ==========================================
+.o-form-buttonbox .oe_stat_button .o_button_icon {
+    color: var(--pharma-primary);
+}
+
+// // Smart Buttons Font Fixes
+// .o-form-buttonbox .oe_stat_button {
+//     .o_stat_info {
+//         .o_stat_text, .o_stat_value {
+//             font-size: 13px !important;
+//             font-weight: 400 !important;
+//             text-transform: capitalize;
+//         }
+//         .o_stat_value {
+//             color: var(--pharma-primary) !important;
+//         }
+//     }
+// }
+
+.form-check-input:checked {
+    background-color: var(--pharma-primary);
+    border-color: var(--pharma-primary);
+}
+
+.o_data_row td {
+    vertical-align: middle;
+}
+
+// Match field label size to field value size
+// Removed to follow Odoo standard
+
+// ==========================================
+// MODAL
+// ==========================================
+.modal-header {
+    border-bottom: 2px solid var(--pharma-primary);
+}
+
+// ==========================================
+// DISCUSS
+// ==========================================
+.o-mail-Discuss {
+    margin-top: 0px !important;
+}
+
+// Chatter Font Fixes
+.o-mail-Chatter {
+    .o-mail-Chatter-header {
+        button {
+            font-size: 14px !important;
+            font-weight: 500 !important;
+        }
+    }
+}
+
+// ==========================================
+// RESPONSIVE
+// ==========================================
+@media (max-width: 1200px) {
+    .app_container .app_list {
+        grid-template-columns: repeat(4, 1fr);
+        width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    html .o_web_client>.o_action_manager {
+        margin-left: 0 !important;
+    }
+
+    .o_main_navbar {
+        flex-wrap: nowrap;
+        padding-right: 15px !important;
+        /* Add space at the end */
+    }
+
+    .o_main_navbar .navbar-brand {
+        margin-right: 0px;
+        padding-left: 0px;
+    }
+
+    .o_main_navbar .o_menu_brand,
+    .o_main_navbar .o_nav_entry,
+    .o_main_navbar .dropdown-toggle:not(.o-dropdown-toggle-custo),
+    .o_main_navbar .o_menu_toggle {
+        padding-left: 0px;
+    }
+
+    .app_container .app_list {
+        grid-template-columns: repeat(3, 1fr);
+        width: 90%;
+        gap: 15px;
+    }
+
+    .app_container .wrapper {
+        overflow-y: auto;
+        align-items: flex-start;
+        height: 100%;
+        padding-top: 40px;
+    }
+
+    /* Force hamburger menu to the right end and align */
+    .o_main_navbar .o_mobile_menu_toggle,
+    .o_main_navbar .o_menu_toggle {
+        order: -1 !important;
+        margin-left: 10px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 100% !important;
+        color: var(--pharma-white) !important;
+    }
+
+    /* Align breadcrumbs and ensure they take available space */
+    .o_main_navbar .o_menu_brand,
+    .o_main_navbar .breadcrumb,
+    .o_main_navbar .o_control_panel_breadcrumbs {
+        flex-grow: 1 !important;
+        display: flex !important;
+        align-items: center !important;
+        margin-bottom: 0 !important;
+        height: 100% !important;
+    }
+
+    /* Make breadcrumbs white and bold on mobile */
+    .o_main_navbar .o_menu_brand,
+    .o_main_navbar .o_menu_brand *,
+    .o_main_navbar .breadcrumb,
+    .o_main_navbar .breadcrumb *,
+    .o_main_navbar .o_control_panel_breadcrumbs,
+    .o_main_navbar .o_control_panel_breadcrumbs *,
+    .o_main_navbar .o_back_button,
+    .o_main_navbar .o_back_button * {
+        color: var(--pharma-white) !important;
+        font-weight: 700 !important;
+        text-decoration: none !important;
+    }
+
+    /* Fix unreadable light text colors in mobile form views */
+    .o_form_view .o_form_label,
+    .o_form_view label.o_form_label,
+    .o_form_view .o_cell label,
+    .o_form_view .o_wrap_label label,
+    .o_form_view label,
+    .o_form_view .text-secondary,
+    .o_form_view .text-muted,
+    .o_form_view span.text-muted {
+        color: var(--pharma-text-color) !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .app_container .app_list {
+        grid-template-columns: repeat(2, 1fr);
+        width: 95%;
+    }
+
+    .app_container .app_list .app_wrapp .app {
+        height: 65px;
+        width: 65px;
+
+        i {
+            font-size: 26px;
+        }
+    }
+}
+
+.o_eia_api_key_link {
+    color: #0d6efd !important;
+    text-decoration: underline;
+}
+
+.o_eia_api_key_link:hover,
+.o_eia_api_key_link:focus {
+    color: #0a58ca !important;
+}
+
+.o_eia_api_key_help {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 12px 14px 12px 16px;
+    border-radius: 12px;
+    background: rgba(15, 42, 68, 0.04);
+    border: 1px solid rgba(15, 42, 68, 0.08);
+    max-width: 360px;
+}
+
+.o_eia_api_key_section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 22px;
+}
+
+.o_eia_api_key_help_title {
+    color: var(--pharma-navy);
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.o_eia_api_key_help_text {
+    color: #556575;
+    font-size: 14px;
+    line-height: 1.35;
+}
+
+.o_eia_api_key_label {
+    color: var(--pharma-navy);
+    font-weight: 700;
+    margin-bottom: 0;
+}
+
+.o_eia_api_key_field_group {
+    margin-top: 0;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.o_eia_api_key_field_group .o_eia_api_key_label {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    white-space: nowrap;
+}
+
+.o_eia_api_key_field_group .o_field_widget {
+    flex: 1 1 auto;
+    width: 100%;
+}
+
+.o_eia_api_key_field_group .o_input,
+.o_eia_api_key_field_group .o_field_password,
+.o_eia_api_key_field_group input.o_input {
+    margin-top: 0;
+    width: 100%;
+}

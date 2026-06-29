@@ -30,18 +30,21 @@ html .o_web_client>.o_action_manager {
 
 .sidebar {
     height: 94vh;
-    width: auto;
+    width: 90px;
+    max-width: 90px;
     position: fixed;
     background-color: var(--white-color);
     box-shadow: 0 2px 4px 0px rgba(0, 109, 111, 0.10);
-    padding: 20px 20px;
-    padding-left: 0;
-    padding-top: 40px;
+    padding: 40px 0 20px 0;
     overflow: auto;
     scrollbar-width: thin;
     scrollbar-color: transparent transparent;
-    transition: all .4s;
+    transition: none;
     z-index: 100;
+
+    @media (max-width: 768px) {
+        display: none !important;
+    }
 
     ::-webkit-scrollbar {
         display: none;
@@ -52,23 +55,14 @@ html .o_web_client>.o_action_manager {
     }
 
     span {
-        opacity: 0;
-        max-width: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        padding-right: 15px;
-        transition: opacity 0.4s ease, max-width 0.4s ease;
-        display: inline-block;
-        vertical-align: middle;
+        display: none !important;
     }
 
     &:hover {
         scrollbar-color: rgb(219, 219, 219) rgb(218, 218, 218);
-        transition: all 0.4s;
 
         span {
-            opacity: 1;
-            max-width: 200px;
+            display: none !important;
         }
     }
 
@@ -141,14 +135,20 @@ html .o_web_client>.o_action_manager {
     .sidbar-item {
         position: relative;
         margin-bottom: 10px;
-        padding: 15px 15px;
-        margin-left: 25px;
+        margin-left: 15px;
+        margin-right: 15px;
+        padding: 12px 0px;
+        height: 46px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        transition: background-color 0.3s ease;
 
         a {
             width: 100%;
             display: flex;
-            justify-content: start;
-            column-gap: 15px;
+            justify-content: center;
+            column-gap: 0px;
             align-items: center;
             color: var(--secondary-color) !important;
             padding-bottom: 10px;
@@ -172,15 +172,15 @@ html .o_web_client>.o_action_manager {
                 stroke: var(--primary-color);
             }
 
-            ::before {
+            &::before {
                 position: absolute;
                 content: "";
                 height: 100%;
-                width: 8px;
+                width: 5px;
                 background-color: var(--primary-color);
-                left: -28px;
+                left: -15px;
                 top: 0;
-                border-radius: 10px;
+                border-radius: 0 4px 4px 0;
                 transition: all 0.3s ease;
             }
         }
@@ -389,7 +389,18 @@ html .o_web_client>.o_action_manager {
     color: var(--white-color) !important;
     background-color: rgba(0, 109, 111, 0.28);
     border-radius: 15px;
-    padding: 15px 15px;
+    padding: 12px 0px;
     box-shadow: 0px 15px 35px 0px rgba(0, 109, 111, 0.26);
     position: relative;
+
+    &::before {
+        position: absolute;
+        content: "";
+        height: 100%;
+        width: 5px;
+        background-color: var(--primary-color);
+        left: -15px;
+        top: 0;
+        border-radius: 0 4px 4px 0;
+    }
 }

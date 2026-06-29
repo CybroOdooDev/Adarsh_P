@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── mrp.routing.workcenter — inherit form to add SOP link ────────── -->
+    <record id="mrp_routing_workcenter_form_pharma" model="ir.ui.view">
+        <field name="name">mrp.routing.workcenter.form.pharma</field>
+        <field name="model">mrp.routing.workcenter</field>
+        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='description']" position="inside">
+                <field name="sop_id" required="1"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- ─── mrp.routing.workcenter — inherit list/tree to add SOP link ────── -->
+    <record id="mrp_routing_workcenter_tree_pharma" model="ir.ui.view">
+        <field name="name">mrp.routing.workcenter.tree.pharma</field>
+        <field name="model">mrp.routing.workcenter</field>
+        <field name="inherit_id" ref="mrp.mrp_routing_workcenter_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='workcenter_id']" position="after">
+                <field name="sop_id" optional="show"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

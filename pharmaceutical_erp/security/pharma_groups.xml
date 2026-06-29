@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Base user — read-only access -->
+    <record id="group_pharma_user" model="res.groups">
+        <field name="name">Pharma / User</field>
+    </record>
+
+    <!-- Operator — executes BMR steps, raises manual deviations -->
+    <record id="group_pharma_operator" model="res.groups">
+        <field name="name">Pharma / Operator</field>
+        <field name="implied_ids" eval="[(4, ref('group_pharma_user'))]"/>
+    </record>
+
+    <!-- QC Analyst — manages QC test orders and lot status -->
+    <record id="group_pharma_qc_analyst" model="res.groups">
+        <field name="name">Pharma / QC Analyst</field>
+        <field name="implied_ids" eval="[(4, ref('group_pharma_operator'))]"/>
+    </record>
+
+    <!-- QA Manager — approves formulas, specs, verifies CAPAs -->
+    <record id="group_pharma_qa_manager" model="res.groups">
+        <field name="name">Pharma / QA Manager</field>
+        <field name="implied_ids" eval="[(4, ref('group_pharma_qc_analyst'))]"/>
+    </record>
+
+    <!-- QA Director — full QA authority, approves AVL, closes CAPAs, accepts disposition -->
+    <record id="group_pharma_qa_director" model="res.groups">
+        <field name="name">Pharma / QA Director</field>
+        <field name="implied_ids" eval="[(4, ref('group_pharma_qa_manager'))]"/>
+    </record>
+
+    <!-- Procurement — manages POs and AVL records -->
+    <record id="group_pharma_procurement" model="res.groups">
+        <field name="name">Pharma / Procurement</field>
+        <field name="implied_ids" eval="[(4, ref('group_pharma_user'))]"/>
+    </record>
+
+    <!-- Feature toggle groups -->
+    <record id="group_vendor_qualification" model="res.groups">
+        <field name="name">Pharma / Vendor Qualification Feature</field>
+    </record>
+
+    <record id="group_pharma_sop_training_feature" model="res.groups">
+        <field name="name">Pharma / SOP &amp; Training Feature</field>
+    </record>
+
+    <record id="group_pharma_capa_management" model="res.groups">
+        <field name="name">Pharma / CAPA Management Feature</field>
+    </record>
+
+    <!-- Audit Trail Feature Group -->
+    <record id="group_audit_trail_feature" model="res.groups">
+        <field name="name">Pharma / Audit Trail Feature</field>
+    </record>
+
+    <record id="group_pharma_admin" model="res.groups">
+        <field name="name">Pharma / Administrator</field>
+        <field name="implied_ids" eval="[
+            (4, ref('group_pharma_qa_director')),
+            (4, ref('group_pharma_procurement')),
+            (4, ref('group_vendor_qualification')),
+            (4, ref('group_pharma_sop_training_feature')),
+            (4, ref('group_pharma_capa_management')),
+            (4, ref('group_audit_trail_feature')),
+        ]"/>
+    </record>
+
+    <record id="base.group_system" model="res.groups">
+        <field name="implied_ids" eval="[(4, ref('group_pharma_admin'))]"/>
+    </record>
+
+</odoo>

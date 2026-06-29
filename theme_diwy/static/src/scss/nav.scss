@@ -14,6 +14,12 @@
   border-radius: 50% !important;
 }
 
+.o_menu_systray,
+.o_user_menu {
+  position: relative;
+  top: -4px;
+}
+
 .navbar {
   background: #fff !important;
   border-bottom: transparent;
@@ -35,7 +41,14 @@
 
 .o_main_navbar .oe_topbar_name {
   color: var(--text-color);
+}
 
+.o_main_navbar .o_menu_brand,
+.o_main_navbar .o_menu_sections,
+.o_main_navbar .oe_topbar_name,
+.o_main_navbar .navbar-brand {
+  position: relative;
+  top: -4px;
 }
 
 
@@ -64,17 +77,19 @@
 
 .sidebar {
   height: 93vh;
-  width: auto;
+  width: 90px;
+  max-width: 90px;
   background-color: var(--white-color);
   box-shadow: 0 2px 4px 0px rgba(0, 109, 111, 0.1);
-  padding: 20px 20px;
-  padding-left: 0;
-  padding-top: 40px;
+  padding: 40px 0 20px 0;
   overflow: auto;
   scrollbar-width: thin;
   scrollbar-color: transparent transparent;
-  transition: all 0.4s;
-  max-width: 100px;
+  transition: none;
+
+  @media (max-width: 768px) {
+    display: none !important;
+  }
 }
 
 .sidebar ::-webkit-scrollbar {
@@ -86,24 +101,15 @@
 }
 
 .sidebar span {
-  opacity: 0;
-  max-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  padding-right: 15px;
-  transition: opacity 0.4s ease, max-width 0.4s ease;
-  display: inline-block;
-  vertical-align: middle;
+  display: none !important;
 }
 
 .sidebar:hover {
   scrollbar-color: rgb(219, 219, 219) rgb(218, 218, 218);
-  transition: all 0.4s;
 }
 
 .sidebar:hover span {
-  opacity: 1;
-  max-width: 200px;
+  display: none !important;
 }
 
 .sidebar .sidebar_links {
@@ -174,15 +180,21 @@
 
 .sidebar .sidbar-item {
   position: relative;
-  padding: 15px 15px;
-  margin-left: 25px;
+  margin-left: 15px;
+  margin-right: 15px;
+  padding: 12px 0px;
+  height: 46px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
 }
 
 .sidebar .sidbar-item a {
   width: 100%;
   display: flex;
-  justify-content: start;
-  column-gap: 15px;
+  justify-content: center;
+  column-gap: 0px;
   align-items: center;
   color: var(--secondary-color) !important;
   padding-bottom: 10px;
@@ -209,11 +221,11 @@
   position: absolute;
   content: "";
   height: 100%;
-  width: 8px;
+  width: 5px;
   background-color: var(--primary-color);
-  left: -28px;
+  left: -15px;
   top: 0;
-  border-radius: 10px;
+  border-radius: 0 4px 4px 0;
   transition: all 0.3s ease;
 }
 
@@ -223,7 +235,9 @@
 }
 
 .diwy-back-btn {
-  margin-left: 90px;
+  margin-left: 15px;
+  position: relative;
+  top: -4px;
 }
 
 .o_main_navbar .navbar-brand {
@@ -231,7 +245,14 @@
 }
 
 @media (max-width: 768px) {
-  .diwy-back-btn {
-    margin-left: 10px;
+  .o_main_navbar .o_menu_toggle {
+    margin-left: 15px !important;
+  }
+}
+
+@media (max-width: 1024px) {
+  .o_main_navbar .navbar-brand,
+  .o_main_navbar .o_menu_brand {
+    display: none !important;
   }
 }

@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Quality Deviation reporting and investigation views. -->
+    <record id="pharma_deviation_form" model="ir.ui.view">
+        <field name="name">pharma.deviation.form</field>
+        <field name="model">pharma.deviation</field>
+        <field name="arch" type="xml">
+            <form string="Deviation">
+                <header>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="open,under_investigation,closed"/>
+
+                    <button name="action_investigate" type="object"
+                            string="Start Investigation" class="btn-primary"
+                            invisible="status != 'open'"/>
+
+                    <button name="action_close" type="object"
+                            string="Close Deviation" class="btn-success"
+                            invisible="status != 'under_investigation' or (enable_capa_setting and not all_capas_closed)"
+                            groups="pharmaceutical_erp.group_pharma_qa_director"/>
+                    <field name="all_capas_closed" invisible="1"/>
+                </header>
+
+                <sheet>
+                    <!-- Smart button for CAPAs -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="pharmaceutical_erp.pharma_capa_action" type="action"
+                                class="oe_stat_button" icon="fa-check-circle"
+                                invisible="not enable_capa_setting"
+                                context="{'default_deviation_id': id, 'search_default_deviation_id': id}">
+                            <field name="capa_count" widget="statinfo" string="CAPAs"/>
+                        </button>
+                    </div>
+                    <field name="enable_capa_setting" invisible="1"/>
+
+                    <div class="oe_title">
+                        <label for="name" string="Deviation"/>
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+
+                    <!-- Deadline banner when overdue -->
+                    <div class="alert alert-warning" role="status"
+                         invisible="status == 'closed' or not deadline_date">
+                        <strong>Investigation deadline: </strong>
+                        <field name="deadline_date" readonly="1"/>
+                    </div>
+
+                    <group>
+                        <group string="Origin">
+                            <field name="batch_id"/>
+                            <field name="lot_id"/>
+                            <field name="stage"/>
+                            <field name="qc_result_id" optional="show"/>
+                        </group>
+                        <group string="Classification &amp; Deadline">
+                            <field name="classification"/>
+                            <field name="root_cause_category"/>
+                            <field name="raised_by" readonly="1"/>
+                            <field name="raised_on" readonly="1"/>
+                            <field name="deadline_date" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Description">
+                        <field name="description" nolabel="1" colspan="2" readonly="1" class="fw-bold"/>
+                    </group>
+
+                    <group string="Immediate Action Taken">
+                        <field name="immediate_action" nolabel="1" colspan="2" readonly="1" class="fw-bold"/>
+                    </group>
+
+                    <group string="Disposition" invisible="status == 'open'">
+                        <field name="disposition"/>
+                    </group>
+
+                    <notebook>
+                        <page name="capas" string="CAPAs" invisible="not enable_capa_setting">
+                            <field name="capa_ids" mode="list">
+                                <list string="CAPAs" editable="bottom">
+                                    <field name="name" readonly="1"/>
+                                    <field name="capa_type"/>
+                                    <field name="assigned_to"/>
+                                    <field name="due_date"/>
+                                    <field name="status" widget="badge"
+                                           decoration-success="status == 'closed'"
+                                           decoration-info="status == 'in_progress'"
+                                           decoration-warning="status == 'verified'"
+                                           decoration-muted="status == 'open'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+    <record id="pharma_deviation_list" model="ir.ui.view">
+        <field name="name">pharma.deviation.list</field>
+        <field name="model">pharma.deviation</field>
+        <field name="arch" type="xml">
+            <list string="Deviations"
+                  decoration-danger="status == 'open'"
+                  decoration-warning="status == 'under_investigation'"
+                  decoration-muted="status == 'closed'">
+                <field name="name"/>
+                <field name="batch_id" optional="show"/>
+                <field name="lot_id" optional="show"/>
+                <field name="stage"/>
+                <field name="classification" widget="badge"
+                       decoration-danger="classification == 'critical'"
+                       decoration-warning="classification == 'major'"
+                       decoration-info="classification == 'minor'"/>
+                <field name="deadline_date"/>
+                <field name="raised_by" optional="show"/>
+                <field name="disposition" optional="show"/>
+                <field name="capa_count" string="CAPAs" optional="show"/>
+                <field name="status" widget="badge"
+                       decoration-danger="status == 'open'"
+                       decoration-warning="status == 'under_investigation'"
+                       decoration-success="status == 'closed'"/>
+            </list>
+        </field>
+    </record>
+    <record id="pharma_deviation_search" model="ir.ui.view">
+        <field name="name">pharma.deviation.search</field>
+        <field name="model">pharma.deviation</field>
+        <field name="arch" type="xml">
+            <search string="Search Deviations">
+                <field name="name"/>
+                <field name="batch_id"/>
+                <field name="lot_id"/>
+                <filter string="Open" name="open" domain="[('status','=','open')]"/>
+                <filter string="Under Investigation" name="investigating"
+                        domain="[('status','=','under_investigation')]"/>
+                <filter string="Closed" name="closed" domain="[('status','=','closed')]"/>
+                <separator/>
+                <filter string="Critical" name="critical"
+                        domain="[('classification','=','critical')]"/>
+                <filter string="Major" name="major"
+                        domain="[('classification','=','major')]"/>
+                <filter string="Minor" name="minor"
+                        domain="[('classification','=','minor')]"/>
+                <group name="group_by">
+                    <filter string="Status" name="grp_status" context="{'group_by': 'status'}"/>
+                    <filter string="Classification" name="grp_class"
+                            context="{'group_by': 'classification'}"/>
+                    <filter string="Stage" name="grp_stage" context="{'group_by': 'stage'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+    <record id="pharma_deviation_action" model="ir.actions.act_window">
+        <field name="name">Deviations</field>
+        <field name="res_model">pharma.deviation</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="pharma_deviation_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No deviations recorded. IPQC failures will auto-create deviations.
+            </p>
+        </field>
+    </record>
+
+</odoo>

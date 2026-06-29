@@ -1,0 +1,69 @@
+2026-06-20 08:40:33,901 210806 WARNING ? odoo.tools.config: missing --http-interface/http_interface, using 0.0.0.0 by default, will change to 127.0.0.1 in 20.0 
+2026-06-20 08:40:33,902 210806 INFO ? odoo: Odoo version 19.0 
+2026-06-20 08:40:33,902 210806 INFO ? odoo: Using configuration file at /home/cybrosys/Desktop/odoo19/odoo19/odoo.conf 
+2026-06-20 08:40:33,903 210806 INFO ? odoo: addons paths: _NamespacePath(['/home/cybrosys/Desktop/odoo19/odoo19/odoo/addons', '/home/cybrosys/.local/share/Odoo/addons/19.0', '/home/cybrosys/Desktop/odoo19/odoo19/addons', '/home/cybrosys/Desktop/odoo19/odoo19/19.0', '/home/cybrosys/Desktop/odoo19/odoo19/custom_work']) 
+2026-06-20 08:40:33,903 210806 INFO ? odoo: database: odoo@localhost:5433 
+2026-06-20 08:40:34,206 210806 INFO odooV91 odoo.modules.loading: loading 1 modules... 
+2026-06-20 08:40:34,209 210806 INFO odooV91 odoo.modules.loading: 1 modules loaded in 0.00s, 0 queries (+0 extra) 
+2026-06-20 08:40:34,236 210806 INFO odooV91 odoo.modules.loading: updating modules list 
+2026-06-20 08:40:34,239 210806 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.update_list on [] to user __system__ #1 via n/a 
+2026-06-20 08:40:34,624 210806 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 08:40:34,624 210806 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 08:40:34,685 210806 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 08:40:34,685 210806 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 08:40:36,295 210806 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.button_upgrade on ['Pharmaceutical ERP'] to user __system__ #1 via n/a 
+2026-06-20 08:40:36,295 210806 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.update_list on ['Pharmaceutical ERP'] to user __system__ #1 via n/a 
+2026-06-20 08:40:36,609 210806 WARNING odooV91 odoo.modules.module: Missing `author` key in manifest for 'beauty_salon_ai', defaulting to '' 
+2026-06-20 08:40:36,657 210806 WARNING odooV91 odoo.modules.module: Missing `license` key in manifest for 'delivery_slot', defaulting to LGPL-3 
+2026-06-20 08:40:38,001 210806 INFO odooV91 odoo.addons.base.models.ir_module: ALLOW access to module.button_install on [] to user __system__ #1 via n/a 
+2026-06-20 08:40:38,034 210806 INFO odooV91 odoo.modules.loading: loading 114 modules... 
+2026-06-20 08:40:38,655 210806 INFO odooV91 odoo.modules.loading: Loading module pharmaceutical_erp (112/114) 
+2026-06-20 08:40:38,924 210806 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 08:40:38,924 210806 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 08:40:38,925 210806 WARNING odooV91 odoo.registry: Model attribute '_sql_constraints' is no longer supported, please define model.Constraint on the model. 
+2026-06-20 08:40:38,975 210806 INFO odooV91 odoo.registry: module pharmaceutical_erp: creating or updating database tables 
+2026-06-20 08:40:39,061 210806 WARNING odooV91 odoo.addons.base.models.ir_model: Two fields (employee_count, employee_ids) of pharma.sop() have the same label: Assigned Employees. [Modules: pharmaceutical_erp and pharmaceutical_erp] 
+2026-06-20 08:40:39,188 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/security/pharma_groups.xml 
+2026-06-20 08:40:39,297 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/security/ir.model.access.csv 
+2026-06-20 08:40:39,345 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/data/pharma_sequences_data.xml 
+2026-06-20 08:40:39,357 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/data/mail_template_data.xml 
+2026-06-20 08:40:39,388 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/data/pharma_cron_data.xml 
+2026-06-20 08:40:39,390 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/views/product_template_views.xml 
+2026-06-20 08:40:39,478 210806 INFO odooV91 odoo.modules.loading: loading pharmaceutical_erp/views/pharma_avl_views.xml 
+2026-06-20 08:40:39,506 210806 WARNING odooV91 odoo.tools.view_validation: <string>:9:0:ERROR:RELAXNGV:RELAXNG_ERR_NOELEM: Expecting an element field, got nothing 
+2026-06-20 08:40:39,507 210806 WARNING odooV91 odoo.tools.view_validation: <string>:9:0:ERROR:RELAXNGV:RELAXNG_ERR_INVALIDATTR: Invalid attribute expand for element group 
+2026-06-20 08:40:39,507 210806 WARNING odooV91 odoo.tools.view_validation: <string>:3:0:ERROR:RELAXNGV:RELAXNG_ERR_EXTRACONTENT: Element search has extra content: field 
+2026-06-20 08:40:39,507 210806 WARNING odooV91 odoo.tools.view_validation: Invalid XML:  Get RNG validator and validate RNG file. 
+2026-06-20 08:40:39,510 210806 WARNING odooV91 odoo.modules.loading: Transient module states were reset 
+2026-06-20 08:40:39,510 210806 ERROR odooV91 odoo.registry: Failed to load registry 
+2026-06-20 08:40:39,510 210806 CRITICAL odooV91 odoo.service.server: Failed to initialize database `odooV91`. 
+Traceback (most recent call last):
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/service/server.py", line 1510, in preload_registries
+    registry = Registry.new(dbname, update_module=update_module, install_modules=config['init'], upgrade_modules=config['update'], reinit_modules=config['reinit'])
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/func.py", line 88, in locked
+    return func(inst, *args, **kwargs)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/orm/registry.py", line 199, in new
+    load_modules(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 456, in load_modules
+    load_module_graph(
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 216, in load_module_graph
+    load_data(env, idref, mode, kind='data', package=package)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/modules/loading.py", line 59, in load_data
+    convert_file(env, package.name, filename, idref, mode, noupdate=kind == 'demo')
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 693, in convert_file
+    convert_xml_import(env, module, fp, idref, mode, noupdate)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 792, in convert_xml_import
+    obj.parse(doc.getroot())
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 663, in parse
+    self._tag_root(de)
+  File "/home/cybrosys/Desktop/odoo19/odoo19/odoo/tools/convert.py", line 616, in _tag_root
+    raise ParseError(msg) from None  # Restart with "--log-handler odoo.tools.convert:DEBUG" for complete traceback
+odoo.tools.convert.ParseError: while parsing /home/cybrosys/Desktop/odoo19/odoo19/custom_work/pharmaceutical_erp/views/pharma_avl_views.xml:101
+Invalid view pharma.avl.search (pharmaceutical_erp.pharma_avl_search_view) definition in pharmaceutical_erp/views/pharma_avl_views.xml
+
+View error context:
+'-no context-'
+
+2026-06-20 08:40:39,511 210806 INFO odooV91 odoo.service.server: Initiating shutdown 
+2026-06-20 08:40:39,511 210806 INFO odooV91 odoo.service.server: Hit CTRL-C again or send a second signal to force the shutdown. 
+2026-06-20 08:40:39,511 210806 INFO odooV91 odoo.sql_db: ConnectionPool(read/write;used=0/count=0/max=64): Closed 1 connections  

@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+    <t t-name="pharmaceutical_erp.PharmaDashboard" owl="1">
+        <!-- QWeb template defining the OWL component structure for the Pharmaceutical Dashboard. Responsible for
+        rendering key statistics, charts, and actionable metrics related to batches and quality control. -->
+        <div class="pharma-dashboard-wrapper">
+            <!-- Top Header -->
+            <div class="dash-header">
+                <div class="dash-title">
+                    <h1 style="color: #006D6F;">Dashboard</h1>
+                    <p style="color: #6c8a98;">Welcome back, Admin</p>
+                </div>
+                <!-- Actions removed as per request -->
+            </div>
+
+            <!-- Date Filter -->
+            <div class="dash-filter">
+                <div class="date-picker">
+                    <i class="fa fa-calendar-o"></i>
+                    <input type="date" t-model="state.startDate" t-on-change="fetchData"
+                           style="border: none; outline: none; background: transparent; cursor: pointer;
+                           color: #333; font-family: inherit; font-size: 13px;"/>
+                    <span style="color: #68808a; margin: 0 5px;">-</span>
+                    <input type="date" t-model="state.endDate" t-on-change="fetchData"
+                           style="border: none; outline: none; background: transparent; cursor: pointer;
+                           color: #333; font-family: inherit; font-size: 13px;"/>
+                </div>
+            </div>
+
+            <!-- Top Row Cards -->
+            <div class="dash-row top-cards">
+                <div class="dash-card stat-card" t-on-click="openLots" style="cursor: pointer;">
+                    <div class="icon-box icon-green">
+                        <i class="fa fa-cube"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Batches</span>
+                        <span class="stat-value"><t t-esc="state.totalBatches"/></span>
+                        <span t-attf-class="stat-trend {{ state.trendBatches.up ? 'trend-up' : 'trend-down' }}">
+                            <i t-attf-class="fa {{ state.trendBatches.up ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                            <t t-esc="state.trendBatches.value"/>% vs last month
+                        </span>
+                    </div>
+                </div>
+                <div class="dash-card stat-card" t-on-click="openQcTests" style="cursor: pointer;">
+                    <div class="icon-box icon-blue">
+                        <i class="fa fa-flask"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Open QC Tests</span>
+                        <span class="stat-value"><t t-esc="state.openQcTests"/></span>
+                        <span t-attf-class="stat-trend {{ state.trendQc.up ? 'trend-up' : 'trend-down' }}">
+                            <i t-attf-class="fa {{ state.trendQc.up ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                            <t t-esc="state.trendQc.value"/>% vs last month
+                        </span>
+                    </div>
+                </div>
+                <div class="dash-card stat-card" t-on-click="openDeviations" style="cursor: pointer;">
+                    <div class="icon-box icon-orange">
+                        <i class="fa fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Open Deviations</span>
+                        <span class="stat-value"><t t-esc="state.openDeviations"/></span>
+                        <span t-attf-class="stat-trend {{ state.trendDev.up ? 'trend-up' : 'trend-down' }}">
+                            <i t-attf-class="fa {{ state.trendDev.up ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                            <t t-esc="state.trendDev.value"/>% vs last month
+                        </span>
+                    </div>
+                </div>
+                <div class="dash-card stat-card" t-on-click="openCapas" style="cursor: pointer;">
+                    <div class="icon-box icon-purple">
+                        <i class="fa fa-shield"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Open CAPAs</span>
+                        <span class="stat-value"><t t-esc="state.openCapas"/></span>
+                        <span t-attf-class="stat-trend {{ state.trendCapa.up ? 'trend-up' : 'trend-down' }}">
+                            <i t-attf-class="fa {{ state.trendCapa.up ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                            <t t-esc="state.trendCapa.value"/>% vs last month
+                        </span>
+                    </div>
+                </div>
+                <div class="dash-card stat-card" t-on-click="openOos" style="cursor: pointer;">
+                    <div class="icon-box icon-teal">
+                        <i class="fa fa-search"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Open OOS</span>
+                        <span class="stat-value"><t t-esc="state.openOos"/></span>
+                        <span t-attf-class="stat-trend {{ state.trendOos.up ? 'trend-up' : 'trend-down' }}">
+                            <i t-attf-class="fa {{ state.trendOos.up ? 'fa-arrow-up' : 'fa-arrow-down' }}"></i>
+                            <t t-esc="state.trendOos.value"/>% vs last month
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Row -->
+            <div class="dash-row middle-cards">
+                <div class="dash-card chart-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa fa-line-chart"></i> Batch Production Trend</div>
+                        <div class="chart-filter">
+                            <select class="form-select form-select-sm" t-model="state.chartFilter" t-on-change="fetchData"
+                                    style="border: none; outline: none; background: transparent; cursor: pointer;
+                                    color: #333; font-family: inherit; font-size: 13px; font-weight: bold;
+                                    appearance: none; padding-right: 15px;">
+                                <option value="yearly">Yearly</option>
+                                <option value="monthly">Monthly</option>
+                                <option value="weekly">Weekly</option>
+                                <option value="daily">Daily</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas t-ref="chartCanvas"></canvas>
+                    </div>
+                </div>
+                <div class="dash-card list-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa fa-server"></i> Batch Status</div>
+                    </div>
+                    <div class="list-body">
+                        <div class="list-item" t-on-click="() => this.openLotsByStatus('released')" style="cursor: pointer;">
+                            <div class="item-icon icon-green"><i class="fa fa-check-circle-o"></i></div>
+                            <span class="item-name">Released</span>
+                            <span class="item-val"><t t-esc="state.releasedBatches"/></span>
+                        </div>
+                        <div class="list-item" t-on-click="() => this.openLotsByStatus('quarantine')" style="cursor: pointer;">
+                            <div class="item-icon icon-orange"><i class="fa fa-flask"></i></div>
+                            <span class="item-name">Quarantine</span>
+                            <span class="item-val"><t t-esc="state.quarantineBatches"/></span>
+                        </div>
+                        <div class="list-item" t-on-click="() => this.openLotsByStatus('rejected')" style="cursor: pointer;">
+                            <div class="item-icon icon-red"><i class="fa fa-times-circle-o"></i></div>
+                            <span class="item-name">Rejected</span>
+                            <span class="item-val"><t t-esc="state.rejectedBatches"/></span>
+                        </div>
+                        <div class="list-item" t-on-click="() => this.openLotsByStatus('approved')" style="cursor: pointer;">
+                            <div class="item-icon icon-blue"><i class="fa fa-clock-o"></i></div>
+                            <span class="item-name">Pending Release</span>
+                            <span class="item-val"><t t-esc="state.pendingReleaseBatches"/></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row -->
+            <div class="dash-row bottom-cards">
+                <div class="dash-card activities-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa fa-calendar-check-o"></i> Open Quality Activities</div>
+                    </div>
+                    <div class="activities-grid">
+                        <div class="activity-box" t-on-click="openQcTests" style="cursor: pointer;">
+                            <div class="act-header">
+                                <i class="fa fa-file-text-o icon-blue-text"></i>
+                                <span>QC Tests</span>
+                            </div>
+                            <div class="act-val"><t t-esc="state.openQcTests"/></div>
+                            <div class="act-sub">Open</div>
+                        </div>
+                        <div class="activity-box" t-on-click="openDeviations" style="cursor: pointer;">
+                            <div class="act-header">
+                                <i class="fa fa-exclamation-triangle icon-orange-text"></i>
+                                <span>Deviations</span>
+                            </div>
+                            <div class="act-val"><t t-esc="state.openDeviations"/></div>
+                            <div class="act-sub">Open</div>
+                        </div>
+                        <div class="activity-box" t-on-click="openCapas" style="cursor: pointer;">
+                            <div class="act-header">
+                                <i class="fa fa-shield icon-purple-text"></i>
+                                <span>CAPAs</span>
+                            </div>
+                            <div class="act-val"><t t-esc="state.openCapas"/></div>
+                            <div class="act-sub">Open</div>
+                        </div>
+                        <div class="activity-box" t-on-click="openOos" style="cursor: pointer;">
+                            <div class="act-header">
+                                <i class="fa fa-search icon-teal-text"></i>
+                                <span>OOS Investigations</span>
+                            </div>
+                            <div class="act-val"><t t-esc="state.openOos"/></div>
+                            <div class="act-sub">Open</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="dash-card expiring-card">
+                    <div class="card-header">
+                        <div class="card-title"><i class="fa fa-calendar"></i> Expiring Batches</div>
+                    </div>
+                    <div class="expiring-grid">
+                        <div class="exp-col" t-on-click="() => this.openExpiringLots(0)" style="cursor: pointer;">
+                            <div class="exp-title">Today</div>
+                            <div class="exp-val val-red"><t t-esc="state.expiringToday"/></div>
+                            <div class="exp-sub">Batches</div>
+                        </div>
+                        <div class="exp-col" t-on-click="() => this.openExpiringLots(30)" style="cursor: pointer;">
+                            <div class="exp-title">Within 30 Days</div>
+                            <div class="exp-val val-orange"><t t-esc="state.expiring30"/></div>
+                            <div class="exp-sub">Batches</div>
+                        </div>
+                        <div class="exp-col" t-on-click="() => this.openExpiringLots(60)" style="cursor: pointer;">
+                            <div class="exp-title">Within 60 Days</div>
+                            <div class="exp-val val-orange2"><t t-esc="state.expiring60"/></div>
+                            <div class="exp-sub">Batches</div>
+                        </div>
+                        <div class="exp-col" t-on-click="() => this.openExpiringLots(90)" style="cursor: pointer;">
+                            <div class="exp-title">Within 90 Days</div>
+                            <div class="exp-val val-red"><t t-esc="state.expiring90"/></div>
+                            <div class="exp-sub">Batches</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </t>
+</templates>

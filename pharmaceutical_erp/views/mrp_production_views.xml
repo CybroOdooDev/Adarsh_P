@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── mrp.production — inherit form to add BMR smart button ────────── -->
+    <record id="mrp_production_form_pharma" model="ir.ui.view">
+        <field name="name">mrp.production.form.pharma</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="pharma_bmr_completed" invisible="1"/>
+                <field name="pharma_allowed_component_ids" invisible="1"/>
+            </xpath>
+            <xpath expr="//header/button[@name='button_mark_done'][1]" position="attributes">
+                <attribute name="invisible">state in ('draft', 'cancel', 'done', 'to_close') or not pharma_bmr_completed</attribute>
+            </xpath>
+            <xpath expr="//header/button[@name='button_mark_done'][2]" position="attributes">
+                <attribute name="invisible">state != 'to_close' or not pharma_bmr_completed</attribute>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <!-- BMR stat button — view only, no direct creation allowed -->
+                <button name="action_view_bmr" type="object" class="oe_stat_button" icon="fa-file-text-o"
+                        title="BMRs are auto-generated when a Production Order is confirmed.">
+                    <field name="bmr_count" widget="statinfo" string="BMRs"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- QA Release Queue Action -->
+    <record id="pharma_qa_release_queue_action" model="ir.actions.act_window">
+        <field name="name">QA Release Queue</field>
+        <field name="res_model">mrp.production</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('qa_release_eligible', '=', True)]</field>
+        <field name="context">{'hide_unbuild': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No BMRs currently awaiting QA Release.
+            </p>
+            <p>
+                BMRs will appear here automatically when they are completed, all QC tests are passed, and there are no active deviations.
+            </p>
+        </field>
+    </record>
+
+    <!-- MR Production Inherit - QA Release Button -->
+    <record id="mrp_production_form_pharma_release" model="ir.ui.view">
+        <field name="name">mrp.production.form.pharma.release</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <field name="qa_release_eligible" invisible="1"/>
+                <button name="action_qa_release" type="object"
+                        string="QA Release" class="btn-primary"
+                        invisible="not qa_release_eligible"
+                        groups="pharmaceutical_erp.group_pharma_qa_manager"/>
+            </xpath>
+            <xpath expr="//button[@name='button_unbuild']" position="attributes">
+                <attribute name="invisible">state != 'done' or context.get('hide_unbuild')</attribute>
+            </xpath>
+            <xpath expr="//field[@name='bom_id']" position="attributes">
+                <attribute name="domain">[('formula_status', '=', 'approved')]</attribute>
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='product_id']" position="attributes">
+                <attribute name="domain">[('has_approved_bom', '=', True)]</attribute>
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='move_raw_ids']//field[@name='product_id']" position="attributes">
+                <attribute name="domain">[('id', 'in', parent.pharma_allowed_component_ids)]</attribute>
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Configuration settings for the pharmaceutical module. -->
+    <record id="res_config_settings_view_form_pharmaceutical_erp" model="ir.ui.view">
+        <field name="name">res.config.settings.view.form.inherit.pharmaceutical.erp</field>
+        <field name="model">res.config.settings</field>
+        <field name="priority" eval="80"/>
+        <field name="inherit_id" ref="base_setup.res_config_settings_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//form" position="inside">
+                <app data-string="Pharmaceutical ERP"
+                     string="Pharmaceutical ERP"
+                     name="pharmaceutical_erp"
+                     logo="/pharmaceutical_erp/static/description/icon.png">
+
+                    <block title="Vendor Management" name="pharmaceutical_erp_vendor_settings">
+                        <setting id="pharmaceutical_erp_vendor_qualification"
+                                 string="Enable Vendor Qualification"
+                                 help="Show the Vendor Qualification menu and portal questionnaire workflow.
+                                 Approved qualifications auto-create AVL entries.">
+                            <field name="vendor_qualification"/>
+                        </setting>
+                    </block>
+
+                    <block title="Quality Assurance" name="pharmaceutical_erp_quality_settings">
+                        <setting id="pharmaceutical_erp_enable_capa"
+                                 string="Enable CAPA Management"
+                                 help="Enable CAPA menus, deviation CAPA tracking, and automatic CAPA creation
+                                  when a deviation investigation starts.">
+                            <field name="enable_capa"/>
+                        </setting>
+                    </block>
+
+                    <block title="SOP &amp; Training" name="pharmaceutical_erp_sop_settings">
+                        <setting id="pharmaceutical_erp_enable_sop_training"
+                                 string="Enable SOP &amp; Training Management"
+                                 help="Show SOP lifecycle and Training Records menus. Operators must have passed
+                                 training to sign BMR steps and IPQC checks.">
+                            <field name="enable_sop_training"/>
+                        </setting>
+                    </block>
+
+                </app>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="pharma_config_settings_action" model="ir.actions.act_window">
+        <field name="name">Settings</field>
+        <field name="res_model">res.config.settings</field>
+        <field name="view_mode">form</field>
+        <field name="context">{'module': 'pharmaceutical_erp', 'bin_size': False}</field>
+    </record>
+</odoo>
