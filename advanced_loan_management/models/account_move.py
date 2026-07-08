@@ -1,0 +1,72 @@
+# -*- coding: utf-8 -*-
+################################################################################
+#
+#    Cybrosys Technologies Pvt. Ltd.
+#
+#    Copyright (C) 2024-TODAY Cybrosys Technologies(<https://www.cybrosys.com>).
+#    Author: Sabeel B (odoo@cybrosys.com)
+#
+#    You can modify it under the terms of the GNU AFFERO
+#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
+#
+#    You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
+#    (AGPL v3) along with this program.
+#    If not, see <http://www.gnu.org/licenses/>.
+#
+################################################################################
+from odoo import models, fields
+
+
+class AccountMove(models.Model):
+    """Alter loan repayment line state on draft and cancel button click"""
+    _inherit = 'account.move'
+
+    repayment_line_id = fields.Many2one('repayment.line', string="Repayment Line")
+
+    def button_draft(self):
+        """Change repayment record state to 'invoiced'
+        while reset to draft the invoice"""
+        res = super().button_draft()
+        loan_line_ids = self.env['repayment.line'].search([
+            ('name', 'ilike', self.payment_reference)])
+        if loan_line_ids:
+            loan_line_ids.update({
+                'state': 'invoiced',
+                'invoice': True
+            })
+        return res
+
+    def button_cancel(self):
+        """Change repayment record state to 'unpaid'
+        while cancelling the invoice"""
+        res = super().button_cancel()
+        for record in self:
+            loan_line_ids = self.env['repayment.line'].search([
+                ('name', 'ilike', record.payment_reference)])
+            if loan_line_ids:
+                loan_line_ids.update({
+                    'state': 'unpaid',
+                    'invoice': False
+                })
+        return res
+
+    def _compute_amount(self):
+        """payment_state is computed here in Odoo 15 (compute='_compute_amount'
+        on the field), not in _compute_payment_state as in 16+. Overriding
+        _compute_payment_state on v15 is a no-op since nothing calls it."""
+        res = super()._compute_amount()
+        for record in self:
+            if record.payment_state in ('paid', 'in_payment', 'reversed') and record.repayment_line_id:
+                if record.repayment_line_id.state != 'paid':
+                    record.repayment_line_id.write({'state': 'paid'})
+        return res
+
+
+
+
+
