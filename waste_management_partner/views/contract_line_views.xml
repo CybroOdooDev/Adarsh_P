@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<odoo>
+    <record id="action_contract_line_tree_view" model="ir.ui.view">
+        <field name="name">contract.line.list</field>
+        <field name="model">contract.line</field>
+        <field name="arch" type="xml">
+            <list editable="bottom">
+                <field name="waste_categ_id" column_invisible="1"/>
+                <field name="product_id" string="Product" domain="[('categ_id', '=', waste_categ_id)]"/>
+                <field name="price" string="Price/kg" />
+                <field name="currency_id" string="Currency" />
+
+            </list>
+        </field>
+    </record>
+</odoo>

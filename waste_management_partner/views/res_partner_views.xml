@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ─── res.partner — inherit form to add waste management fields ───────────── -->
+    <record id="res_partner_form_waste_management" model="ir.ui.view">
+        <field name="name">res.partner.form.waste.management</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Waste Management">
+
+                    <!-- Classification fields -->
+                    <group string="Waste Classification">
+                        <group>
+                            <field name="generator_type" placeholder="e.g. Industrial, Commercial"/>
+                        </group>
+                        <group>
+                            <field name="regulatory_id" placeholder="e.g. REG-2024-001"/>
+                        </group>
+                    </group>
+
+                    <separator string="Contracts"/>
+
+                    <!-- Contracts list — full width -->
+                    <field name="contract_id"
+                           nolabel="1"
+                           widget="one2many_list"
+                           mode="list">
+                        <list>
+                            <field name="name" string="Contract Ref"/>
+                            <field name="from_date" string="From"/>
+                            <field name="to_date" string="To"/>
+                            <field name="product_id" string="Waste Type"/>
+                        </list>
+                    </field>
+
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

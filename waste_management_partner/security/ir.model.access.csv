@@ -1,0 +1,3 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+waste_management_partner.access_partner_contract,access_partner_contract,waste_management_partner.model_partner_contract,base.group_user,1,1,1,1
+waste_management_partner.access_contract_line,access_contract_line,waste_management_partner.model_contract_line,base.group_user,1,1,1,1

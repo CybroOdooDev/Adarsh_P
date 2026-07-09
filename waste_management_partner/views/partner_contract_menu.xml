@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+        <menuitem
+            id="menu_partner_contract_wm"
+            action="action_menu_partner_contract_wm"
+            name="Partner Contract"
+            parent="contacts.res_partner_menu_config"
+            />
+</odoo>
