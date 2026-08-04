@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_delivery_carrier_form_fedex" model="ir.ui.view">
+        <field name="name">delivery.carrier.form.fedex</field>
+        <field name="model">delivery.carrier</field>
+        <field name="inherit_id" ref="delivery.view_delivery_carrier_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="FedEx Configuration" invisible="delivery_type != 'fedex_custom'">
+                    <group>
+                        <field name="fedex_environment"/>
+                        <field name="fedex_client_id"/>
+                        <field name="fedex_client_secret" password="True"/>
+                        <field name="fedex_account_number"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>

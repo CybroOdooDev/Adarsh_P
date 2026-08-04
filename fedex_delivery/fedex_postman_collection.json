@@ -1,0 +1,131 @@
+{
+	"info": {
+		"_postman_id": "a82b9e40-1234-4567-89ab-cdef01234567",
+		"name": "FedEx REST API (Odoo 19 Integration)",
+		"description": "Postman Collection for testing FedEx OAuth 2.0 Token generation and Create Shipment API.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "https://apis-sandbox.fedex.com",
+			"type": "string"
+		},
+		{
+			"key": "client_id",
+			"value": "YOUR_FEDEX_CLIENT_ID",
+			"type": "string"
+		},
+		{
+			"key": "client_secret",
+			"value": "YOUR_FEDEX_CLIENT_SECRET",
+			"type": "string"
+		},
+		{
+			"key": "account_number",
+			"value": "YOUR_FEDEX_ACCOUNT_NUMBER",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "1. Get OAuth Access Token",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();",
+							"if (jsonData.access_token) {",
+							"    pm.collectionVariables.set('access_token', jsonData.access_token);",
+							"    console.log('Access token saved successfully');",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "client_credentials",
+							"type": "text"
+						},
+						{
+							"key": "client_id",
+							"value": "{{client_id}}",
+							"type": "text"
+						},
+						{
+							"key": "client_secret",
+							"value": "{{client_secret}}",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{base_url}}/oauth/token",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"oauth",
+						"token"
+					]
+				},
+				"description": "Authenticate with FedEx OAuth 2.0 service to get a Bearer token."
+			},
+			"response": []
+		},
+		{
+			"name": "2. Create Shipment (Generate Label)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer {{access_token}}",
+						"type": "text"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"labelResponseOptions\": \"LABEL\",\n  \"requestedShipment\": {\n    \"totalPackageCount\": 2,\n    \"shipper\": {\n      \"contact\": {\n        \"personName\": \"Warehouse Manager\",\n        \"phoneNumber\": \"1234567890\",\n        \"companyName\": \"My Company\"\n      },\n      \"address\": {\n        \"streetLines\": [\n          \"123 Main Street\"\n        ],\n        \"city\": \"Memphis\",\n        \"stateOrProvinceCode\": \"TN\",\n        \"postalCode\": \"38115\",\n        \"countryCode\": \"US\"\n      }\n    },\n    \"recipients\": [\n      {\n        \"contact\": {\n          \"personName\": \"John Doe\",\n          \"phoneNumber\": \"9876543210\",\n          \"companyName\": \"Customer Inc\"\n        },\n        \"address\": {\n          \"streetLines\": [\n            \"456 Customer Ave\"\n          ],\n          \"city\": \"Austin\",\n          \"stateOrProvinceCode\": \"TX\",\n          \"postalCode\": \"73301\",\n          \"countryCode\": \"US\"\n        }\n      }\n    ],\n    \"shipDatestamp\": \"2026-08-04\",\n    \"serviceType\": \"FEDEX_GROUND\",\n    \"packagingType\": \"YOUR_PACKAGING\",\n    \"pickupType\": \"DROPOFF_AT_FEDEX_LOCATION\",\n    \"shippingChargesPayment\": {\n      \"paymentType\": \"SENDER\",\n      \"payor\": {\n        \"responsibleParty\": {\n          \"accountNumber\": {\n            \"value\": \"{{account_number}}\"\n          }\n        }\n      }\n    },\n    \"labelSpecification\": {\n      \"imageType\": \"PDF\",\n      \"labelStockType\": \"PAPER_85X11_TOP_HALF_LABEL\"\n    },\n    \"requestedPackageLineItems\": [\n      {\n        \"sequenceNumber\": 1,\n        \"weight\": {\n          \"units\": \"LB\",\n          \"value\": 5.0\n        }\n      },\n      {\n        \"sequenceNumber\": 2,\n        \"weight\": {\n          \"units\": \"LB\",\n          \"value\": 5.0\n        }\n      }\n    ]\n  },\n  \"accountNumber\": {\n    \"value\": \"{{account_number}}\"\n  }\n}"
+				},
+				"url": {
+					"raw": "{{base_url}}/ship/v1/shipments",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"ship",
+						"v1",
+						"shipments"
+					]
+				},
+				"description": "Create a FedEx shipment and return Base64 PDF shipping labels."
+			},
+			"response": []
+		}
+	]
+}
