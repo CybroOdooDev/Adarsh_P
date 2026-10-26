@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- The summary posted in the channel. Values: meeting_name, duration, attendees, date,
+         overview (Markup), points, decisions, actions (lists of str) -->
+    <template id="meeting_summary_message">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 680px; margin: 6px 0; border: 1px solid #e5e7eb; border-left: 5px solid #714b67; border-radius: 8px; padding: 18px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 12px;">
+                <div style="font-size: 16px; font-weight: 700; color: #111827;">
+                    📋 <t t-out="meeting_name"/>
+                </div>
+                <span style="background-color: #f3f4f6; color: #4b5563; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 9999px;">
+                    ⏱️ <t t-call="discuss_meeting_subtitles_ai.meeting_duration"/>
+                </span>
+            </div>
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">
+                <strong>👥 Participants:</strong> <t t-out="attendees"/> • <strong>📅 Date:</strong> <t t-out="date"/>
+            </div>
+            <div style="margin-top: 10px;">
+                <div style="font-weight: 700; color: #1f2937; font-size: 13px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    📝 Overview
+                </div>
+                <div style="color: #374151; font-size: 13.5px; line-height: 1.6;">
+                    <t t-if="overview" t-out="overview"/>
+                    <p t-else="">Summary generated from meeting transcript.</p>
+                </div>
+            </div>
+            <div t-if="points" style="margin-top: 14px;">
+                <div style="font-weight: 700; color: #1f2937; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    💡 Key Discussion Points
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 13.5px; line-height: 1.5;">
+                    <li t-foreach="points" t-as="point" style="margin-bottom: 6px;" t-out="point"/>
+                </ul>
+            </div>
+            <div t-if="decisions" style="margin-top: 14px; background-color: #f0fdf4; border-left: 3px solid #22c55e; padding: 10px 14px; border-radius: 4px;">
+                <div style="font-weight: 700; color: #15803d; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    ✅ Decisions &amp; Alignments
+                </div>
+                <ul style="margin: 0; padding-left: 18px; color: #166534; font-size: 13px; line-height: 1.5;">
+                    <li t-foreach="decisions" t-as="decision" style="margin-bottom: 6px;" t-out="decision"/>
+                </ul>
+            </div>
+            <div t-if="actions" style="margin-top: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
+                <div style="font-weight: 700; color: #0369a1; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+                    📌 Action Items &amp; Next Steps
+                </div>
+                <div style="font-size: 13px; line-height: 1.5;">
+                    <div t-foreach="actions" t-as="action" style="margin-bottom: 6px; display: flex; align-items: baseline; gap: 6px;">
+                        <span style="color: #0284c7; font-weight: bold;">•</span>
+                        <span style="color: #1e293b;" t-out="action"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <!-- Posted when the call ends with a transcript. Values: duration, lines_count, generate_url, view_url -->
+    <template id="meeting_ended_message">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 620px; margin: 6px 0; border: 1px solid #dbeafe; border-left: 5px solid #2563eb; border-radius: 8px; padding: 16px; background-color: #eff6ff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+                <div style="font-size: 15px; font-weight: 700; color: #1e3a8a;">
+                    📞 Meeting Ended • Transcript Captured
+                </div>
+                <span style="background-color: #dbeafe; color: #1e40af; font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 9999px;">
+                    ⏱️ <t t-call="discuss_meeting_subtitles_ai.meeting_duration"/>
+                </span>
+            </div>
+            <div style="font-size: 13px; color: #1e40af; margin-bottom: 12px; line-height: 1.4;">
+                <!-- the count stands apart: a directive inside a sentence splits it into fragments for translators -->
+                <div>Speech turns transcribed: <strong t-out="lines_count"/></div>
+                <div>Would you like to generate an executive AI summary and action items?</div>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                <a t-att-href="generate_url" style="background-color: #2563eb; color: #ffffff; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+                    ✨ Generate AI Summary Now
+                </a>
+                <a t-att-href="view_url" target="_blank" style="background-color: #ffffff; color: #475569; border: 1px solid #cbd5e1; text-decoration: none; padding: 7px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px;">
+                    📄 View Transcript &amp; Details
+                </a>
+            </div>
+        </div>
+    </template>
+
+    <!-- "1 min" / "N mins". Value: duration -->
+    <template id="meeting_duration">
+        <t t-if="duration == 1">1 min</t>
+        <t t-else=""><t t-out="duration"/> mins</t>
+    </template>
+</odoo>
