@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Discuss Meeting Live Subtitles &amp; AI Summaries</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-color: #714b67;
+      --accent-color: #017e84;
+      --text-color: #121212;
+      --text-color-light: #64728f;
+    }
+
+    body {
+      font-family: "Montserrat", sans-serif;
+      color: var(--text-color);
+    }
+
+    .feature-card {
+      border: 2px solid #e9ecef;
+      border-radius: 10px;
+      padding: 24px;
+      height: 100%;
+      background-color: #fff;
+    }
+
+    .feature-card i {
+      font-size: 28px;
+      color: var(--accent-color);
+    }
+
+    .feature-card h5 {
+      font-weight: 700;
+      margin: 14px 0 8px;
+    }
+
+    .feature-card p,
+    .feature-card li {
+      color: var(--text-color-light);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .section-title {
+      font-weight: 700;
+      color: var(--primary-color);
+      margin: 40px 0 20px;
+    }
+
+    .badge-support {
+      background-color: #71639e;
+      color: #fff;
+      font-weight: 500;
+      padding: 8px 16px;
+      border-radius: 50px;
+      min-width: 130px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <!-- support header -->
+    <div class="my-3 py-3 px-4" style="border: 2px solid #e9ecef; border-radius: 10px; background-color: #fff;">
+      <div class="row justify-content-between align-items-center">
+        <div class="col-lg-3">
+          <div class="my-3 mx-auto mx-sm-0" style="width: 250px">
+            <img src="//apps.odoocdn.com/apps/assets/17.0/theme_boec/images/Cybrosys.png?fcdde35" alt="Cybrosys Technologies" style="width: 100%" />
+          </div>
+        </div>
+        <div class="col-lg-9">
+          <div class="my-3 d-flex flex-wrap align-items-center justify-content-center justify-content-sm-end gap-2">
+            <span class="me-2"><b>Supports:</b></span>
+            <span class="badge-support"><i class="fa-solid fa-check"></i> Community</span>
+            <span class="badge-support"><i class="fa-solid fa-check"></i> Enterprise</span>
+            <span class="badge-support"><i class="fa-solid fa-check"></i> Odoo.sh</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- overview -->
+    <div class="row align-items-center my-5">
+      <div class="col-md-3 text-center">
+        <img src="icon.png" alt="Discuss Meeting Live Subtitles &amp; AI Summaries" style="width: 160px" />
+      </div>
+      <div class="col-md-9">
+        <h1 style="font-weight: 700;">Discuss Meeting Live Subtitles &amp; AI Summaries</h1>
+        <p class="lead" style="color: var(--text-color-light);">
+          Live closed captions and AI meeting minutes for Odoo Discuss calls. Speech is transcribed on your own
+          server by default, so meeting audio never has to leave it.
+        </p>
+      </div>
+    </div>
+
+    <!-- key features -->
+    <h2 class="section-title">Key Features</h2>
+    <div class="row g-4">
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-closed-captioning"></i>
+          <h5>Live Subtitles</h5>
+          <p>Turn on <b>Subtitle(CC)</b> in a call to read what everyone says, with each speaker's name. Captions
+            are personal: only the people who turn them on see them.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-file-lines"></i>
+          <h5>Call Transcription</h5>
+          <p>Internal users can turn on <b>Transcribe</b> to record the whole call into a meeting record. Everyone
+            in the call is notified and sees a <b>Transcribing</b> indicator while it runs.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
+          <h5>AI Meeting Summaries</h5>
+          <p>Generate meeting minutes with an overview, key discussion points, decisions and action items, during
+            the call or after it, and post them to the channel in one click.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-microphone-lines"></i>
+          <h5>Speech Engines</h5>
+          <ul class="ps-3 mb-0">
+            <li><b>Whisper</b>: accurate local transcription in 99 languages.</li>
+            <li><b>Whistle</b>: a tiny, fast local model for seven European languages.</li>
+            <li><b>Auto</b>: Whistle first, with Whisper redoing captions Whistle is unsure of.</li>
+            <li><b>Grok STT</b>: xAI cloud transcription, with no load on your server.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-robot"></i>
+          <h5>Summary Providers</h5>
+          <ul class="ps-3 mb-0">
+            <li><b>Built-in summarizer</b>: works without any API key.</li>
+            <li><b>OpenAI</b>: summaries with models such as gpt-4o-mini.</li>
+            <li><b>Ollama</b>: a private, local language model.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-film"></i>
+          <h5>Recording Upload</h5>
+          <p>Upload an audio or video recording to a channel. It is transcribed in the background, and its summary
+            is posted to the channel when it is ready.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-user-tag"></i>
+          <h5>Accurate Names</h5>
+          <p>The names of the people in the call, and the keywords you configure, are passed to the speech engine
+            so names, places and product terms are spelled correctly.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-shield-halved"></i>
+          <h5>Privacy and Access</h5>
+          <p>Audio stays on your server unless you choose a cloud engine or the OpenAI fallback. Transcripts and
+            summaries are visible to internal members of the channel only.</p>
+        </div>
+      </div>
+      <div class="col-md-6 col-lg-4">
+        <div class="feature-card">
+          <i class="fa-solid fa-language"></i>
+          <h5>Languages</h5>
+          <p>Pick the meeting language, or let each speaker's language be detected automatically. A main language
+            is assumed whenever the detection is unsure.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- configuration -->
+    <h2 class="section-title">Configuration</h2>
+    <div class="feature-card">
+      <ol class="mb-0" style="color: var(--text-color-light); line-height: 1.8;">
+        <li>Go to <b>Settings &gt; Discuss &gt; Meeting Subtitles &amp; AI Summaries</b>.</li>
+        <li>Choose the speech-to-text engine. For Grok STT, enter your xAI API key.</li>
+        <li>Add names, places and product terms to <b>Keywords</b> to improve how they are recognized.</li>
+        <li>Choose the AI provider for summaries and the speech recognition language.</li>
+      </ol>
+    </div>
+
+    <!-- usage -->
+    <h2 class="section-title">How to Use</h2>
+    <div class="feature-card">
+      <ol class="mb-0" style="color: var(--text-color-light); line-height: 1.8;">
+        <li>Start or join a call in any Discuss channel.</li>
+        <li>Click <b>Subtitle(CC)</b> to see live captions, and <b>Transcribe</b> to record the conversation.</li>
+        <li>Open <b>AI Summary &amp; Notes</b> to read the transcript and generate a summary.</li>
+        <li>Post the summary to the channel, or find it later under <b>Discuss &gt; Meeting Summaries</b>.</li>
+      </ol>
+    </div>
+
+    <!-- support -->
+    <h2 class="section-title">Need Help?</h2>
+    <div class="row g-4 mb-5">
+      <div class="col-md-6">
+        <div class="feature-card">
+          <i class="fa-solid fa-envelope"></i>
+          <h5>Email Support</h5>
+          <p class="mb-0"><a href="mailto:odoo@cybrosys.com">odoo@cybrosys.com</a></p>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="feature-card">
+          <i class="fa-solid fa-globe"></i>
+          <h5>Website</h5>
+          <p class="mb-0"><a href="https://www.cybrosys.com" target="_blank">www.cybrosys.com</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+
+</html>
