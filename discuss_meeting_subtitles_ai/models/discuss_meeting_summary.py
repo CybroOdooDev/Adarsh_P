@@ -28,11 +28,13 @@ import re
 from datetime import timedelta
 
 import requests
+from babel.dates import format_date, format_interval
 from markupsafe import Markup
 
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 from odoo.tools import config
+from odoo.tools.misc import babel_locale_parse, get_lang
 
 from ..tools import stt_client
 
@@ -502,12 +504,14 @@ class DiscussMeetingSummary(models.Model):
             "meeting_name": self.name or (self.channel_id.name and self.env._("Meeting: %s", self.channel_id.name))
             or self.env._("Discuss Meeting"),
             "duration": self.duration_minutes,
-            "attendees": ", ".join(self.attendee_ids.mapped("name")) or self.env._("Meeting Participants"),
-            "date": fields.Datetime.context_timestamp(self, self.date).strftime("%b %d, %Y %H:%M"),
+            "when": self._summary_time_range(),
+            "attendees": [{"name": name, "initials": "".join(word[0] for word in name.split()[:2]).upper()}
+                          for name in self.attendee_ids.mapped("name") if name],
             "overview": self.executive_summary,
             "points": lines(self.key_discussion_points),
             "decisions": lines(self.decisions),
             "actions": lines(self.action_items),
+            "view_url": self._form_url(),
         })
         self.channel_id.message_post(
             body=body,
@@ -516,6 +520,19 @@ class DiscussMeetingSummary(models.Model):
         )
         self.state = 'posted'
         return True
+
+    def _form_url(self):
+        return f"{self.get_base_url()}/web#id={self.id}&model=discuss.meeting.summary&view_type=form"
+
+    def _summary_time_range(self):
+        """"Oct 27, 2026 · 12:52 – 1:50 PM", in the reader's language and timezone."""
+        start = fields.Datetime.context_timestamp(self, self.date)
+        end = start + timedelta(minutes=self.duration_minutes or 0)
+        locale = babel_locale_parse(get_lang(self.env).code)
+        # 12- or 24-hour clock as the language writes times
+        skeleton = "hm" if "a" in locale.time_formats["short"].pattern else "Hm"
+        return "%s · %s" % (format_date(start, "medium", locale=locale),
+                            format_interval(start, end, skeleton, tzinfo=start.tzinfo, locale=locale))
 
     def _post_call_ended_prompt(self):
         """Posts an interactive notification card in the channel chatter when a call finishes,
@@ -526,7 +543,7 @@ class DiscussMeetingSummary(models.Model):
             "duration": self.duration_minutes,
             "lines_count": len([line for line in (self.raw_transcript or "").split("\n") if line.strip()]),
             "generate_url": f"{base_url}/discuss/meeting/generate_summary_redirect?summary_id={self.id}",
-            "view_url": f"{base_url}/web#id={self.id}&model=discuss.meeting.summary&view_type=form",
+            "view_url": self._form_url(),
         })
         # Posted by OdooBot: the call ends with whoever leaves last, possibly a guest or the
         # inactive-session cleanup, so no participant is the natural author.

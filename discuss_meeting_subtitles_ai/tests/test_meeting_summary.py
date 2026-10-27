@@ -21,6 +21,8 @@
 #############################################################################
 import base64
 import json
+import os
+import tempfile
 from contextlib import contextmanager
 from datetime import timedelta
 from unittest.mock import MagicMock, patch
@@ -28,13 +30,14 @@ from unittest.mock import MagicMock, patch
 import requests
 
 from odoo import fields
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
 from odoo.tests import new_test_user, tagged
 from odoo.tests.common import TransactionCase
 
 from odoo.addons.discuss_meeting_subtitles_ai.tools import stt_client
 
 SUMMARY_MODULE = 'odoo.addons.discuss_meeting_subtitles_ai.models.discuss_meeting_summary'
+SETTINGS_MODULE = 'odoo.addons.discuss_meeting_subtitles_ai.models.res_config_settings'
 
 
 def json_response(payload, status_code=200):
@@ -305,13 +308,32 @@ class TestMeetingSummary(MeetingTestCommon):
         meeting.action_post_to_channel()
         body = self._last_message_body()
         self.assertEqual(meeting.state, 'posted')
-        for label in ('Overview', 'Key Discussion Points', 'Decisions &amp; Alignments', '1 min', 'Alice Martin'):
+        for label in ('Meeting Summary', 'Key Points', 'Decisions', 'Action Items', 'Priya: send reminder',
+                      '1 min', 'Alice Martin', '>AM<', 'View full transcript', 'Copy summary'):
             self.assertIn(label, body)
+        self.assertNotIn('No action items', body)
+        # the copy link and its card keep their classes through the message sanitizer
+        for css_class in ('o_meeting_summary_card', 'o_meeting_summary_footer', 'o_meeting_summary_copy'):
+            self.assertIn(css_class, body)
+        self.assertIn(f'id={meeting.id}&amp;model=discuss.meeting.summary', body)
         self.assertIn('<b>collections</b>', body)
         self.assertNotIn('<script>', body)
         self.assertNotIn('<img', body)
         with self.assertRaises(UserError):
             meeting.action_post_to_channel()
+
+    def test_post_summary_without_action_items(self):
+        meeting = self._meeting(
+            name='General', duration_minutes=58, executive_summary='<p>A short session.</p>',
+            key_discussion_points='Greetings', state='summarized',
+            date=fields.Datetime.to_datetime('2026-10-27 07:22:00'),
+        )
+        meeting.with_context(tz='Asia/Kolkata').action_post_to_channel()
+        body = self._last_message_body()
+        self.assertIn('58 min', body)
+        self.assertIn('No action items were identified in this meeting.', body)
+        self.assertIn('Oct 27, 2026 · 12:52', body)
+        self.assertIn('1:50', body)
 
     def test_generate_and_post_once(self):
         meeting = self._meeting(raw_transcript='Alice: We will ship on Monday.', state='draft')
@@ -517,6 +539,26 @@ class TestMeetingSettings(TransactionCase):
         self.assertEqual(get_param('discuss_meeting_subtitles_ai.subtitles_language'), 'fr-FR')
         self.assertEqual(get_param('discuss_meeting_subtitles_ai.keywords'), 'Cybrosys')
         self.assertEqual(get_param('discuss_meeting_subtitles_ai.partial_captions'), 'True')
+
+    def test_speech_workers_setting(self):
+        settings = self.env['res.config.settings'].create({'meeting_stt_workers': 2})
+        settings.execute()
+        self.assertEqual(self.env['ir.config_parameter'].sudo().get_param('discuss_meeting_subtitles_ai.stt_workers'), '2')
+        for workers in (0, 5):
+            with self.assertRaises(ValidationError):
+                self.env['res.config.settings'].create({'meeting_stt_workers': workers})
+
+    def test_debug_audio_deleted_when_turned_off(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            folder = os.path.join(tmp, 'odoo_subtitle_debug')
+            with patch(f'{SETTINGS_MODULE}.DEBUG_AUDIO_DIR', folder):
+                self.env['res.config.settings'].create({'meeting_save_debug_audio': True}).execute()
+                os.makedirs(folder)
+                open(os.path.join(folder, 'clip.wav'), 'wb').close()
+                self.env['res.config.settings'].create({'meeting_save_debug_audio': True}).execute()
+                self.assertTrue(os.path.exists(folder), "kept while debug audio stays on")
+                self.env['res.config.settings'].create({'meeting_save_debug_audio': False}).execute()
+                self.assertFalse(os.path.exists(folder))
 
     def test_main_language_never_auto(self):
         field = self.env['res.config.settings']._fields['meeting_main_language']

@@ -69,9 +69,18 @@ AI Provider Options
 
 Installation
 ============
+#. Install the Python packages the module needs into the Python environment that runs Odoo::
+
+       pip install faster-whisper cactus-needle
+
+   ``faster-whisper`` runs the Whisper engine and ``cactus-needle`` runs the Whistle engine.
+   Install ``cactus-needle``, not ``needle``: the ``needle`` package on PyPI is an unrelated
+   CSS-testing tool. Each speech model is downloaded the first time it is used, so the server
+   needs internet access once.
+
 #. Add the folder holding this module to ``addons_path`` in ``odoo.conf``::
 
-       addons_path = /path/to/addons,/path/to/Custom_addons
+       addons_path = /path/to/addons,/path/to/custom_addons
 
 #. Update the app list in Odoo:
 

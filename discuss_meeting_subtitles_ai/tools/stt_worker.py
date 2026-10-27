@@ -25,13 +25,15 @@
 Runs as its own process (started by ``stt_client``), so the heavy models live outside Odoo's
 memory limits and a crash here can never take Odoo down. It must not import Odoo.
 
-One worker serves all Odoo workers over a Unix socket, so each model is loaded once and only
-one transcription uses the CPU at a time, with final captions served before partial ones.
+One worker serves all Odoo workers over a Unix socket, so each model is loaded once. It runs
+``workers`` transcriptions at a time (one by default; Whistle only one at a time), with final
+captions served before partial ones.
 
 Protocol, one request per connection:
-  hello   : the worker sends one JSON line {"pid": int, "loaded": [[engine, model], ...]}
+  hello   : the worker sends one JSON line {"pid": int, "loaded": [["whisper", model, workers],
+            ["whistle", null], ...]}
   request : one JSON line {"engine", "language", "model", "keywords", "prompt", "beam_size",
-            "main_language", "partial", "lock_timeout", "size"}, then ``size`` raw bytes
+            "main_language", "partial", "lock_timeout", "workers", "size"}, then ``size`` raw bytes
   response: one JSON line {"text": str, "language": str|None, "language_probability": float,
             "queue_seconds": float, "stt_seconds": float}, or {"error": str} ("busy" when the
             request waited ``lock_timeout`` seconds without its turn)
@@ -84,7 +86,8 @@ CONFIDENT_LOGPROB = -0.5
 CONFIDENT_NO_SPEECH = 0.2
 NON_SPEECH_TAG = re.compile(r"\[[^\]]*\]|\([^)]*\)|[♪♫]+")
 
-_whisper_models = {}
+_whisper_models = {}  # size -> (model, workers)
+_whisper_models_lock = threading.Lock()
 _whistle_loaded = False
 
 
@@ -124,15 +127,20 @@ def patch_faster_whisper_av():
         av.open = safe_open
 
 
-def whisper_model(size):
-    model = _whisper_models.get(size)
-    if model is None:
-        patch_faster_whisper_av()
-        from faster_whisper import WhisperModel
-        log("loading Whisper model %r" % size)
-        # every core: ctranslate2 otherwise caps itself at 4 threads
-        model = WhisperModel(size, device="cpu", compute_type="int8", cpu_threads=os.cpu_count() or 0)
-        _whisper_models[size] = model
+def whisper_model(size, workers=1):
+    """The Whisper model of ``size``, able to run ``workers`` transcriptions at once."""
+    # two requests may need it together (with several workers): load it once
+    with _whisper_models_lock:
+        model, loaded_workers = _whisper_models.get(size, (None, 0))
+        if model is None or loaded_workers != workers:
+            patch_faster_whisper_av()
+            from faster_whisper import WhisperModel
+            log("loading Whisper model %r for %d worker(s)" % (size, workers))
+            # Every core, shared between the workers: ctranslate2 otherwise caps itself at 4
+            # threads. Each worker is a model replica; they share the weights in memory.
+            model = WhisperModel(size, device="cpu", compute_type="int8",
+                                 cpu_threads=(os.cpu_count() or 0) // workers, num_workers=workers)
+            _whisper_models[size] = (model, workers)
     return model
 
 
@@ -160,9 +168,9 @@ def is_reliable(segment):
 
 
 def transcribe_whisper(audio, language, size, keywords, prompt=None, beam_size=5, main_language=None,
-                       without_timestamps=False):
+                       without_timestamps=False, workers=1):
     lang = language.split("-")[0] if language and language != "auto" else None
-    model = whisper_model(size)
+    model = whisper_model(size, workers)
     if lang and lang not in model.supported_languages:
         lang = None
     samples = decode_wav(audio)
@@ -246,6 +254,7 @@ def handle(header, audio):
             audio, header.get("language"), header.get("model") or "small", keywords,
             prompt=header.get("prompt"), beam_size=int(header.get("beam_size") or 5),
             main_language=header.get("main_language"), without_timestamps=True,
+            workers=request_workers(header),
         )
     raise ValueError("unknown engine %r" % engine)
 
@@ -260,38 +269,56 @@ def read_exact(stream, size):
     return data
 
 
+def request_workers(header):
+    """How many transcriptions the request allows at once (the admin's Speech Workers setting)."""
+    try:
+        return max(1, int(header.get("workers") or 1))
+    except (TypeError, ValueError):
+        return 1
+
+
 def loaded_models():
-    """The [engine, model] pairs already in memory: their requests need no loading time."""
-    return [["whisper", size] for size in _whisper_models] + ([["whistle", None]] if _whistle_loaded else [])
+    """The models already in memory, whose requests need no loading time: ["whisper", size,
+    workers] (with fewer or more workers it is loaded again) and ["whistle", None]."""
+    return ([["whisper", size, workers] for size, (_model, workers) in list(_whisper_models.items())]
+            + ([["whistle", None]] if _whistle_loaded else []))
 
 
 class Scheduler:
-    """One transcription at a time, final captions first, shared by all connections.
+    """Up to ``workers`` transcriptions at a time, final captions first, shared by all connections.
 
-    A partial caption (a preview of speech still going on) never takes the engine while a final
-    caption waits for it. Each request waits at most its own ``lock_timeout`` for its turn.
+    ``workers`` comes with each request (one by default: on a CPU with few cores, two
+    transcriptions at once each take twice as long). Only one Whistle transcription runs at a
+    time, as its library isn't known to be thread-safe. A partial caption (a preview of speech still going on) never
+    takes a turn while a final caption waits for one. Each request waits at most its own
+    ``lock_timeout`` for its turn.
     """
 
     def __init__(self):
         self._cond = threading.Condition()
-        self._busy = False
+        self._running = 0
+        self._whistle_running = False
         self._finals_waiting = 0
         self._waiting = 0
         self.last_activity = time.monotonic()
 
-    def acquire(self, timeout, partial=False):
+    def acquire(self, timeout, partial=False, workers=1, engine=None):
         deadline = time.monotonic() + timeout
         with self._cond:
             self._waiting += 1
             if not partial:
                 self._finals_waiting += 1
             try:
-                while self._busy or (partial and self._finals_waiting):
+                while (self._running >= workers
+                       or (engine == "whistle" and self._whistle_running)
+                       or (partial and self._finals_waiting)):
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
                         return False
                     self._cond.wait(remaining)
-                self._busy = True
+                self._running += 1
+                if engine == "whistle":
+                    self._whistle_running = True
                 return True
             finally:
                 self._waiting -= 1
@@ -299,9 +326,11 @@ class Scheduler:
                     self._finals_waiting -= 1
                     self._cond.notify_all()  # partials blocked only by this final may go now
 
-    def release(self):
+    def release(self, engine=None):
         with self._cond:
-            self._busy = False
+            self._running -= 1
+            if engine == "whistle":
+                self._whistle_running = False
             self.last_activity = time.monotonic()
             self._cond.notify_all()
 
@@ -311,7 +340,7 @@ class Scheduler:
 
     def idle_seconds(self):
         with self._cond:
-            if self._busy or self._waiting:
+            if self._running or self._waiting:
                 return 0.0
             return time.monotonic() - self.last_activity
 
@@ -329,7 +358,9 @@ def serve_connection(conn, scheduler):
         except (OSError, ValueError, KeyError, EOFError):
             return
         started = time.monotonic()
-        if not scheduler.acquire(float(header.get("lock_timeout") or 0), bool(header.get("partial"))):
+        engine = header.get("engine")
+        if not scheduler.acquire(float(header.get("lock_timeout") or 0), bool(header.get("partial")),
+                                 request_workers(header), engine):
             reply = {"error": "busy"}
         else:
             queued = time.monotonic() - started
@@ -341,7 +372,7 @@ def serve_connection(conn, scheduler):
                 log("request failed: %r" % exc)
                 reply = {"error": repr(exc)}
             finally:
-                scheduler.release()
+                scheduler.release(engine)
             reply = dict(reply, queue_seconds=queued, stt_seconds=time.monotonic() - started - queued)
         with contextlib.suppress(OSError):  # the client gave up waiting
             stream.write(json.dumps(reply).encode() + b"\n")

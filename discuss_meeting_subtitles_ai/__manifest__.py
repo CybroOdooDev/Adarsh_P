@@ -54,8 +54,9 @@
             'discuss_meeting_subtitles_ai/static/src/discuss/upload/upload_recording_dialog.xml',
             'discuss_meeting_subtitles_ai/static/src/discuss/upload/upload_recording_dialog.js',
             'discuss_meeting_subtitles_ai/static/src/discuss/upload/thread_actions_patch.js',
+            'discuss_meeting_subtitles_ai/static/src/discuss/summary/summary_copy.js',
         ],
     },
-    'external_dependencies': {'python': ['requests']},
+    'external_dependencies': {'python': ['requests', 'faster-whisper', 'cactus-needle']},
     'license': 'LGPL-3',
 }

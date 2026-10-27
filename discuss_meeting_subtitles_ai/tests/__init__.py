@@ -22,3 +22,4 @@
 
 from . import test_meeting_summary
 from . import test_meeting_controllers
+from . import test_stt_worker

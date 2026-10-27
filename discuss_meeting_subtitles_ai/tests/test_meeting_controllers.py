@@ -138,6 +138,16 @@ class TestMeetingRoutes(HttpCase):
         self.assertEqual((result['status'], result['text']), ('ok', 'Hello everyone.'))
         self.assertFalse(self.meeting.transcript_line_ids, "subtitles alone record nothing")
 
+    def test_caption_uses_speech_workers_setting(self):
+        self.authenticate('route_alice', 'route_alice')
+        self.make_jsonrpc_request('/discuss/meeting/set_subtitles', {'channel_id': self.channel.id, 'enabled': True})
+        set_param = self.env['ir.config_parameter'].sudo().set_param
+        # one by default; anything invalid falls back to one, too many is capped
+        for value, workers in ((False, 1), ('2', 2), ('9', 4), ('0', 1), ('many', 1)):
+            set_param('discuss_meeting_subtitles_ai.stt_workers', value)
+            _result, transcribe = self._caption()
+            self.assertEqual(transcribe.call_args.kwargs['workers'], workers, value)
+
     def test_short_chunk_and_partial_captions(self):
         self.authenticate('route_alice', 'route_alice')
         self.make_jsonrpc_request('/discuss/meeting/set_subtitles', {'channel_id': self.channel.id, 'enabled': True})
@@ -147,7 +157,8 @@ class TestMeetingRoutes(HttpCase):
             }, files={'file': ('audio.wav', b'RIFF', 'audio/wav')})
         self.assertEqual(response.json(), {'status': 'empty_chunk'})
         transcribe.assert_not_called()
-        # partial captions are off by default
+        # with partial captions off (the default; the database under test may have them on)
+        self.env['ir.config_parameter'].sudo().set_param('discuss_meeting_subtitles_ai.partial_captions', False)
         result, transcribe = self._caption(partial='1')
         self.assertEqual(result['status'], 'disabled')
         transcribe.assert_not_called()
