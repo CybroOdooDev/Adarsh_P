@@ -127,7 +127,9 @@ def _read_line(sock, deadline):
 def _request(header, audio_bytes, timeout=None, only_if_cold=False):
     """Send one request to the shared worker and return its reply (None if ``only_if_cold`` and
     the model is already loaded)."""
-    key = [header["engine"], header["model"] if header["engine"] == "whisper" else None]
+    # as the worker lists them: a Whisper model with another number of workers is loaded again
+    key = ([header["engine"], header["model"], header["workers"]] if header["engine"] == "whisper"
+           else [header["engine"], None])
     for attempt in (1, 2):
         try:
             sock = _connect_or_start()
@@ -185,21 +187,22 @@ _SILENCE = _silent_wav()
 
 
 def _header(engine, language, model, keywords, prompt=None, beam_size=5, main_language=None,
-            partial=False, lock_timeout=LOCK_TIMEOUT):
+            partial=False, lock_timeout=LOCK_TIMEOUT, workers=1):
     return {
         "engine": engine, "language": language, "model": model, "keywords": keywords or [],
         "prompt": prompt or None, "beam_size": beam_size, "main_language": main_language,
-        "partial": partial, "lock_timeout": lock_timeout,
+        "partial": partial, "lock_timeout": lock_timeout, "workers": workers,
     }
 
 
-def warm_up(engine, model="small"):
+def warm_up(engine, model="small", workers=1):
     """Start loading ``engine`` ('whisper' or 'whistle') now, without waiting for it."""
 
     def run():
         try:
             # like a partial caption that never waits: a busy worker loads the model itself
-            _request(_header(engine, "auto", model, [], beam_size=1, partial=True, lock_timeout=0),
+            _request(_header(engine, "auto", model, [], beam_size=1, partial=True, lock_timeout=0,
+                             workers=workers),
                      _SILENCE, only_if_cold=True)
         except SttWorkerUnavailable:
             return  # busy (it then loads the model itself) or not installed: nothing to warm up
@@ -211,7 +214,7 @@ def warm_up(engine, model="small"):
 
 def transcribe_with_info(audio_bytes, engine, language="auto", model="small", keywords=None,
                          prompt=None, beam_size=5, timeout=None, lock_timeout=LOCK_TIMEOUT,
-                         main_language=None, partial=False):
+                         main_language=None, partial=False, workers=1):
     """Transcribe audio with ``engine`` ('whisper' or 'whistle') in the shared worker.
 
     Returns ``{"text", "language", "language_probability", "confidence", "queue_seconds", "stt_seconds"}``,
@@ -220,10 +223,11 @@ def transcribe_with_info(audio_bytes, engine, language="auto", model="small", ke
     accurate). ``timeout`` raises the wait for long recordings; ``lock_timeout`` is how long to
     queue behind other requests (of any Odoo process) before giving up with SttWorkerUnavailable.
     With auto-detection, ``main_language`` is assumed whenever the detection is unsure. A
-    ``partial`` caption only gets the worker when no final caption is waiting for it.
+    ``partial`` caption only gets the worker when no final caption is waiting for it. ``workers``
+    is how many transcriptions the worker may run at once (Whisper model replicas).
     """
     reply = _request(_header(engine, language, model, keywords, prompt, beam_size, main_language,
-                             partial, lock_timeout), audio_bytes, timeout)
+                             partial, lock_timeout, workers), audio_bytes, timeout)
     return {
         "text": reply.get("text") or "",
         "language": reply.get("language"),

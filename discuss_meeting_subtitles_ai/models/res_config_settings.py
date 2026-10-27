@@ -20,7 +20,15 @@
 #
 #############################################################################
 
-from odoo import fields, models
+import os
+import shutil
+import tempfile
+
+from odoo import api, fields, models
+from odoo.exceptions import ValidationError
+
+# Where Save Subtitle Debug Audio keeps the received utterances (shared with the controller)
+DEBUG_AUDIO_DIR = os.path.join(tempfile.gettempdir(), "odoo_subtitle_debug")
 
 
 class ResConfigSettings(models.TransientModel):
@@ -67,7 +75,8 @@ class ResConfigSettings(models.TransientModel):
         string='Save Subtitle Debug Audio',
         config_parameter='discuss_meeting_subtitles_ai.save_debug_audio',
         help='Keep the last 50 received utterances as WAV files in the server temp folder (odoo_subtitle_debug) '
-             'to diagnose recognition problems. Disable in production: it stores meeting audio.',
+             'to diagnose recognition problems. Disable in production: it stores meeting audio. '
+             'Turning it off deletes the saved files.',
     )
     meeting_whisper_model = fields.Selection(
         [
@@ -82,6 +91,15 @@ class ResConfigSettings(models.TransientModel):
         default='small',
         config_parameter='discuss_meeting_subtitles_ai.whisper_model',
         help='Local speech-to-text model. Bigger models are far more accurate but slower. Downloaded on first use.',
+    )
+    meeting_stt_workers = fields.Integer(
+        string='Speech Workers',
+        default=1,
+        config_parameter='discuss_meeting_subtitles_ai.stt_workers',
+        help='How many captions Whisper transcribes at the same time (1 to 4), so people speaking at once '
+             'don\'t wait for each other. Only raise it on a server with CPU cores to spare: otherwise the '
+             'captions share the same cores and each one takes longer. Each worker needs a little more '
+             'memory. The text is the same either way.',
     )
     meeting_ai_provider = fields.Selection(
         [
@@ -143,3 +161,17 @@ class ResConfigSettings(models.TransientModel):
         default='en-US',
         config_parameter='discuss_meeting_subtitles_ai.subtitles_language',
     )
+
+    @api.constrains('meeting_stt_workers')
+    def _check_meeting_stt_workers(self):
+        for settings in self:
+            if not 1 <= settings.meeting_stt_workers <= 4:
+                raise ValidationError(self.env._("Speech Workers must be between 1 and 4."))
+
+    def set_values(self):
+        was_saving = self.env['ir.config_parameter'].sudo().get_param(
+            'discuss_meeting_subtitles_ai.save_debug_audio') in ('True', '1')
+        super().set_values()
+        if was_saving and not self.meeting_save_debug_audio:
+            # it holds meeting audio: none of it stays behind once debugging is over
+            shutil.rmtree(DEBUG_AUDIO_DIR, ignore_errors=True)

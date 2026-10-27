@@ -16,7 +16,7 @@ const CanCaptureAudio = Boolean(
 // Audio pipeline tuning (all times in seconds)
 const TARGET_SAMPLE_RATE = 16000; // what Whisper expects
 const MIN_RMS_THRESHOLD = 0.012; // never treat anything quieter than this as speech
-const NOISE_MARGIN = 3; // speech must be this many times louder than the noise floor
+const NOISE_MARGIN = 2; // speech must be this many times louder than the noise floor
 const END_SILENCE = 0.5; // silence that closes an utterance
 const MAX_UTTERANCE = 6; // force a cut so captions keep flowing
 const MIN_UTTERANCE = 0.4; // ignore clicks and coughs
@@ -33,6 +33,10 @@ const LANGUAGE_STREAK = 2; // ...or once this many captions in a row came out in
 const LANGUAGE_RECHECK = 5; // a locked language is detected again every this many captions
 const PARTIAL_INTERVAL = 2; // with partial captions on: re-caption ongoing speech this often
 const MIN_PARTIAL = 1; // no partial caption before this much of the utterance
+// Hum and rumble (fans, air conditioning, a knocked desk) lie below this, voices above: removing
+// them keeps that noise from passing for speech. Hz.
+const HIGH_PASS_FREQUENCY = 100;
+const HIGH_PASS_Q = -3.01; // in dB for a high-pass filter: a flat (Butterworth) response
 
 // Runs in the audio thread: forwards mic samples to the main thread in blocks.
 const CAPTURE_WORKLET = `
@@ -441,9 +445,13 @@ export class MeetingSpeechService {
                 return; // the stop already closed this context and stream
             }
             this.sourceNode = context.createMediaStreamSource(stream);
+            this.filterNode = context.createBiquadFilter();
+            this.filterNode.type = "highpass";
+            this.filterNode.frequency.value = HIGH_PASS_FREQUENCY;
+            this.filterNode.Q.value = HIGH_PASS_Q;
             this.captureNode = new AudioWorkletNode(context, "meeting-capture");
             // Not connected to the destination: we only listen, never play back.
-            this.sourceNode.connect(this.captureNode);
+            this.sourceNode.connect(this.filterNode).connect(this.captureNode);
 
             this.resetSegmenter();
             this.captureNode.port.onmessage = (e) => this.onAudioBlock(e.data, context.sampleRate);
@@ -749,6 +757,10 @@ export class MeetingSpeechService {
         if (this.sourceNode) {
             this.sourceNode.disconnect();
             this.sourceNode = null;
+        }
+        if (this.filterNode) {
+            this.filterNode.disconnect();
+            this.filterNode = null;
         }
         if (this.audioContext) {
             this.audioContext.close().catch(() => {});

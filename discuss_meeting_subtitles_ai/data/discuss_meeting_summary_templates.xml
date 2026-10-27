@@ -1,56 +1,65 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <!-- The summary posted in the channel. Values: meeting_name, duration, attendees, date,
-         overview (Markup), points, decisions, actions (lists of str) -->
+    <!-- The summary posted in the channel. Values: meeting_name, duration, when, attendees (dicts:
+         name, initials), overview (Markup), points, decisions, actions (lists of str), view_url.
+         Chat messages keep only class and style attributes, and only some CSS properties (no
+         flexbox alignment or gap): rows are tables, icons Font Awesome, and "Copy summary" is a
+         link that summary_copy.js turns into a copy of the card's text. -->
     <template id="meeting_summary_message">
-        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 680px; margin: 6px 0; border: 1px solid #e5e7eb; border-left: 5px solid #714b67; border-radius: 8px; padding: 18px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);">
-            <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f3f4f6; padding-bottom: 10px; margin-bottom: 12px;">
-                <div style="font-size: 16px; font-weight: 700; color: #111827;">
-                    📋 <t t-out="meeting_name"/>
-                </div>
-                <span style="background-color: #f3f4f6; color: #4b5563; font-size: 11.5px; font-weight: 600; padding: 4px 10px; border-radius: 9999px;">
-                    ⏱️ <t t-call="discuss_meeting_subtitles_ai.meeting_duration"/>
+        <div class="o_meeting_summary_card" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 640px; margin: 6px 0; border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px 28px; background-color: #ffffff; color: #111827;">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="vertical-align: top; padding: 0;">
+                        <div style="font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #6b7280;">Meeting Summary</div>
+                        <div style="font-size: 24px; font-weight: 700; line-height: 1.3; margin-top: 4px; color: #111827;" t-out="meeting_name"/>
+                    </td>
+                    <td style="vertical-align: top; text-align: right; padding: 0 0 0 12px; white-space: nowrap;">
+                        <span style="display: inline-block; background-color: #e6f4f1; color: #0f5f55; font-size: 13px; font-weight: 600; padding: 5px 12px; border-radius: 9999px;"><t t-out="duration"/> min</span>
+                    </td>
+                </tr>
+            </table>
+            <div style="margin-top: 14px; font-size: 14px; line-height: 28px; color: #4b5563;">
+                <span style="display: inline-block; margin-right: 20px; white-space: nowrap;">
+                    <i class="fa fa-calendar-o" style="color: #6b7280; margin-right: 6px;"/><t t-out="when"/>
+                </span>
+                <span t-foreach="attendees" t-as="attendee" style="display: inline-block; margin-right: 16px; white-space: nowrap;">
+                    <span style="display: inline-block; width: 24px; height: 24px; line-height: 24px; border-radius: 9999px; background-color: #0f766e; color: #ffffff; font-size: 10px; font-weight: 700; text-align: center; vertical-align: middle; margin-right: 8px;" t-out="attendee['initials']"/><span style="vertical-align: middle;" t-out="attendee['name']"/>
                 </span>
             </div>
-            <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">
-                <strong>👥 Participants:</strong> <t t-out="attendees"/> • <strong>📅 Date:</strong> <t t-out="date"/>
+            <div style="margin-top: 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #374151;">Summary</div>
+            <div style="margin-top: 8px; font-size: 15px; line-height: 1.6; color: #374151;">
+                <t t-if="overview" t-out="overview"/>
+                <p t-else="" style="margin: 0;">Summary generated from meeting transcript.</p>
             </div>
-            <div style="margin-top: 10px;">
-                <div style="font-weight: 700; color: #1f2937; font-size: 13px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    📝 Overview
-                </div>
-                <div style="color: #374151; font-size: 13.5px; line-height: 1.6;">
-                    <t t-if="overview" t-out="overview"/>
-                    <p t-else="">Summary generated from meeting transcript.</p>
-                </div>
-            </div>
-            <div t-if="points" style="margin-top: 14px;">
-                <div style="font-weight: 700; color: #1f2937; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    💡 Key Discussion Points
-                </div>
-                <ul style="margin: 0; padding-left: 20px; color: #374151; font-size: 13.5px; line-height: 1.5;">
-                    <li t-foreach="points" t-as="point" style="margin-bottom: 6px;" t-out="point"/>
+            <t t-if="points">
+                <div style="margin-top: 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #374151;">Key Points</div>
+                <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: #374151;">
+                    <li t-foreach="points" t-as="point" style="margin-bottom: 4px;" t-out="point"/>
                 </ul>
-            </div>
-            <div t-if="decisions" style="margin-top: 14px; background-color: #f0fdf4; border-left: 3px solid #22c55e; padding: 10px 14px; border-radius: 4px;">
-                <div style="font-weight: 700; color: #15803d; font-size: 13px; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    ✅ Decisions &amp; Alignments
-                </div>
-                <ul style="margin: 0; padding-left: 18px; color: #166534; font-size: 13px; line-height: 1.5;">
-                    <li t-foreach="decisions" t-as="decision" style="margin-bottom: 6px;" t-out="decision"/>
+            </t>
+            <t t-if="decisions">
+                <div style="margin-top: 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #374151;">Decisions</div>
+                <ul style="margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: #374151;">
+                    <li t-foreach="decisions" t-as="decision" style="margin-bottom: 4px;" t-out="decision"/>
                 </ul>
+            </t>
+            <div style="margin-top: 24px; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #374151;">Action Items</div>
+            <ul t-if="actions" style="margin: 8px 0 0; padding-left: 20px; font-size: 15px; line-height: 1.6; color: #374151;">
+                <li t-foreach="actions" t-as="action" style="margin-bottom: 4px;" t-out="action"/>
+            </ul>
+            <div t-else="" style="margin-top: 8px; background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; padding: 12px 16px; font-size: 14px; color: #4b5563;">
+                <i class="fa fa-check-circle-o" style="font-size: 16px; color: #6b7280; margin-right: 10px; vertical-align: middle;"/><span style="vertical-align: middle;">No action items were identified in this meeting.</span>
             </div>
-            <div t-if="actions" style="margin-top: 14px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 12px 14px;">
-                <div style="font-weight: 700; color: #0369a1; font-size: 13px; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
-                    📌 Action Items &amp; Next Steps
-                </div>
-                <div style="font-size: 13px; line-height: 1.5;">
-                    <div t-foreach="actions" t-as="action" style="margin-bottom: 6px; display: flex; align-items: baseline; gap: 6px;">
-                        <span style="color: #0284c7; font-weight: bold;">•</span>
-                        <span style="color: #1e293b;" t-out="action"/>
-                    </div>
-                </div>
-            </div>
+            <table class="o_meeting_summary_footer" style="width: 100%; border-collapse: collapse; margin-top: 24px; border-top: 1px solid #e5e7eb;">
+                <tr>
+                    <td style="vertical-align: middle; padding: 16px 0 0;">
+                        <a t-att-href="view_url" style="color: #0f766e; font-size: 14px; font-weight: 600; text-decoration: none;">View full transcript <i class="fa fa-arrow-right" style="margin-left: 4px;"/></a>
+                    </td>
+                    <td style="vertical-align: middle; text-align: right; padding: 16px 0 0 12px; white-space: nowrap;">
+                        <a t-att-href="view_url" class="o_meeting_summary_copy" style="display: inline-block; border: 1px solid #d1d5db; border-radius: 8px; padding: 9px 16px; background-color: #ffffff; color: #111827; font-size: 14px; font-weight: 600; text-decoration: none;"><i class="fa fa-files-o" style="margin-right: 8px;"/>Copy summary</a>
+                    </td>
+                </tr>
+            </table>
         </div>
     </template>
 

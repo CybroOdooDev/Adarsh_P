@@ -25,7 +25,6 @@ import json
 import logging
 import os
 import re
-import tempfile
 import time
 
 import requests
@@ -37,11 +36,11 @@ from odoo.http import request
 
 from odoo.addons.mail.tools.discuss import add_guest_to_context
 
+from ..models.res_config_settings import DEBUG_AUDIO_DIR
 from ..tools import grok_stt, stt_client
 
 _logger = logging.getLogger(__name__)
 
-DEBUG_AUDIO_DIR = os.path.join(tempfile.gettempdir(), "odoo_subtitle_debug")
 DEBUG_AUDIO_KEEP = 50
 GROK_TIMEOUT = 15  # a final caption later than this is stale anyway
 PARTIAL_LOCK_TIMEOUT = 0.3  # a partial caption is skipped rather than queued behind another request
@@ -51,6 +50,7 @@ LANGUAGE_CODE = re.compile(r"^[a-z]{2,3}$")
 # Higher catches more misheard captions but sends more of them through the slower Whisper
 # (noisy test clips: 0.5 -> 11.2% WER, 34/48 to Whisper; 0.6 -> 9.8%, 43/48).
 WHISTLE_MIN_CONFIDENCE = 0.6
+MAX_SPEECH_WORKERS = 4
 
 
 def _save_debug_audio(audio_bytes, channel_id):
@@ -88,6 +88,19 @@ def _partial_captions_enabled(get_param):
             and get_param('discuss_meeting_subtitles_ai.stt_engine', 'whisper') != 'grok')
 
 
+def _speech_workers(get_param):
+    """How many captions the speech worker may transcribe at once (the Speech Workers setting).
+
+    More than one only helps on a CPU with cores to spare: otherwise the captions share them,
+    and each takes as much longer.
+    """
+    try:
+        workers = int(get_param('discuss_meeting_subtitles_ai.stt_workers', 1))
+    except (TypeError, ValueError):
+        return 1
+    return min(max(workers, 1), MAX_SPEECH_WORKERS)
+
+
 def _warm_up_speech_engine(ai_state):
     """Load the local speech model as soon as the call needs captions, not on the first caption."""
     if not ai_state.get('subtitles') and not ai_state.get('transcribe'):
@@ -95,8 +108,9 @@ def _warm_up_speech_engine(ai_state):
     get_param = request.env['ir.config_parameter'].sudo().get_param
     engine = get_param('discuss_meeting_subtitles_ai.stt_engine', 'whisper')
     model = get_param('discuss_meeting_subtitles_ai.whisper_model', 'small')
+    workers = _speech_workers(get_param)
     for name in {'whistle': ['whistle'], 'auto': ['whistle', 'whisper'], 'grok': []}.get(engine, ['whisper']):
-        stt_client.warm_up(name, model)
+        stt_client.warm_up(name, model, workers)
 
 
 class DiscussMeetingAiController(http.Controller):
@@ -151,6 +165,7 @@ class DiscussMeetingAiController(http.Controller):
         language = get_param('discuss_meeting_subtitles_ai.subtitles_language', 'en-US')
         whisper_model = get_param('discuss_meeting_subtitles_ai.whisper_model', 'small')
         main_language = get_param('discuss_meeting_subtitles_ai.main_language', 'en-US')
+        workers = _speech_workers(get_param)
 
         engine = get_param('discuss_meeting_subtitles_ai.stt_engine', 'whisper')
         # Hotwords: configured terms plus the names of the people currently in the call
@@ -224,7 +239,7 @@ class DiscussMeetingAiController(http.Controller):
                 # transcribed, or invents text ("Thank you for watching.") in its place.
                 result = stt_client.transcribe_with_info(
                     audio_bytes, name, language, whisper_model, keywords, beam_size=1,
-                    main_language=main_language, partial=is_partial,
+                    main_language=main_language, partial=is_partial, workers=workers,
                     **({'lock_timeout': PARTIAL_LOCK_TIMEOUT} if is_partial else {}))
                 text = result['text']
                 detected_language = result['language']

@@ -32,11 +32,14 @@
                     <setting id="meeting_partial_captions_setting" string="Live Partial Captions" help="Show words while people are still talking instead of only after they pause. Needs noticeably more server CPU, or more Grok STT requests.">
                         <field name="meeting_partial_captions"/>
                     </setting>
-                    <setting id="meeting_debug_audio_setting" string="Save Debug Audio" help="Keep the last 50 received utterances in the server temp folder to diagnose recognition problems. Stores meeting audio, so turn it off afterwards.">
+                    <setting id="meeting_debug_audio_setting" string="Save Debug Audio" help="Keep the last 50 received utterances in the server temp folder to diagnose recognition problems. Stores meeting audio, so turn it off afterwards: that deletes the saved files.">
                         <field name="meeting_save_debug_audio"/>
                     </setting>
                     <setting id="meeting_whisper_model_setting" string="Whisper Model" invisible="meeting_stt_engine == 'grok'" help="Local model used to transcribe speech. Bigger is more accurate but slower.">
                         <field name="meeting_whisper_model" class="w-50"/>
+                    </setting>
+                    <setting id="meeting_stt_workers_setting" string="Speech Workers" invisible="meeting_stt_engine in ('grok', 'whistle')" help="How many captions Whisper transcribes at once, so people speaking together don't wait for each other. Raise it only on a server with CPU cores to spare: otherwise each caption takes longer.">
+                        <field name="meeting_stt_workers" class="w-25"/>
                     </setting>
                     <setting id="meeting_subtitles_lang_setting" string="Speech Recognition Language" help="Set the language people speak in the meeting. Choosing it explicitly is much more accurate than auto-detect.">
                         <field name="meeting_subtitles_default_language" class="w-50"/>
