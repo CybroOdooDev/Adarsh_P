@@ -26,14 +26,13 @@ Runs as its own process (started by ``stt_client``), so the heavy models live ou
 memory limits and a crash here can never take Odoo down. It must not import Odoo.
 
 One worker serves all Odoo workers over a Unix socket, so each model is loaded once. It runs
-``workers`` transcriptions at a time (one by default; Whistle only one at a time), with final
-captions served before partial ones.
+``workers`` transcriptions at a time (one by default; Whistle only one at a time).
 
 Protocol, one request per connection:
   hello   : the worker sends one JSON line {"pid": int, "loaded": [["whisper", model, workers],
             ["whistle", null], ...]}
   request : one JSON line {"engine", "language", "model", "keywords", "prompt", "beam_size",
-            "main_language", "partial", "lock_timeout", "workers", "size"}, then ``size`` raw bytes
+            "main_language", "lock_timeout", "workers", "size"}, then ``size`` raw bytes
   response: one JSON line {"text": str, "language": str|None, "language_probability": float,
             "queue_seconds": float, "stt_seconds": float}, or {"error": str} ("busy" when the
             request waited ``lock_timeout`` seconds without its turn)
@@ -81,7 +80,7 @@ HALLUCINATIONS = {
 MIN_AUTO_LANGUAGE_PROBABILITY = 0.7
 # A known phrase Whisper hears this confidently was really said ("Thank you." at the end of a
 # meeting): on noise and breathing it never got close (real ones: logprob >= -0.35, no-speech
-# <= 0.08). Whistle's confidence can't tell them apart, so its known phrases always go.
+# <= 0.08). Whistle reports no such scores, so its known phrases always go.
 CONFIDENT_LOGPROB = -0.5
 CONFIDENT_NO_SPEECH = 0.2
 NON_SPEECH_TAG = re.compile(r"\[[^\]]*\]|\([^)]*\)|[♪♫]+")
@@ -232,16 +231,13 @@ def transcribe_whistle(audio, language, keywords):
     samples = decode_wav(audio)
     if samples is None:
         return {"text": ""}
-    # word timestamps bring each word's probability: misheard words on noisy audio score low
     global _whistle_loaded
-    res = needle.transcribe(samples, language=lang, keywords=keywords or None, word_timestamps=True)
+    res = needle.transcribe(samples, language=lang, keywords=keywords or None)
     _whistle_loaded = True
     text = clean_text(res.get("text") or "")
-    confidence = min((w["probability"] for w in res.get("words") or []), default=None) if text else None
-    log("Whistle lang=%s confidence=%s text=%r" % (
-        res.get("language"), "-" if confidence is None else "%.2f" % confidence, text))
+    log("Whistle lang=%s text=%r" % (res.get("language"), text))
     # no language confidence is reported, so the language is never treated as reliably detected
-    return {"text": text, "language": res.get("language"), "language_probability": 0.0, "confidence": confidence}
+    return {"text": text, "language": res.get("language"), "language_probability": 0.0}
 
 
 def handle(header, audio):
@@ -285,12 +281,11 @@ def loaded_models():
 
 
 class Scheduler:
-    """Up to ``workers`` transcriptions at a time, final captions first, shared by all connections.
+    """Up to ``workers`` transcriptions at a time, shared by all connections.
 
     ``workers`` comes with each request (one by default: on a CPU with few cores, two
     transcriptions at once each take twice as long). Only one Whistle transcription runs at a
-    time, as its library isn't known to be thread-safe. A partial caption (a preview of speech still going on) never
-    takes a turn while a final caption waits for one. Each request waits at most its own
+    time, as its library isn't known to be thread-safe. Each request waits at most its own
     ``lock_timeout`` for its turn.
     """
 
@@ -298,20 +293,15 @@ class Scheduler:
         self._cond = threading.Condition()
         self._running = 0
         self._whistle_running = False
-        self._finals_waiting = 0
         self._waiting = 0
         self.last_activity = time.monotonic()
 
-    def acquire(self, timeout, partial=False, workers=1, engine=None):
+    def acquire(self, timeout, workers=1, engine=None):
         deadline = time.monotonic() + timeout
         with self._cond:
             self._waiting += 1
-            if not partial:
-                self._finals_waiting += 1
             try:
-                while (self._running >= workers
-                       or (engine == "whistle" and self._whistle_running)
-                       or (partial and self._finals_waiting)):
+                while self._running >= workers or (engine == "whistle" and self._whistle_running):
                     remaining = deadline - time.monotonic()
                     if remaining <= 0:
                         return False
@@ -322,9 +312,6 @@ class Scheduler:
                 return True
             finally:
                 self._waiting -= 1
-                if not partial:
-                    self._finals_waiting -= 1
-                    self._cond.notify_all()  # partials blocked only by this final may go now
 
     def release(self, engine=None):
         with self._cond:
@@ -359,8 +346,7 @@ def serve_connection(conn, scheduler):
             return
         started = time.monotonic()
         engine = header.get("engine")
-        if not scheduler.acquire(float(header.get("lock_timeout") or 0), bool(header.get("partial")),
-                                 request_workers(header), engine):
+        if not scheduler.acquire(float(header.get("lock_timeout") or 0), request_workers(header), engine):
             reply = {"error": "busy"}
         else:
             queued = time.monotonic() - started

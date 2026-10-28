@@ -131,9 +131,9 @@ class TestMeetingCall(MeetingTestCommon):
 
         with self._capture_bus() as sent:
             self.channel._broadcast_meeting_ai_state()
-            self.assertTrue(self.channel._broadcast_meeting_subtitle('Alice Martin', 'Hello', is_final=True,
+            self.assertTrue(self.channel._broadcast_meeting_subtitle('Alice Martin', 'Hello',
                                                                       partner_id=self.alice.partner_id.id,
-                                                                      member_id=self.alice_member.id, seq=3))
+                                                                      member_id=self.alice_member.id))
         self.assertEqual(sent, ['discuss.channel/meeting_ai_state', 'discuss.channel/meeting_subtitle'])
 
     def test_subtitle_viewer_leaving_updates_others(self):
@@ -528,17 +528,15 @@ class TestMeetingSettings(TransactionCase):
 
     def test_settings_are_stored(self):
         settings = self.env['res.config.settings'].create({
-            'meeting_stt_engine': 'auto',
+            'meeting_stt_engine': 'whistle',
             'meeting_subtitles_default_language': 'fr-FR',
             'meeting_subtitles_keywords': 'Cybrosys',
-            'meeting_partial_captions': True,
         })
         settings.execute()
         get_param = self.env['ir.config_parameter'].sudo().get_param
-        self.assertEqual(get_param('discuss_meeting_subtitles_ai.stt_engine'), 'auto')
+        self.assertEqual(get_param('discuss_meeting_subtitles_ai.stt_engine'), 'whistle')
         self.assertEqual(get_param('discuss_meeting_subtitles_ai.subtitles_language'), 'fr-FR')
         self.assertEqual(get_param('discuss_meeting_subtitles_ai.keywords'), 'Cybrosys')
-        self.assertEqual(get_param('discuss_meeting_subtitles_ai.partial_captions'), 'True')
 
     def test_speech_workers_setting(self):
         settings = self.env['res.config.settings'].create({'meeting_stt_workers': 2})
@@ -559,6 +557,22 @@ class TestMeetingSettings(TransactionCase):
                 self.assertTrue(os.path.exists(folder), "kept while debug audio stays on")
                 self.env['res.config.settings'].create({'meeting_save_debug_audio': False}).execute()
                 self.assertFalse(os.path.exists(folder))
+
+    def test_missing_engine_package(self):
+        missing = {'whisper': 'faster-whisper', 'whistle': 'cactus-needle'}
+        with patch.object(stt_client, 'missing_package', side_effect=missing.get):
+            settings = self.env['res.config.settings'].create({'meeting_stt_engine': 'whisper'})
+            self.assertIn('pip install faster-whisper', settings.meeting_stt_missing_package)
+            settings.meeting_stt_engine = 'whistle'
+            self.assertIn('pip install cactus-needle', settings.meeting_stt_missing_package)
+            settings.meeting_stt_engine = 'cloud_whisper'
+            self.assertIn('uploaded recordings', settings.meeting_stt_missing_package)
+            settings.meeting_stt_engine = 'grok'
+            self.assertFalse(settings.meeting_stt_missing_package, "Grok STT needs no local package")
+        with patch.object(stt_client, 'missing_package', return_value=None):
+            for engine in ('whisper', 'whistle', 'cloud_whisper'):
+                settings.meeting_stt_engine = engine
+                self.assertFalse(settings.meeting_stt_missing_package, engine)
 
     def test_main_language_never_auto(self):
         field = self.env['res.config.settings']._fields['meeting_main_language']

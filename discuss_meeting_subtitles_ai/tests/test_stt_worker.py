@@ -20,8 +20,10 @@
 #
 #############################################################################
 
+import importlib.metadata
 import threading
 import time
+from unittest.mock import patch
 
 from odoo.tests import tagged
 from odoo.tests.common import TransactionCase
@@ -32,18 +34,6 @@ from odoo.addons.discuss_meeting_subtitles_ai.tools import stt_client, stt_worke
 @tagged('post_install', '-at_install')
 class TestSpeechWorkerScheduler(TransactionCase):
     """Turns of the shared speech worker: how many captions are transcribed at once."""
-
-    def _wait_for_final(self, scheduler, workers=1):
-        """A final caption waiting for its turn in another thread; returns that thread and its result."""
-        result = {}
-        thread = threading.Thread(target=lambda: result.update(
-            got=scheduler.acquire(5, workers=workers, engine='whisper')))
-        thread.start()
-        deadline = time.monotonic() + 5
-        while not scheduler._finals_waiting and time.monotonic() < deadline:
-            time.sleep(0.01)
-        self.assertEqual(scheduler._finals_waiting, 1)
-        return thread, result
 
     def test_one_caption_at_a_time_by_default(self):
         scheduler = stt_worker.Scheduler()
@@ -70,12 +60,16 @@ class TestSpeechWorkerScheduler(TransactionCase):
         scheduler.release('whisper')
         self.assertTrue(scheduler.acquire(0, workers=2, engine='whistle'))
 
-    def test_partial_waits_for_final_captions(self):
+    def test_waiting_caption_gets_the_next_turn(self):
         scheduler = stt_worker.Scheduler()
         self.assertTrue(scheduler.acquire(0, engine='whisper'))
-        thread, result = self._wait_for_final(scheduler)
-        # a free worker is still not for a preview while a final caption waits
-        self.assertFalse(scheduler.acquire(0, partial=True, workers=2, engine='whisper'))
+        result = {}
+        thread = threading.Thread(target=lambda: result.update(got=scheduler.acquire(5, engine='whisper')))
+        thread.start()
+        deadline = time.monotonic() + 5
+        while not scheduler._waiting and time.monotonic() < deadline:
+            time.sleep(0.01)
+        self.assertEqual(scheduler._waiting, 1)
         scheduler.release('whisper')
         thread.join(5)
         self.assertTrue(result['got'])
@@ -89,3 +83,13 @@ class TestSpeechWorkerScheduler(TransactionCase):
     def test_header_carries_workers(self):
         self.assertEqual(stt_client._header('whisper', 'en', 'small', [])['workers'], 1)
         self.assertEqual(stt_client._header('whisper', 'en', 'small', [], workers=2)['workers'], 2)
+
+    def test_missing_package(self):
+        def distribution(name):
+            if name != 'faster-whisper':
+                raise importlib.metadata.PackageNotFoundError(name)
+
+        with patch.object(importlib.metadata, 'distribution', side_effect=distribution):
+            self.assertIsNone(stt_client.missing_package('whisper'))
+            self.assertEqual(stt_client.missing_package('whistle'), 'cactus-needle')
+            self.assertIsNone(stt_client.missing_package('grok'), "a cloud engine needs no package")

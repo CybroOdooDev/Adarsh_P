@@ -52,7 +52,16 @@ _session = requests.Session()
 
 
 class GrokSttError(Exception):
-    """The Grok STT request failed or was rejected."""
+    """The Grok STT request failed or was rejected.
+
+    ``kind`` tells why, to explain it to the speaker: 'rate_limit', 'auth', 'timeout',
+    'unreachable', 'too_large' or 'error'; ``status`` is the HTTP status, if any.
+    """
+
+    def __init__(self, message, kind="error", status=None):
+        super().__init__(message)
+        self.kind = kind
+        self.status = status
 
 
 def grok_language(language):
@@ -74,7 +83,7 @@ def transcribe(audio_bytes, api_key, filename="audio.wav", language=None, keywor
     "end", "speaker"?}]}``. Raises GrokSttError when the request fails.
     """
     if len(audio_bytes) > MAX_FILE_BYTES:
-        raise GrokSttError("the file is larger than the 500 MB Grok STT accepts")
+        raise GrokSttError("the file is larger than the 500 MB Grok STT accepts", "too_large")
     data = [("model", MODEL)]
     lang = grok_language(language)
     if lang:
@@ -94,16 +103,23 @@ def transcribe(audio_bytes, api_key, filename="audio.wav", language=None, keywor
             files={"file": (filename, audio_bytes)},
             timeout=timeout,
         )
+    except requests.Timeout as exc:
+        raise GrokSttError("Grok STT did not answer in time: %s" % exc, "timeout") from exc
     except requests.RequestException as exc:
-        raise GrokSttError("Grok STT is unreachable: %s" % exc) from exc
+        raise GrokSttError("Grok STT is unreachable: %s" % exc, "unreachable") from exc
     if response.status_code != 200:
         try:
-            detail = response.json().get("error") or response.text
+            detail = response.json()
         except ValueError:
-            detail = response.text
+            detail = None
+        if isinstance(detail, dict):
+            detail = detail.get("error") or detail
         if isinstance(detail, dict):
             detail = detail.get("message") or detail
-        raise GrokSttError("Grok STT returned %s: %s" % (response.status_code, str(detail)[:300]))
+        detail = detail or response.text
+        kind = {429: "rate_limit", 401: "auth", 403: "auth"}.get(response.status_code, "error")
+        raise GrokSttError("Grok STT returned %s: %s" % (response.status_code, str(detail)[:300]),
+                           kind, response.status_code)
     try:
         return response.json()
     except ValueError as exc:

@@ -20,7 +20,7 @@
 #
 #############################################################################
 
-from . import grok_stt, stt_client
+from . import cloud_whisper, grok_stt, stt_client
 # Standalone scripts that stt_client starts as their own processes (they only act when
 # run as __main__ and load the speech models lazily): importing them here is harmless.
 from . import stt_job, stt_worker

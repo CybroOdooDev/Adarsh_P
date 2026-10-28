@@ -27,6 +27,8 @@ import tempfile
 from odoo import api, fields, models
 from odoo.exceptions import ValidationError
 
+from ..tools import cloud_whisper, stt_client
+
 # Where Save Subtitle Debug Audio keeps the received utterances (shared with the controller)
 DEBUG_AUDIO_DIR = os.path.join(tempfile.gettempdir(), "odoo_subtitle_debug")
 
@@ -36,33 +38,50 @@ class ResConfigSettings(models.TransientModel):
 
     meeting_stt_engine = fields.Selection(
         [
-            ('whisper', 'Whisper (most accurate, 99 languages)'),
-            ('whistle', 'Whistle (tiny and fast; English, German, French, Spanish, Italian, Dutch, Polish only)'),
-            ('auto', 'Auto (Whistle first, Whisper if it hears nothing or is unsure)'),
-            ('grok', 'Grok STT (xAI cloud: most accurate, no server load)'),
+            ('whisper', 'Whisper'),
+            ('whistle', 'Whistle'),
+            ('grok', 'Grok STT'),
+            ('cloud_whisper', 'Cloud Whisper'),
         ],
         string='Speech-to-Text Engine',
         default='whisper',
         config_parameter='discuss_meeting_subtitles_ai.stt_engine',
+        help='Whisper: the most accurate local engine, 99 languages. '
+             'Whistle: a tiny, fast local engine for English, German, French, Spanish, Italian, Dutch and '
+             'Polish only. '
+             'Grok STT: xAI cloud transcription, most accurate, with no load on this server. '
+             'Cloud Whisper: Whisper behind an OpenAI-compatible API (Groq, OpenAI or your own GPU server).',
     )
     meeting_xai_api_key = fields.Char(
         string='xAI API Key',
         config_parameter='discuss_meeting_subtitles_ai.xai_api_key',
         help='Key of the xAI account used by Grok STT. Meeting audio is sent to xAI to be transcribed.',
     )
+    meeting_cloud_whisper_url = fields.Char(
+        string='Cloud Whisper URL',
+        default=cloud_whisper.DEFAULT_URL,
+        config_parameter='discuss_meeting_subtitles_ai.cloud_whisper_url',
+        help='Base URL of the OpenAI-compatible API, without /audio/transcriptions: '
+             'https://api.groq.com/openai/v1 (Groq), https://api.openai.com/v1 (OpenAI), '
+             'or the address of your own Whisper server.',
+    )
+    meeting_cloud_whisper_model = fields.Char(
+        string='Cloud Whisper Model',
+        default=cloud_whisper.DEFAULT_MODEL,
+        config_parameter='discuss_meeting_subtitles_ai.cloud_whisper_model',
+        help='Whisper model name at that provider, e.g. whisper-large-v3 (Groq) or whisper-1 (OpenAI).',
+    )
+    meeting_cloud_whisper_api_key = fields.Char(
+        string='Cloud Whisper API Key',
+        config_parameter='discuss_meeting_subtitles_ai.cloud_whisper_api_key',
+        help='Key of the account at that provider; leave empty for a server of your own that needs none. '
+             'Meeting audio is sent to that address to be transcribed.',
+    )
     meeting_subtitles_keywords = fields.Char(
         string='Subtitle Keywords',
         config_parameter='discuss_meeting_subtitles_ai.keywords',
         help='Comma-separated names and terms to recognize correctly (e.g. Odoo, Cybrosys). '
              'Participant names are added automatically.',
-    )
-    meeting_partial_captions = fields.Boolean(
-        string='Live Partial Captions',
-        config_parameter='discuss_meeting_subtitles_ai.partial_captions',
-        help='Show words while the speaker is still talking, refined into the final caption when they pause. '
-             'Transcribes each utterance several times, so it needs noticeably more server CPU; partial '
-             'captions are skipped whenever the speech engine is busy, so they never delay final captions. '
-             'Not used with Grok STT, where each one would be a billed request.',
     )
     meeting_stt_openai_fallback = fields.Boolean(
         string='OpenAI Speech Fallback',
@@ -80,17 +99,20 @@ class ResConfigSettings(models.TransientModel):
     )
     meeting_whisper_model = fields.Selection(
         [
-            ('tiny', 'Tiny (fastest, least accurate)'),
-            ('base', 'Base (fast, basic accuracy)'),
-            ('small', 'Small (recommended balance)'),
-            ('medium', 'Medium (accurate, needs a strong CPU/GPU)'),
-            ('distil-large-v3', 'Distil Large v3 (very accurate, English only)'),
-            ('large-v3', 'Large v3 (best accuracy, needs a GPU)'),
+            ('tiny', 'Tiny'),
+            ('base', 'Base'),
+            ('small', 'Small'),
+            ('medium', 'Medium'),
+            ('distil-large-v3', 'Distil Large v3'),
+            ('large-v3', 'Large v3'),
         ],
         string='Whisper Model',
         default='small',
         config_parameter='discuss_meeting_subtitles_ai.whisper_model',
-        help='Local speech-to-text model. Bigger models are far more accurate but slower. Downloaded on first use.',
+        help='Local speech-to-text model. Bigger models are far more accurate but slower. Downloaded on first use. '
+             'Tiny: fastest, least accurate. Base: fast, basic accuracy. Small: the recommended balance. '
+             'Medium: accurate, needs a strong CPU or a GPU. Distil Large v3: very accurate, English only. '
+             'Large v3: best accuracy, needs a GPU.',
     )
     meeting_stt_workers = fields.Integer(
         string='Speech Workers',
@@ -103,14 +125,16 @@ class ResConfigSettings(models.TransientModel):
     )
     meeting_ai_provider = fields.Selection(
         [
-            ('internal', 'Built-in Smart Summarizer (No API Key Required)'),
-            ('openai', 'OpenAI (ChatGPT)'),
-            ('ollama', 'Ollama / Local Engine (Needle / Llama 3)'),
+            ('internal', 'Built-in Smart Summarizer'),
+            ('openai', 'OpenAI'),
+            ('ollama', 'Ollama / Local Engine'),
         ],
         string='Meeting AI Provider',
         default='internal',
         config_parameter='discuss_meeting_subtitles_ai.ai_provider',
-        help='Engine used to summarize meeting transcripts',
+        help='Engine used to summarize meeting transcripts. '
+             'Built-in Smart Summarizer: needs no API key. OpenAI: ChatGPT models. '
+             'Ollama / Local Engine: a model on your own server, such as Needle or Llama 3.',
     )
     meeting_openai_api_key = fields.Char(
         string='OpenAI API Key',
@@ -142,9 +166,9 @@ class ResConfigSettings(models.TransientModel):
     )
     meeting_subtitles_default_language = fields.Selection(
         [
-            ('auto', 'Auto-Detect (less accurate on short phrases)'),
-            ('en-US', 'English (US)'),
-            ('en-GB', 'English (UK)'),
+            ('auto', 'Auto-Detect'),
+            ('en-US', 'US English'),
+            ('en-GB', 'UK English'),
             ('es-ES', 'Spanish'),
             ('fr-FR', 'French'),
             ('de-DE', 'German'),
@@ -160,7 +184,34 @@ class ResConfigSettings(models.TransientModel):
         string='Subtitles Speech Language',
         default='en-US',
         config_parameter='discuss_meeting_subtitles_ai.subtitles_language',
+        help='The language people speak in meetings. Auto-Detect is less accurate on short phrases.',
     )
+
+    meeting_stt_missing_package = fields.Char(
+        string='Missing Speech Package',
+        compute='_compute_meeting_stt_missing_package',
+        help='What the selected engine needs that is not installed on this server.',
+    )
+
+    @api.depends('meeting_stt_engine')
+    def _compute_meeting_stt_missing_package(self):
+        for settings in self:
+            engine = settings.meeting_stt_engine
+            message = False
+            if engine in ('whisper', 'whistle'):
+                package = stt_client.missing_package(engine)
+                if package:
+                    message = self.env._(
+                        "This engine needs the %(package)s Python package, which is not installed on this "
+                        "server: captions stay empty until it is. Install it in the Python environment that "
+                        "runs Odoo (pip install %(package)s), then restart Odoo.",
+                        package=package)
+            elif engine == 'cloud_whisper' and stt_client.missing_package('whisper'):
+                message = self.env._(
+                    "Live captions work without it, but uploaded recordings are transcribed by the local "
+                    "Whisper model, which needs the faster-whisper Python package: install it in the Python "
+                    "environment that runs Odoo (pip install faster-whisper), then restart Odoo.")
+            settings.meeting_stt_missing_package = message
 
     @api.constrains('meeting_stt_workers')
     def _check_meeting_stt_workers(self):
@@ -171,7 +222,8 @@ class ResConfigSettings(models.TransientModel):
     def set_values(self):
         was_saving = self.env['ir.config_parameter'].sudo().get_param(
             'discuss_meeting_subtitles_ai.save_debug_audio') in ('True', '1')
-        super().set_values()
+        res = super().set_values()
         if was_saving and not self.meeting_save_debug_audio:
             # it holds meeting audio: none of it stays behind once debugging is over
             shutil.rmtree(DEBUG_AUDIO_DIR, ignore_errors=True)
+        return res

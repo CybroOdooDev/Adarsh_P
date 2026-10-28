@@ -27,6 +27,8 @@ import os
 import re
 import time
 
+from urllib.parse import urlparse
+
 import requests
 from markupsafe import Markup
 
@@ -37,19 +39,14 @@ from odoo.http import request
 from odoo.addons.mail.tools.discuss import add_guest_to_context
 
 from ..models.res_config_settings import DEBUG_AUDIO_DIR
-from ..tools import grok_stt, stt_client
+from ..tools import cloud_whisper, grok_stt, stt_client
 
 _logger = logging.getLogger(__name__)
 
 DEBUG_AUDIO_KEEP = 50
-GROK_TIMEOUT = 15  # a final caption later than this is stale anyway
-PARTIAL_LOCK_TIMEOUT = 0.3  # a partial caption is skipped rather than queued behind another request
+CLOUD_STT_TIMEOUT = 15  # a final caption later than this is stale anyway
+CLOUD_ENGINES = ('grok', 'cloud_whisper')  # no local model: billed per request
 LANGUAGE_CODE = re.compile(r"^[a-z]{2,3}$")
-# In 'auto', a final caption with a Whistle word less likely than this goes to Whisper too.
-# Clean speech keeps every word above ~0.55; words misheard in noise mostly score below 0.5.
-# Higher catches more misheard captions but sends more of them through the slower Whisper
-# (noisy test clips: 0.5 -> 11.2% WER, 34/48 to Whisper; 0.6 -> 9.8%, 43/48).
-WHISTLE_MIN_CONFIDENCE = 0.6
 MAX_SPEECH_WORKERS = 4
 
 
@@ -81,11 +78,35 @@ def _self_call_member(channel_id):
     return member if member.sudo().rtc_session_ids else member.browse()
 
 
-def _partial_captions_enabled(get_param):
-    """Live partial captions are on, and the engine is local: with Grok each one would be a billed
-    request, several per sentence, for a preview the final caption replaces anyway."""
-    return (get_param('discuss_meeting_subtitles_ai.partial_captions') in ('True', '1')
-            and get_param('discuss_meeting_subtitles_ai.stt_engine', 'whisper') != 'grok')
+def _cloud_error_message(exc, provider):
+    """Why a cloud engine's caption was lost, for the speaker to read.
+
+    ``exc`` is a GrokSttError or CloudWhisperError (same ``kind`` and ``status``); ``provider``
+    names who answered: 'xAI', or the host of the Cloud Whisper URL.
+    """
+    if exc.kind == 'rate_limit':
+        return request.env._("Captions skipped: %s has reached this account's request limit. "
+                             "They resume when the limit resets; a paid plan raises it.", provider)
+    if exc.kind == 'auth':
+        return request.env._("Captions failed: %s rejected the API key. Check it under Settings > Discuss > "
+                             "Meeting Subtitles & AI Summaries.", provider)
+    if exc.kind == 'timeout':
+        return request.env._("Caption skipped: %(provider)s did not answer within %(seconds)s seconds.",
+                             provider=provider, seconds=CLOUD_STT_TIMEOUT)
+    if exc.kind == 'unreachable':
+        return request.env._("Captions failed: %s could not be reached. Check this server's internet connection.",
+                             provider)
+    if exc.status:
+        return request.env._("Caption failed: %(provider)s returned an error (HTTP %(status)s).",
+                             provider=provider, status=exc.status)
+    return request.env._("Caption failed: %s could not transcribe it.", provider)
+
+
+def _engine_not_installed_message(engine):
+    """Why a local engine's caption was lost: its Python package is not on the server."""
+    return request.env._("Captions failed: the %(engine)s speech engine is not installed on this server. "
+                         "An administrator can install it with: pip install %(package)s",
+                         engine=engine.capitalize(), package=stt_client.ENGINE_PACKAGES[engine])
 
 
 def _speech_workers(get_param):
@@ -101,6 +122,13 @@ def _speech_workers(get_param):
     return min(max(workers, 1), MAX_SPEECH_WORKERS)
 
 
+def _local_engine(engine):
+    """The local engine ('whisper' or 'whistle') that transcribes captions, or None for a cloud engine."""
+    if engine in CLOUD_ENGINES:
+        return None
+    return 'whistle' if engine == 'whistle' else 'whisper'
+
+
 def _warm_up_speech_engine(ai_state):
     """Load the local speech model as soon as the call needs captions, not on the first caption."""
     if not ai_state.get('subtitles') and not ai_state.get('transcribe'):
@@ -109,8 +137,9 @@ def _warm_up_speech_engine(ai_state):
     engine = get_param('discuss_meeting_subtitles_ai.stt_engine', 'whisper')
     model = get_param('discuss_meeting_subtitles_ai.whisper_model', 'small')
     workers = _speech_workers(get_param)
-    for name in {'whistle': ['whistle'], 'auto': ['whistle', 'whisper'], 'grok': []}.get(engine, ['whisper']):
-        stt_client.warm_up(name, model, workers)
+    local_engine = _local_engine(engine)
+    if local_engine:
+        stt_client.warm_up(local_engine, model, workers)
 
 
 class DiscussMeetingAiController(http.Controller):
@@ -180,19 +209,7 @@ class DiscussMeetingAiController(http.Controller):
         # speaker: re-detecting on every short clip is unreliable and makes captions flip language.
         if language == 'auto' and LANGUAGE_CODE.match(kwargs.get('language') or ''):
             language = kwargs['language']
-        # Partial: the utterance so far, sent while the speaker is still talking. It is only a
-        # preview, so it never waits for a busy engine (that would delay final captions) and
-        # never goes to the paid cloud fallback.
-        is_partial = kwargs.get('partial') == '1'
-        # a partial caption only exists to be watched, and never goes to a paid cloud engine
-        if is_partial and (not ai_state['subtitles'] or not _partial_captions_enabled(get_param)):
-            return request.make_response(
-                json.dumps({"status": "disabled", "text": ""}),
-                headers=[("Content-Type", "application/json")],
-            )
-        seq = int(kwargs['seq']) if (kwargs.get('seq') or '').isdigit() else None
-
-        if not is_partial and get_param('discuss_meeting_subtitles_ai.save_debug_audio') in ('True', '1'):
+        if get_param('discuss_meeting_subtitles_ai.save_debug_audio') in ('True', '1'):
             debug_path = _save_debug_audio(audio_bytes, channel.id)
             _logger.info("Subtitle debug audio saved: %s (%d bytes)", debug_path, len(audio_bytes))
 
@@ -204,9 +221,9 @@ class DiscussMeetingAiController(http.Controller):
         # Whether a configured engine answered: no words from it is silence, not a reason to
         # send the audio to OpenAI. Only an engine failure (error, busy, not installed) is.
         engine_answered = False
+        caption_error = None  # why a caption was lost (cloud error, engine not installed), shown to the speaker
         if engine == 'grok':
-            # Cloud engine, final captions only (see _partial_captions_enabled): no local model, no
-            # queue. The local engines are not tried after it, as their first use may load a model
+            # Cloud engine: no local model, no queue. The local engines are not tried after it, as their first use may load a model
             # for minutes; the OpenAI fallback below still is.
             xai_api_key = get_param('discuss_meeting_subtitles_ai.xai_api_key', '')
             if xai_api_key:
@@ -214,7 +231,7 @@ class DiscussMeetingAiController(http.Controller):
                 try:
                     result = grok_stt.transcribe(
                         audio_bytes, xai_api_key, language=language, keywords=keywords,
-                        timeout=GROK_TIMEOUT)
+                        timeout=CLOUD_STT_TIMEOUT)
                     text = (result.get('text') or '').strip()
                     engine_answered = True
                     # Grok reports no confidence: the browser locks the speaker's language only
@@ -222,15 +239,39 @@ class DiscussMeetingAiController(http.Controller):
                     detected_language = result.get('language')
                 except grok_stt.GrokSttError as exc:
                     outcome = "failed"
+                    caption_error = _cloud_error_message(exc, 'xAI')
                     _logger.warning("Grok STT failed: %s", exc)
                 transcribing += time.monotonic() - call_started
             else:
+                outcome = "failed"
+                caption_error = request.env._("Captions failed: no xAI API key is set for Grok STT. Add it under "
+                                              "Settings > Discuss > Meeting Subtitles & AI Summaries.")
                 _logger.warning("Grok STT is the speech engine but no xAI API key is set")
-        # Local engines: 'whisper' (default), 'whistle', or 'auto' (Whistle first, Whisper if it heard nothing).
-        order = {'whistle': ['whistle'], 'auto': ['whistle', 'whisper'], 'grok': []}.get(engine, ['whisper'])
-        unsure = None  # a final caption Whistle doubts: Whisper redoes it, kept if Whisper hears nothing
-        for name in order:
-            used_engine = name
+        elif engine == 'cloud_whisper':
+            # Whisper behind an OpenAI-compatible API (Groq, OpenAI, a GPU server of your own):
+            # like Grok, the OpenAI fallback below is still tried after it
+            call_started = time.monotonic()
+            cloud_url = get_param('discuss_meeting_subtitles_ai.cloud_whisper_url') or cloud_whisper.DEFAULT_URL
+            try:
+                result = cloud_whisper.transcribe(
+                    audio_bytes,
+                    get_param('discuss_meeting_subtitles_ai.cloud_whisper_api_key', ''),
+                    url=cloud_url,
+                    model=get_param('discuss_meeting_subtitles_ai.cloud_whisper_model') or cloud_whisper.DEFAULT_MODEL,
+                    language=language, keywords=keywords, timeout=CLOUD_STT_TIMEOUT)
+                text = result['text']
+                engine_answered = True
+                # no language confidence either: the browser locks the language once two captions agree
+                detected_language = result['language']
+            except cloud_whisper.CloudWhisperError as exc:
+                outcome = "failed"
+                caption_error = _cloud_error_message(exc, urlparse(cloud_url).hostname or cloud_url)
+                _logger.warning("Cloud Whisper failed: %s", exc)
+            transcribing += time.monotonic() - call_started
+        # Local engines: 'whisper' (default) or 'whistle'
+        local_engine = _local_engine(engine)
+        if local_engine:
+            used_engine = local_engine
             call_started = time.monotonic()
             try:
                 # greedy decoding (beam 1): several times faster, which live captions need more
@@ -238,41 +279,29 @@ class DiscussMeetingAiController(http.Controller):
                 # No previous caption as context: Whisper then skips speech it takes for already
                 # transcribed, or invents text ("Thank you for watching.") in its place.
                 result = stt_client.transcribe_with_info(
-                    audio_bytes, name, language, whisper_model, keywords, beam_size=1,
-                    main_language=main_language, partial=is_partial, workers=workers,
-                    **({'lock_timeout': PARTIAL_LOCK_TIMEOUT} if is_partial else {}))
+                    audio_bytes, local_engine, language, whisper_model, keywords, beam_size=1,
+                    main_language=main_language, workers=workers)
                 text = result['text']
                 detected_language = result['language']
                 language_probability = result['language_probability']
                 engine_answered = True
                 waited += result['queue_seconds']
                 transcribing += result['stt_seconds']
-                # partials stay with Whistle: a second engine would double their delay
-                if (text and name == 'whistle' and 'whisper' in order and not is_partial
-                        and (result['confidence'] or 0.0) < WHISTLE_MIN_CONFIDENCE):
-                    _logger.info("Whistle unsure (%.2f), asking Whisper: %r", result['confidence'] or 0.0, text)
-                    unsure = (text, detected_language)
-                    text = ""
-                    continue
             except stt_client.SttWorkerUnavailable as exc:
                 outcome = "busy" if "busy" in str(exc) else "unavailable"
                 waited += time.monotonic() - call_started
-                if not is_partial:
-                    _logger.info("Speech engine %s unavailable: %s", name, exc)
+                if str(exc).startswith("not_installed"):
+                    caption_error = _engine_not_installed_message(local_engine)
+                _logger.info("Speech engine %s unavailable: %s", local_engine, exc)
             except stt_client.SttWorkerError:
                 outcome = "failed"
                 transcribing += time.monotonic() - call_started
-                _logger.exception("Speech engine %s failed", name)
-            if text:
-                break
-        if not text and unsure:
-            text, detected_language = unsure
-            language_probability = 0.0
+                _logger.exception("Speech engine %s failed", local_engine)
 
         # Cloud fallback: OpenAI Whisper API, only when the speech engine failed and the admin
         # opted in (the key alone may be there for summaries only)
         openai_fallback = get_param('discuss_meeting_subtitles_ai.stt_openai_fallback') in ('True', '1')
-        if openai_fallback and api_key and not is_partial and not engine_answered:
+        if openai_fallback and api_key and not engine_answered:
             used_engine += "+openai"
             call_started = time.monotonic()
             try:
@@ -303,24 +332,22 @@ class DiscussMeetingAiController(http.Controller):
             channel._broadcast_meeting_subtitle(
                 partner_name=speaker_name,
                 text=text,
-                is_final=not is_partial,
                 partner_id=partner.id if partner else None,
                 member_id=member.id,
-                seq=seq,
             )
         # Each browser sends only its own microphone, so the speaker's own request records
         # the line once for the whole meeting (only while the call is being transcribed).
-        if text and not is_partial and ai_state['transcribe']:
+        if text and ai_state['transcribe']:
             request.env["discuss.meeting.summary"].sudo()._add_transcript_line(
                 channel, member, speaker_name, text)
 
         if text:
             outcome = "ok"
         _logger.info(
-            "caption ch=%s member=%s audio=%s %s %s engine=%s wait=%.2fs stt=%.2fs total=%.2fs chars=%d",
+            "caption ch=%s member=%s audio=%s %s engine=%s wait=%.2fs stt=%.2fs total=%.2fs chars=%d",
             channel.id, member.id,
             "%.1fs" % ((len(audio_bytes) - 44) / 32000) if audio_bytes[:4] == b'RIFF' else "?",  # 16 kHz PCM16 mono
-            "partial" if is_partial else "final", outcome, used_engine,
+            outcome, used_engine,
             waited, transcribing, time.monotonic() - request_started, len(text))
 
         return request.make_response(
@@ -329,6 +356,8 @@ class DiscussMeetingAiController(http.Controller):
                 "text": text,
                 "language": detected_language,
                 "language_probability": language_probability,
+                # only for a caption that was lost (the OpenAI fallback may have saved it)
+                **({"caption_error": caption_error} if caption_error and not text else {}),
                 **ai_state,
             }),
             headers=[("Content-Type", "application/json")],
@@ -442,7 +471,6 @@ class DiscussMeetingAiController(http.Controller):
         return {
             "language": get_param('discuss_meeting_subtitles_ai.subtitles_language', 'en-US'),
             "provider": get_param('discuss_meeting_subtitles_ai.ai_provider', 'internal'),
-            "partial_captions": _partial_captions_enabled(get_param),
         }
 
     @http.route("/discuss/meeting/generate_summary_redirect", type="http", auth="user", methods=["GET", "POST"])
