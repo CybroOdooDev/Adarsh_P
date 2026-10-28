@@ -95,8 +95,8 @@ class DiscussMeetingSummary(models.Model):
     ai_provider = fields.Selection(
         [
             ('internal', 'Built-in Smart Summarizer'),
-            ('openai', 'OpenAI (ChatGPT)'),
-            ('ollama', 'Ollama / Local LLM (Needle / Llama)'),
+            ('openai', 'OpenAI'),
+            ('ollama', 'Ollama / Local Engine'),
         ],
         string='AI Provider',
         default=lambda self: self.env['ir.config_parameter'].sudo().get_param(

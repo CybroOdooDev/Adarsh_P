@@ -44,16 +44,14 @@ class DiscussChannel(models.Model):
         for channel in self:
             channel.meeting_summary_count = len(channel.meeting_summary_ids)
 
-    def _broadcast_meeting_subtitle(self, partner_name, text, is_final=False, partner_id=None, member_id=None,
-                                    seq=None):
+    def _broadcast_meeting_subtitle(self, partner_name, text, partner_id=None, member_id=None):
         """Broadcasts real-time meeting subtitles to all active members of this channel.
 
         Private (not callable over RPC): only the transcription endpoint may caption, with the
         speaker identity it checked itself.
 
         ``member_id`` tells speakers apart even when they share a partner (all guests use the
-        public partner). ``seq`` is the speaker's utterance number: receivers use it to ignore a
-        partial caption that arrives after the final caption of the same utterance.
+        public partner).
         """
         self.ensure_one()
         payload = {
@@ -61,9 +59,7 @@ class DiscussChannel(models.Model):
             'partner_id': partner_id or self.env.user.partner_id.id,
             'partner_name': partner_name or self.env.user.partner_id.name or "Participant",
             'text': text,
-            'is_final': is_final,
             'member_id': member_id,
-            'seq': seq,
             'time': datetime.now().strftime("%H:%M:%S"),
         }
         self._bus_send("discuss.channel/meeting_subtitle", payload)

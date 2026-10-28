@@ -31,8 +31,9 @@ const LANGUAGE_LOCK_PROBABILITY = 0.9; // auto-detected language reused once thi
 const LANGUAGE_LOCK_MIN_CHARS = 12; // ...on a caption at least this long
 const LANGUAGE_STREAK = 2; // ...or once this many captions in a row came out in the same language
 const LANGUAGE_RECHECK = 5; // a locked language is detected again every this many captions
-const PARTIAL_INTERVAL = 2; // with partial captions on: re-caption ongoing speech this often
-const MIN_PARTIAL = 1; // no partial caption before this much of the utterance
+const CAPTION_HOLD = 6; // each caption stays on screen this long, so it can be read
+const MAX_CAPTION_LINES = 3; // caption lines shown at once: the oldest go first beyond this
+const CAPTION_ERROR_INTERVAL = 30; // the same caption failure is shown at most this often
 // Hum and rumble (fans, air conditioning, a knocked desk) lie below this, voices above: removing
 // them keeps that noise from passing for speech. Hz.
 const HIGH_PASS_FREQUENCY = 100;
@@ -160,7 +161,7 @@ export class MeetingSpeechService {
             transcribeEnabled: false,
             subtitlesActive: false,
             isListening: false,
-            activeSubtitles: [], // [{ id, speaker, text, isFinal, time }]
+            activeSubtitles: [], // [{ id, speaker, text, time, expiresAt }]
             meetingStartTime: null,
             activeChannelId: null,
             language: "auto",
@@ -172,17 +173,14 @@ export class MeetingSpeechService {
         this.sourceNode = null;
         this.stream = null;
         this.captureAttempt = 0; // bumped by each start and stop: a start that awaited past a newer one gives up
-        this.pending = []; // [{ samples, channelId, seq }] at 16 kHz, waiting while a request is in flight
+        this.pending = []; // [{ samples, channelId }] at 16 kHz, waiting while a request is in flight
         this.sending = false;
         this.lockedLanguage = null; // language detected for this speaker when set to auto-detect
         this.languageStreak = { language: null, count: 0 };
         this.lockedCaptions = 0; // captions since the locked language was last checked
-        this.partialCaptions = false; // server setting: caption while the speaker is still talking
-        this.partialInFlight = false;
-        // Utterance numbers, starting from the clock so they keep increasing across page reloads.
-        this.utteranceSeq = Date.now();
-        this.remoteFinalSeq = {}; // subtitle id -> seq of the last final caption received
         this.fadeTimeout = null;
+        this.captionCount = 0; // gives each caption line its own id
+        this.captionErrorShownAt = {}; // failure message -> when it was last shown
         this.micUnavailable = false; // denied or failed in this call: don't prompt again on every change
         this.initBus();
         this.fetchSettings();
@@ -195,10 +193,9 @@ export class MeetingSpeechService {
                 if (res.language && res.language !== "auto") {
                     this.state.language = res.language;
                 }
-                this.partialCaptions = Boolean(res.partial_captions);
             }
         } catch {
-            // keep the defaults: captions still work, without partial captions
+            // keep the defaults: captions still work
         }
     }
 
@@ -268,7 +265,7 @@ export class MeetingSpeechService {
         }
     }
 
-    handleIncomingSubtitle({ partner_id, member_id, partner_name, text, is_final, time, seq }) {
+    handleIncomingSubtitle({ partner_id, member_id, partner_name, text, time }) {
         const store = this.store || this.env?.services?.["mail.store"];
         // Our own captions are already shown locally. Compare channel members, not partners:
         // every guest shares the public partner.
@@ -278,15 +275,6 @@ export class MeetingSpeechService {
             : Boolean(store?.self_partner && partner_id === store.self_partner.id);
         // the member tells guests apart: they all share the public partner
         const id = member_id ? `remote-member-${member_id}` : `remote-${partner_id || "guest"}`;
-        if (seq) {
-            const lastFinal = this.remoteFinalSeq[id] || 0;
-            if (!is_final && seq <= lastFinal) {
-                return; // a late partial of an utterance that is already final
-            }
-            if (is_final) {
-                this.remoteFinalSeq[id] = Math.max(lastFinal, seq);
-            }
-        }
 
         // If it's from another participant, display it in activeSubtitles
         if (!isSelf) {
@@ -294,7 +282,6 @@ export class MeetingSpeechService {
                 id,
                 speaker: partner_name,
                 text,
-                isFinal: is_final,
                 time:
                     time ||
                     new Date().toLocaleTimeString([], {
@@ -306,13 +293,16 @@ export class MeetingSpeechService {
         }
     }
 
-    updateActiveSubtitle({ id, speaker, text, isFinal, time }) {
-        const existingIdx = this.state.activeSubtitles.findIndex((s) => s.id === id);
+    /**
+     * Show a caption of the speaker ``id``. Each caption gets its own line, below the earlier
+     * ones, and stays CAPTION_HOLD seconds even when the next one follows right away, so it can
+     * be read.
+     */
+    updateActiveSubtitle({ id, speaker, text, time }) {
         const item = {
-            id,
+            id: `${id}-${++this.captionCount}`,
             speaker: speaker || _t("Speaker"),
             text,
-            isFinal,
             time:
                 time ||
                 new Date().toLocaleTimeString([], {
@@ -320,25 +310,25 @@ export class MeetingSpeechService {
                     minute: "2-digit",
                     second: "2-digit",
                 }),
-            updatedAt: Date.now(),
+            expiresAt: Date.now() + CAPTION_HOLD * 1000,
         };
+        // the oldest lines make room when people keep talking
+        this.state.activeSubtitles = [...this.state.activeSubtitles, item].slice(-MAX_CAPTION_LINES);
+        this.scheduleCaptionExpiry();
+    }
 
-        if (existingIdx >= 0) {
-            this.state.activeSubtitles[existingIdx] = item;
-        } else {
-            this.state.activeSubtitles.push(item);
+    /** Remove each caption line once its time is up. */
+    scheduleCaptionExpiry() {
+        clearTimeout(this.fadeTimeout);
+        if (!this.state.activeSubtitles.length) {
+            return;
         }
-
-        // Auto-dismiss subtitles after 4.5 seconds of silence
-        if (this.fadeTimeout) {
-            clearTimeout(this.fadeTimeout);
-        }
+        const next = Math.min(...this.state.activeSubtitles.map((s) => s.expiresAt));
         this.fadeTimeout = setTimeout(() => {
             const now = Date.now();
-            this.state.activeSubtitles = this.state.activeSubtitles.filter(
-                (s) => now - s.updatedAt < 4000
-            );
-        }, 4500);
+            this.state.activeSubtitles = this.state.activeSubtitles.filter((s) => s.expiresAt > now);
+            this.scheduleCaptionExpiry();
+        }, Math.max(0, next - Date.now()) + 50);
     }
 
     checkSupported() {
@@ -532,8 +522,6 @@ export class MeetingSpeechService {
                 return;
             }
             seg.speaking = true;
-            seg.seq = ++this.utteranceSeq;
-            seg.lastPartialAt = 0;
             seg.chunks = seg.preRoll.map((p) => p.block);
             seg.seconds = seg.preRollSeconds;
             seg.preRoll = [];
@@ -551,31 +539,17 @@ export class MeetingSpeechService {
             const chunks = seg.chunks;
             this.resetSegmenter();
             if (speechSeconds >= MIN_UTTERANCE) {
-                this.queueUtterance(chunks, sampleRate, seg.seq);
+                this.queueUtterance(chunks, sampleRate);
             }
         } else if (seg.seconds >= MAX_UTTERANCE) {
             // Still talking: cut at the quietest moment of the last stretch (most likely a gap
             // between words) and carry the rest over, rather than splitting a word in half.
             const audio = concatBlocks(seg.chunks);
             const at = quietestPoint(audio, sampleRate, SPLIT_SEARCH);
-            this.queueUtterance([audio.subarray(0, at)], sampleRate, seg.seq);
+            this.queueUtterance([audio.subarray(0, at)], sampleRate);
             seg.chunks = [audio.slice(at)];
             seg.seconds = seg.chunks[0].length / sampleRate;
             seg.silence = 0;
-            seg.seq = ++this.utteranceSeq; // the carried-over part is a new utterance
-            seg.lastPartialAt = 0;
-        } else if (
-            this.partialCaptions &&
-            seg.silence === 0 &&
-            seg.seconds >= MIN_PARTIAL &&
-            seg.seconds - seg.lastPartialAt >= PARTIAL_INTERVAL &&
-            // only when idle: a backlog of final captions matters more than a preview
-            !this.partialInFlight &&
-            !this.sending &&
-            !this.pending.length
-        ) {
-            seg.lastPartialAt = seg.seconds;
-            this.sendPartial(seg.chunks.slice(), sampleRate, seg.seq);
         }
     }
 
@@ -583,17 +557,16 @@ export class MeetingSpeechService {
         return downsample(concatBlocks(chunks), sampleRate, TARGET_SAMPLE_RATE);
     }
 
-    queueUtterance(chunks, sampleRate, seq) {
+    queueUtterance(chunks, sampleRate) {
         this.pending.push({
             samples: this.toSamples(chunks, sampleRate),
             channelId: this.state.activeChannelId,
-            seq,
         });
         this.flushPending();
     }
 
     /** Post audio for transcription. Resolves to the server reply. */
-    async postAudio(wav, channelId, fields, detectLanguage = false) {
+    async postAudio(wav, channelId, detectLanguage = false) {
         const formData = new FormData();
         formData.append("file", wav, "audio.wav");
         formData.append("channel_id", channelId);
@@ -601,47 +574,11 @@ export class MeetingSpeechService {
         if (this.lockedLanguage && !detectLanguage) {
             formData.append("language", this.lockedLanguage);
         }
-        for (const [name, value] of Object.entries(fields)) {
-            formData.append(name, value);
-        }
         const res = await fetch("/discuss/meeting/transcribe_chunk", {
             method: "POST",
             body: formData,
         });
         return res.json();
-    }
-
-    /** Caption the utterance so far, while the speaker is still talking; refined once it is final. */
-    async sendPartial(chunks, sampleRate, seq) {
-        const channelId = this.state.activeChannelId;
-        if (!channelId) {
-            return;
-        }
-        this.partialInFlight = true;
-        try {
-            const wav = encodeWav(this.toSamples(chunks, sampleRate), TARGET_SAMPLE_RATE);
-            const data = await this.postAudio(wav, channelId, { partial: "1", seq });
-            // Shown only while that utterance is still being spoken: once it is cut, its final
-            // caption is on the way and a stale preview must not replace it.
-            if (
-                data?.text &&
-                this.state.subtitlesEnabled &&
-                this.segmenter?.speaking &&
-                this.segmenter.seq === seq
-            ) {
-                const store = this.store || this.env?.services?.["mail.store"];
-                this.updateActiveSubtitle({
-                    id: "local-user",
-                    speaker: store?.self_partner?.name || _t("You"),
-                    text: data.text,
-                    isFinal: false,
-                });
-            }
-        } catch {
-            // a lost preview is replaced by the final caption anyway
-        } finally {
-            this.partialInFlight = false;
-        }
     }
 
     /**
@@ -656,11 +593,8 @@ export class MeetingSpeechService {
         }
         const channelId = this.pending[0].channelId;
         const batch = [];
-        let seq;
         while (this.pending.length && this.pending[0].channelId === channelId) {
-            const item = this.pending.shift();
-            batch.push(item.samples);
-            seq = item.seq;
+            batch.push(this.pending.shift().samples);
         }
         const gap = Math.round(BATCH_GAP * TARGET_SAMPLE_RATE);
         const length = (parts) =>
@@ -676,14 +610,14 @@ export class MeetingSpeechService {
         }
         this.sending = true;
         try {
-            await this.sendUtterance(encodeWav(samples, TARGET_SAMPLE_RATE), channelId, seq);
+            await this.sendUtterance(encodeWav(samples, TARGET_SAMPLE_RATE), channelId);
         } finally {
             this.sending = false;
             this.flushPending();
         }
     }
 
-    async sendUtterance(wav, channelId, seq) {
+    async sendUtterance(wav, channelId) {
         if (!channelId) {
             return;
         }
@@ -691,7 +625,7 @@ export class MeetingSpeechService {
         const myName = store?.self_partner?.name || _t("You");
         try {
             const recheck = Boolean(this.lockedLanguage) && this.lockedCaptions >= LANGUAGE_RECHECK;
-            const data = await this.postAudio(wav, channelId, seq ? { seq } : {}, recheck);
+            const data = await this.postAudio(wav, channelId, recheck);
             if (channelId !== this.state.activeChannelId) {
                 return; // the meeting ended (or moved) while this was being transcribed
             }
@@ -701,19 +635,34 @@ export class MeetingSpeechService {
             if (data && "transcribe" in data) {
                 this.applyAiState({ ...data, channel_id: channelId });
             }
+            if (data?.caption_error) {
+                this.notifyCaptionError(data.caption_error);
+            }
             if (data && data.text) {
                 if (this.state.subtitlesEnabled) {
                     this.updateActiveSubtitle({
                         id: "local-user",
                         speaker: myName,
                         text: data.text,
-                        isFinal: true,
                     });
                 }
             }
         } catch {
             // network or server error: this caption is lost, the next one is sent normally
         }
+    }
+
+    /**
+     * Tell the speaker why their caption was lost (the cloud speech engine failed). A failure that
+     * repeats, like a rate limit, is shown once in a while rather than for every caption.
+     */
+    notifyCaptionError(message) {
+        const now = Date.now();
+        if (now - (this.captionErrorShownAt[message] || 0) < CAPTION_ERROR_INTERVAL * 1000) {
+            return;
+        }
+        this.captionErrorShownAt[message] = now;
+        this.notification?.add(message, { type: "warning", sticky: false });
     }
 
     /**

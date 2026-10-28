@@ -1,231 +1,1162 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Discuss Meeting Live Subtitles &amp; AI Summaries</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" />
-  <style>
-    :root {
-      --primary-color: #714b67;
-      --accent-color: #017e84;
-      --text-color: #121212;
-      --text-color-light: #64728f;
-    }
-
-    body {
-      font-family: "Montserrat", sans-serif;
-      color: var(--text-color);
-    }
-
-    .feature-card {
-      border: 2px solid #e9ecef;
-      border-radius: 10px;
-      padding: 24px;
-      height: 100%;
-      background-color: #fff;
-    }
-
-    .feature-card i {
-      font-size: 28px;
-      color: var(--accent-color);
-    }
-
-    .feature-card h5 {
-      font-weight: 700;
-      margin: 14px 0 8px;
-    }
-
-    .feature-card p,
-    .feature-card li {
-      color: var(--text-color-light);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .section-title {
-      font-weight: 700;
-      color: var(--primary-color);
-      margin: 40px 0 20px;
-    }
-
-    .badge-support {
-      background-color: #71639e;
-      color: #fff;
-      font-weight: 500;
-      padding: 8px 16px;
-      border-radius: 50px;
-      min-width: 130px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-    }
-  </style>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Discuss Meeting Live Subtitles &amp; AI Summaries</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap"
+          rel="stylesheet"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
 </head>
 
-<body>
-  <div class="container">
-    <!-- support header -->
-    <div class="my-3 py-3 px-4" style="border: 2px solid #e9ecef; border-radius: 10px; background-color: #fff;">
-      <div class="row justify-content-between align-items-center">
-        <div class="col-lg-3">
-          <div class="my-3 mx-auto mx-sm-0" style="width: 250px">
-            <img src="//apps.odoocdn.com/apps/assets/17.0/theme_boec/images/Cybrosys.png?fcdde35" alt="Cybrosys Technologies" style="width: 100%" />
-          </div>
-        </div>
-        <div class="col-lg-9">
-          <div class="my-3 d-flex flex-wrap align-items-center justify-content-center justify-content-sm-end gap-2">
-            <span class="me-2"><b>Supports:</b></span>
-            <span class="badge-support"><i class="fa-solid fa-check"></i> Community</span>
-            <span class="badge-support"><i class="fa-solid fa-check"></i> Enterprise</span>
-            <span class="badge-support"><i class="fa-solid fa-check"></i> Odoo.sh</span>
-          </div>
-        </div>
-      </div>
-    </div>
+<body style="font-family: &quot;Montserrat&quot;, sans-serif;background-color: #71639e08;">
 
-    <!-- overview -->
-    <div class="row align-items-center my-5">
-      <div class="col-12">
-        <h1 style="font-weight: 700;">Discuss Meeting Live Subtitles &amp; AI Summaries</h1>
-        <p class="lead" style="color: var(--text-color-light);">
-          Live closed captions and AI meeting minutes for Odoo Discuss calls. Speech is transcribed on your own
-          server by default, so meeting audio never has to leave it.
-        </p>
-      </div>
-    </div>
+<div class="container-fluid cmpad">
+    <div class="supports my-3 py-3" style="padding: 0 35px;border-radius: 10px;border: 2px solid #e9ecef;background-color: white;">
+        <div class="row justify-content-between align-items-center">
+            <div class="col-lg-3">
+                <div class="my-3 mx-auto mx-sm-0" style="width: 250px;">
+                    <img src="//apps.odoocdn.com/apps/assets/17.0/theme_boec/images/Cybrosys.png?fcdde35"
+                         style="width: 100%;" alt="Cybrosys Technologies">
+                </div>
+            </div>
+            <div class="col-lg-9">
+                <div class="row">
+                    <div class="my-3 d-flex align-items-center justify-content-center justify-content-sm-end">
+                        <span class="me-3"><b>Supports: </b></span>
+                        <div class="text-center" style="
+                    background-color: #71639e !important;
+                    font-size: 1rem !important;
+                    color: #fff !important;
+                    font-weight: 500 !important;
+                    padding: 8px !important;
+                    margin: 0 3px !important;
+                    border-radius: 50px !important;
+                    min-width: 130px !important;
+                  ">
+                            Community
+                        </div>
+                        <div class="text-center" style="
+                    background-color: #9e6390 !important;
+                    font-size: 1rem !important;
+                    color: #fff !important;
+                    font-weight: 500 !important;
+                    padding: 8px !important;
+                    margin: 0 3px !important;
+                    border-radius: 50px !important;
+                    min-width: 130px !important;
+                  ">
+                            Enterprise
+                        </div>
+                    </div>
+                </div>
+                <div class="row" style="margin-top: 10px;display: flex;justify-content: end;float: right;">
+                    <div class="d-flex align-items-center justify-content-end flex-wrap gap-2">
+                        <span class="me-3"><b>Availability: </b></span>
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-center col" style="
+                    border: 2px solid #ebebeb;
+    font-size: 1rem !important;
+    color: #333 !important;
+    font-weight: 500 !important;
+    padding: 8px !important;
+    margin: 0 3px !important;
+    border-radius: 20px !important;
+    min-width: 150px !important;
 
-    <!-- key features -->
-    <h2 class="section-title">Key Features</h2>
-    <div class="row g-4">
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-closed-captioning"></i>
-          <h5>Live Subtitles</h5>
-          <p>Turn on <b>Subtitle(CC)</b> in a call to read what everyone says, with each speaker's name. Captions
-            are personal: only the people who turn them on see them.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-file-lines"></i>
-          <h5>Call Transcription</h5>
-          <p>Internal users can turn on <b>Transcribe</b> to record the whole call into a meeting record. Everyone
-            in the call is notified and sees a <b>Transcribing</b> indicator while it runs.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-wand-magic-sparkles"></i>
-          <h5>AI Meeting Summaries</h5>
-          <p>Generate meeting minutes with an overview, key discussion points, decisions and action items, during
-            the call or after it, and post them to the channel in one click.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-microphone-lines"></i>
-          <h5>Speech Engines</h5>
-          <ul class="ps-3 mb-0">
-            <li><b>Whisper</b>: accurate local transcription in 99 languages.</li>
-            <li><b>Whistle</b>: a tiny, fast local model for seven European languages.</li>
-            <li><b>Auto</b>: Whistle first, with Whisper redoing captions Whistle is unsure of.</li>
-            <li><b>Grok STT</b>: xAI cloud transcription, with no load on your server.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-robot"></i>
-          <h5>Summary Providers</h5>
-          <ul class="ps-3 mb-0">
-            <li><b>Built-in summarizer</b>: works without any API key.</li>
-            <li><b>OpenAI</b>: summaries with models such as gpt-4o-mini.</li>
-            <li><b>Ollama</b>: a private, local language model.</li>
-          </ul>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-film"></i>
-          <h5>Recording Upload</h5>
-          <p>Upload an audio or video recording to a channel. It is transcribed in the background, and its summary
-            is posted to the channel when it is ready.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-user-tag"></i>
-          <h5>Accurate Names</h5>
-          <p>The names of the people in the call, and the keywords you configure, are passed to the speech engine
-            so names, places and product terms are spelled correctly.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-shield-halved"></i>
-          <h5>Privacy and Access</h5>
-          <p>Audio stays on your server unless you choose a cloud engine or the OpenAI fallback. Transcripts and
-            summaries are visible to internal members of the channel only.</p>
-        </div>
-      </div>
-      <div class="col-md-6 col-lg-4">
-        <div class="feature-card">
-          <i class="fa-solid fa-language"></i>
-          <h5>Languages</h5>
-          <p>Pick the meeting language, or let each speaker's language be detected automatically. A main language
-            is assumed whenever the detection is unsure.</p>
-        </div>
-      </div>
-    </div>
+                  ">
+                            <img src="./assets/icons/close.png" alt="" width="18" height="18">
+                            Odoo Online
+                        </div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-center col" style="
+                    border: 2px solid #ebebeb;
+    font-size: 1rem !important;
+    color: #333 !important;
+    font-weight: 500 !important;
+    padding: 8px !important;
+    margin: 0 3px !important;
+    border-radius: 20px !important;
+    min-width: 150px !important;
 
-    <!-- configuration -->
-    <h2 class="section-title">Configuration</h2>
-    <div class="feature-card">
-      <ol class="mb-0" style="color: var(--text-color-light); line-height: 1.8;">
-        <li>Go to <b>Settings &gt; Discuss &gt; Meeting Subtitles &amp; AI Summaries</b>.</li>
-        <li>Choose the speech-to-text engine. For Grok STT, enter your xAI API key.</li>
-        <li>Add names, places and product terms to <b>Keywords</b> to improve how they are recognized.</li>
-        <li>Choose the AI provider for summaries and the speech recognition language.</li>
-      </ol>
-    </div>
+                  ">
+                            <img src="./assets/icons/tick.png" alt="" width="18" height="18">
+                            Odoo.sh
+                        </div>
+                        <div class="d-flex align-items-center justify-content-center gap-2 text-center col" style="
+                    border: 2px solid #ebebeb;
+    font-size: 1rem !important;
+    color: #333 !important;
+    font-weight: 500 !important;
+    padding: 8px !important;
+    margin: 0 3px !important;
+    border-radius: 20px !important;
+    min-width: 150px !important;
 
-    <!-- usage -->
-    <h2 class="section-title">How to Use</h2>
-    <div class="feature-card">
-      <ol class="mb-0" style="color: var(--text-color-light); line-height: 1.8;">
-        <li>Start or join a call in any Discuss channel.</li>
-        <li>Click <b>Subtitle(CC)</b> to see live captions, and <b>Transcribe</b> to record the conversation.</li>
-        <li>Open <b>AI Summary &amp; Notes</b> to read the transcript and generate a summary.</li>
-        <li>Post the summary to the channel, or find it later under <b>Discuss &gt; Meeting Summaries</b>.</li>
-      </ol>
+                  ">
+                            <img src="./assets/icons/tick.png" alt="" width="18" height="18">
+                            On Premise
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <!-- support -->
-    <h2 class="section-title">Need Help?</h2>
-    <div class="row g-4 mb-5">
-      <div class="col-md-6">
-        <div class="feature-card">
-          <i class="fa-solid fa-envelope"></i>
-          <h5>Email Support</h5>
-          <p class="mb-0"><a href="mailto:odoo@cybrosys.com">odoo@cybrosys.com</a></p>
+<div class="container-fluid cmpad text-center py-5 py-md-3">
+    <div class="row">
+        <div class="col-md-12">
+            <h3 class="mainhead" style="font-size: 2.3rem;padding-top: 1rem;font-weight: 700;color: black;">
+                Discuss Meeting Live Subtitles &amp; AI Summaries</h3>
+            <p class="para mb-4" style="font-size: 20px;color: #6b7280;">Live Captions and AI Meeting Minutes for Odoo Discuss Calls.</p>
+
+            <div class="d-flex justify-content-center gap-1 flex-wrap">
+                <a href="mailto:odoo@cybrosys.com"
+                   class="contact-btn d-flex align-items-center gap-2 justify-content-center"
+                   style="position: relative;padding: 15px 25px;border: none;border-radius: 50px;font-size: 16px;font-weight: 600;text-decoration: none;color: white;cursor: pointer;min-width: 200px;justify-content: center;background-color: #4facfe">
+                    <img src="./assets/icons/mail.png" alt="" width="25" height="25">
+                    <span class="btn-text" style="font-size: 15px;letter-spacing: 0.5px;">Email Us</span>
+                </a>
+                <a href="skype:"
+                   class="contact-btn d-flex align-items-center gap-2 justify-content-center"
+                   style="position: relative;padding: 15px 25px;border: none;border-radius: 50px;font-size: 16px;font-weight: 600;text-decoration: none;color: white;cursor: pointer;min-width: 200px;justify-content: center;background-color: #555ecb">
+                    <img src="./assets/icons/tms.png" alt="" width="30" height="30">
+                    <span class="btn-text" style="font-size: 15px;letter-spacing: 0.5px;">Teams</span>
+                </a>
+                <a href="https://wa.me/919074270811"
+                   class="contact-btn d-flex align-items-center gap-2 justify-content-center"
+                   style="position: relative;padding: 15px 25px;border: none;border-radius: 50px;font-size: 16px;font-weight: 600;text-decoration: none;color: white;cursor: pointer;min-width: 200px;justify-content: center;background-color: #25d366">
+                    <img src="./assets/icons/whatsapp.png" alt="" width="25" height="25">
+                    <span class="btn-text" style="font-size: 15px;letter-spacing: 0.5px;">+91 9074270811</span>
+                </a>
+            </div>
         </div>
-      </div>
-      <div class="col-md-6">
-        <div class="feature-card">
-          <i class="fa-solid fa-globe"></i>
-          <h5>Website</h5>
-          <p class="mb-0"><a href="https://www.cybrosys.com" target="_blank">www.cybrosys.com</a></p>
-        </div>
-      </div>
     </div>
-  </div>
+</div>
+
+<div class="container-fluid cmpad py-2 py-md-5">
+    <div class="highlights-section">
+        <h2 class="mainhead text-center" style="font-size: 2rem;font-weight: 700;color: black;">Key
+            <span>Highlights</span>
+        </h2>
+        <div class="row" style="margin-top: 20px;">
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Community &amp; Enterprise Support</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Works seamlessly in both Odoo Community and Enterprise editions.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Live Subtitles in Discuss Calls</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Read what everyone says during audio and video calls, with each speaker's name next to the text.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Call Transcription</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Record the whole call into a meeting record. Everyone in the call is notified while it runs.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        AI Meeting Summaries</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Turn the transcript into minutes with key points, decisions and action items, and post them to the channel.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Local or Cloud Speech Engines</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Transcribe on your own server with Whisper or Whistle, or in the cloud with Grok STT or Cloud Whisper (Groq, OpenAI or your own GPU server).</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Accurate Names and Terms</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Participant names and your keywords are passed to the speech engine, so they are spelled correctly.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Recording Upload</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Upload an audio or video recording to a channel: it is transcribed in the background and summarized.</p>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="highlight-card h-100" style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;margin-bottom: 12px;letter-spacing: -0.025em;">
+                        Caption Failure Notices</h3>
+                    <p class="card-description"
+                       style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">When a caption cannot be transcribed, the speaker sees a short notice saying why, such as a reached request limit.</p>
+                </div>
+            </div>
+        </div>
+        <!-- Requirements -->
+        <section class="oe_container">
+            <div class="mt64 mb64">
+                <div class="col-sm-12 py-4">
+                    <div class="alert alert-primary mt-4" style="color: #000;background-color: #f8f8f8;border: 1px solid #dcdcdc;border-radius: 16px;">
+                        The local speech engines use external python dependencies: faster-whisper for Whisper and
+                        the transcription of uploaded recordings, and cactus-needle for Whistle. Install them in the
+                        python environment that runs Odoo before using these engines, with the following commands.
+                        The module installs without them, and the cloud engines (Grok STT and Cloud Whisper) need
+                        no package for live captions.
+                        <br>
+                        <br>
+                        <code class="d-block mt-2" style="background-color: #4e4e4e;color: #fff;border-radius: 5px;padding: 6px 8px;">pip install faster-whisper cactus-needle</code>
+                        <p class="mt-2 mb-0">Alternatively, you can use:</p>
+                        <code class="d-block mt-2" style="background-color: #4e4e4e;color: #fff;padding: 6px 8px;border-radius: 5px;">pip3 install faster-whisper cactus-needle</code>
+                        <br>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="oe_container">
+            <div class="mt16 mb16">
+                <div class="col-sm-12 py-2">
+                    <div class="alert alert-primary mt-3" style="color: #000;background-color: #f8f8f8;border: 1px solid #dcdcdc;border-radius: 16px;padding: 12px;">
+                        <p style="margin: 0 0 8px 0;font-size: 16px;line-height: 1.5;">
+                            If you are using <strong>Odoo.sh</strong>, you can install the required packages by
+                            following the instructions in the blog post below:
+                        </p>
+                        <div style="display: flex;background-color: #000;padding: 8px 12px;border-radius: 8px;">
+                            <img src="./assets/icons/copylink.svg" alt="Copy Link" style="width: 100px;height: 20px;">
+                            <a href="https://www.cybrosys.com/blog/how-to-install-an-external-python-package-on-odoosh"
+                               target="_blank"
+                               style="color: #fff;text-decoration: none;font-weight: bold;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                                https://www.cybrosys.com/blog/how-to-install-an-external-python-package-on-odoosh
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<div class="container-fluid cmpad py-2 py-md-5">
+    <div class="tabs-design1">
+        <ul class="nav nav-pills justify-content-start justify-content-md-center pb-4"
+            style="flex-flow: nowrap;overflow: hidden;overflow-x: auto;" id="pills1" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link active" id="screenshot-tab" data-bs-toggle="pill" data-bs-target="#screenshot"
+                   type="button" role="tab" style="width: max-content;border-radius: 50px;
+    margin: 0 5px;
+    padding: 12px 24px;
+    font-weight: 500;
+
+    border: 2px solid #e9ecef;
+    position: relative;
+
+    ">
+                    Screenshot
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="features-tab" data-bs-toggle="pill" data-bs-target="#features"
+                   type="button" role="tab" style="width: max-content;border-radius: 50px;
+    margin: 0 5px;
+    padding: 12px 24px;
+    font-weight: 500;
+
+    border: 2px solid #e9ecef;
+    position: relative;
+
+    ">
+                    Features
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="faq-tab" data-bs-toggle="pill" data-bs-target="#faq"
+                   type="button" role="tab" style="width: max-content;border-radius: 50px;
+    margin: 0 5px;
+    padding: 12px 24px;
+    font-weight: 500;
+
+    border: 2px solid #e9ecef;
+    position: relative;
+
+    ">
+                    Frequent Questions
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link" id="latest-release-tab" data-bs-toggle="pill" data-bs-target="#latest-release"
+                   type="button" role="tab" style="width: max-content;border-radius: 50px;
+    margin: 0 5px;
+    padding: 12px 24px;
+    font-weight: 500;
+
+    border: 2px solid #e9ecef;
+    position: relative;
+
+    ">
+                    Latest Release
+                </a>
+            </li>
+        </ul>
+        <div class="tab-content bg-white rounded-4" style="border: 2px solid #e9ecef;border-radius: 10px;"
+             id="pills1Content">
+            <div class="tab-pane fade show active" id="screenshot" role="tabpanel">
+                <div class="p-3 py-md-5">
+                    <h2 class="mainhead text-center mb-2"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Meeting Subtitles &amp; AI Summaries Settings</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Go to Settings &gt; Discuss to choose the speech engine, the Whisper model, keywords, the meeting language and the AI summarization engine.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/1.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Subtitles, Transcription and AI Summary in the Call</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        In a Discuss call, open the More menu to turn on Subtitle(CC), start transcribing, or open AI Summary &amp; Notes.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/2.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Live Captions</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Each caption shows the speaker's name. New captions appear under the earlier ones, which stay on screen long enough to be read.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/3.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Call Transcription</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        When transcription starts, everyone in the call is notified and sees the Transcribing indicator.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/4.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Live Meeting Transcript</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        AI Summary &amp; Notes shows the timestamped transcript of the call so far, ready to copy.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/5.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>AI Meeting Summary</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Generate the summary with key discussion points, decisions and action items, then post it to the channel.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/6.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Meeting Minutes in the Channel</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        The summary is posted to the channel with the date, duration and attendees, and a link to the full transcript.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/7.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Meeting Summaries</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Every meeting is kept under Discuss &gt; Meeting Summaries, with its attendees and status.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/8.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Meeting Summary Record</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Each record holds the summary, the key points and decisions, the action items and the raw transcript.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/9.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Upload a Meeting Recording</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        Upload an audio or video recording from the channel: it is transcribed in the background and its summary is posted when it is ready.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/10.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                    <h2 class="mainhead text-center mb-2 mt-5"
+                        style="font-size: 2rem;font-weight: 700;color: black;">
+                        <span>Notice When a Caption Is Lost</span></h2>
+                    <div class="para"
+                         style="max-width: 80%;text-align: center;margin: auto;font-size: 18px;margin-bottom: 2rem;color: #6b7280;">
+                        If a caption cannot be transcribed, for example when a cloud engine's request limit is reached, the speaker is told why.
+                    </div>
+                    <div style="border-radius: 10px;
+                        overflow: hidden;
+                        border: 2px solid #e7e7e7;">
+                        <img src="./assets/screenshots/11.png" alt="" style="max-width: 100%;height: auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="features" role="tabpanel">
+                <div class="p-3 py-md-5">
+                    <h2 class="mainhead text-center mb-4" style="font-size: 2rem;font-weight: 700;color: black;">Our
+                        <span>Features</span>
+                    </h2>
+                    <div class="row" style="border-radius: 10px;">
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">01
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Community &amp; Enterprise Support</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">02
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Live Captions with Speaker Names</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">03
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Transcribe Button with a Notice to Every Participant</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">04
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Local Whisper and Whistle, or Cloud Whisper on Groq and OpenAI</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">05
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Summaries by the Built-in Summarizer, OpenAI or Ollama</h3>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-item mb-4  d-flex flex-column align-items-center justify-content-center"
+                                 style="
+    padding: 25px;
+    background-color: #637eea0d;
+    border-radius: 10px;
+    text-align: left;">
+                                <div class="feature-number d-flex align-items-center justify-content-center" style="    width: 45px;
+    height: 45px;
+    background-color: #7877c633;
+    border-radius: 50%;
+
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #71639e;
+    margin-bottom: 15px;
+    ">06
+                                </div>
+                                <h3 class="feature-title text-center" style="font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0;
+    color: black;
+    line-height: 1.3;">Transcription and Summary of Uploaded Recordings</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="faq" role="tabpanel">
+                <div class="p-3 py-md-5">
+                    <h2 class="mainhead text-center mb-4" style="font-size: 2rem;font-weight: 700;color: black;">
+                        Frequently Asked <span>Questions</span></h2>
+                    <div class="modern-accordion">
+                        <div class="accordion accordion-flush" id="accordionFlushExample">
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse1" aria-expanded="false"
+                                       aria-controls="flush-collapse1">
+                                        Does meeting audio leave my server?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse1" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            Not with the Whisper and Whistle engines: speech is transcribed on your own Odoo server. Audio is sent out only if you choose a cloud engine (Grok STT or Cloud Whisper) or turn on the OpenAI Speech Fallback.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse2" aria-expanded="false"
+                                       aria-controls="flush-collapse2">
+                                        What do I need to install?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse2" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            The local engines need Python packages in the environment that runs Odoo: faster-whisper for Whisper and uploaded recordings, cactus-needle for Whistle. The module installs without them, and Settings warns when the selected engine&#x27;s package is missing. Grok STT needs no package.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse3" aria-expanded="false"
+                                       aria-controls="flush-collapse3">
+                                        Do I need an API key?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse3" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            No for the local engines and the built-in summarizer. Grok STT needs an xAI API key, Cloud Whisper the key of its provider (for example Groq), and OpenAI summaries an OpenAI API key.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse4" aria-expanded="false"
+                                       aria-controls="flush-collapse4">
+                                        Who sees the captions?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse4" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            Subtitle(CC) is personal: only the participants who turn it on see captions. While anyone has it on, everyone in the call is captioned.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse5" aria-expanded="false"
+                                       aria-controls="flush-collapse5">
+                                        Who can read the transcripts and summaries?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse5" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            Internal users who are members of the channel. Only internal users can turn transcription on or off.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse6" aria-expanded="false"
+                                       aria-controls="flush-collapse6">
+                                        Which languages are supported?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse6" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            Whisper recognizes 99 languages; Whistle supports English, German, French, Spanish, Italian, Dutch and Polish. Choose the meeting language in Settings, or let it be detected automatically.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="accordion-item loading-animation"
+                                 style="margin-bottom: 1rem;overflow: hidden;background-color: white;border: 2px solid #e2e8f0 !important;border-radius: 10px !important;">
+                                <h2 class="accordion-header" style="border-radius: 10px;">
+                                    <a class="accordion-button collapsed" type="button" style="box-shadow: unset;
+    border: none !important;
+    padding: 1.5rem 2rem !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem;
+
+    color: #71639e !important;
+    background-color: #e3e3f3a9 !important;
+    position: relative;
+    overflow: hidden;" data-bs-toggle="collapse" data-bs-target="#flush-collapse7" aria-expanded="false"
+                                       aria-controls="flush-collapse7">
+                                        How quickly do captions appear?
+                                    </a>
+                                </h2>
+                                <div id="flush-collapse7" class="accordion-collapse collapse"
+                                     data-bs-parent="#accordionFlushExample" style="border-top: 1px solid #e2e8f0;">
+                                    <div class="accordion-body"
+                                         style="background-color: rgba(99, 102, 241, 0.02);line-height: 1.6;font-size: 1rem;padding: 2rem !important;">
+                                        <p style="margin-bottom: 1rem;">
+                                            A caption appears after the speaker pauses. With a cloud engine it typically takes about one to two seconds; with a local engine it depends on the server&#x27;s CPU, or GPU if it has one.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="latest-release" role="tabpanel">
+                <div class="p-3 py-md-5">
+                    <h2 class="mainhead text-center mb-4" style="font-size: 2rem;font-weight: 700;color: black;">
+                        Latest <span>Releases</span></h2>
+                    <div class="row">
+                        <div class="col-md-4 mb-4">
+                            <div class="release-item h-100" style="position: relative;padding: 30px;border: 2px solid #71639e24;border-radius: 15px;">
+                                <div class="release-header d-flex align-items-center flex-wrap gap-3" style="margin-bottom: 0.75rem;">
+                                    <div class="version" style="font-size: 1.25rem;font-weight: 700;color: #1a202c;">
+                                        Latest Release 19.0.1.0.0
+                                    </div>
+                                    <div style="padding: 0.25rem 0.75rem;
+                                        border-radius: 20px;
+                                        font-size: 0.75rem;
+                                        font-weight: 600;
+                                        text-transform: uppercase;
+                                        letter-spacing: 0.5px;
+                                        position: relative;
+                                        overflow: hidden;    background-color: #9ae6b4;
+                                        color: #2d7d32;
+                                        border: 2px solid #68d391;" class="add">Add
+                                    </div>
+                                    <div class="date" style="color: #64748b;font-size: 0.875rem;font-weight: 500;gap: 0.5rem;">
+                                        <img src="./assets/icons/calendar.png" alt="" width="16" height="16"
+                                             style="margin-right: 5px;">
+                                        26th October, 2026
+                                    </div>
+                                </div>
+                                <div class="feature-list">
+                                    <div class="feature-item p-3" style="display: flex;align-items: center;background-color: #f5f5f5e7;border-radius: 10px;text-align: left;">
+                                        <div class="feature-text" style="color: #6b7280;line-height: 1.6;font-size: 0.95rem;">
+                                            Initial Commit
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid cmpad py-2 py-md-5">
+    <div class="highlights-section">
+        <h2 class="mainhead text-center" style="font-size: 2rem;font-weight: 700;color: black;">Related
+            <span>Modules</span>
+        </h2>
+        <div class="row">
+            <div class="col-md-4 mb-4">
+                <a href="https://apps.odoo.com/apps/modules/19.0/base_accounting_kit" style="text-decoration: none;">
+                    <div class="highlight-card h-100 p-4" style="background-color: white;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                        <h3 class="card-title"
+                            style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                            Odoo 19 Full Accounting Kit for Community</h3>
+                        <p class="card-description"
+                           style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">A Full-Fledged Accounting kit For Every Organization.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="https://apps.odoo.com/apps/modules/19.0/auto_database_backup" style="text-decoration: none;">
+                    <div class="highlight-card h-100 p-4" style="background-color: white;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                        <h3 class="card-title"
+                            style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                            Automatic Database Backup Odoo19</h3>
+                        <p class="card-description"
+                           style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">This Module Helps To Generate Automated Backup Of Databases.</p>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4 mb-4">
+                <a href="https://apps.odoo.com/apps/modules/19.0/base_account_budget" style="text-decoration: none;">
+                    <div class="highlight-card h-100 p-4" style="background-color: white;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                        <h3 class="card-title"
+                            style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                            Odoo 19 Budget Management</h3>
+                        <p class="card-description"
+                           style="font-size: 16px;color: #6b7280;margin-bottom: 0;line-height: 1.6;">Budget Management for Odoo 19 Community Edition.</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container-fluid cmpad py-2 py-md-5">
+    <div class="highlights-section">
+        <h2 class="mainhead text-center" style="font-size: 2rem;font-weight: 700;color: black;">Our
+            <span>Services</span>
+        </h2>
+        <div class="row">
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/setting.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Customization</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/imple.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Implementation</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/support.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Support</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/transfer.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Migration</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/idea.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Integration</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chat.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Consultancy</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/chart.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Odoo Licensing</h3>
+                </div>
+            </div>
+            <div class="col-md-3 mb-4">
+                <div class="highlight-card h-100 high d-flex flex-column justify-content-center align-items-center text-center"
+                     style="background-color: #8d76d51f;
+    backdrop-filter: blur(20px);
+    border-radius: 10px;
+    padding: 32px;
+    border: 2px solid #71639e1a;
+    position: relative;
+    overflow: hidden;">
+                    <div class="card-icon d-flex align-items-center justify-content-center gap-2"
+                         style="width: 60px;height: 60px;border-radius: 10px;margin-bottom: 24px;position: relative;overflow: hidden;background-color: #71639e;">
+                        <img src="./assets/icons/people.png" alt="" width="30" height="30">
+                    </div>
+                    <h3 class="card-title"
+                        style="font-size: 20px;font-weight: 600;color: black;letter-spacing: -0.025em;">
+                        Hire Odoo Developer</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 </body>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </html>

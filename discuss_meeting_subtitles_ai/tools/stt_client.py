@@ -29,6 +29,7 @@ worker queues every caption of the server, final captions first.
 import contextlib
 import fcntl
 import hashlib
+import importlib.metadata
 import io
 import json
 import logging
@@ -56,6 +57,9 @@ FIRST_LOAD_TIMEOUT = 600  # the first request may download and load a model
 REQUEST_TIMEOUT = 60
 START_TIMEOUT = 15  # for the worker to listen once started (the models load on first use)
 HELLO_TIMEOUT = 10
+# The Python package each local engine runs on. Optional: the module installs without them, and
+# an engine whose package is missing is reported in Settings and to the speaker.
+ENGINE_PACKAGES = {"whisper": "faster-whisper", "whistle": "cactus-needle"}
 
 
 class SttWorkerError(Exception):
@@ -187,12 +191,28 @@ _SILENCE = _silent_wav()
 
 
 def _header(engine, language, model, keywords, prompt=None, beam_size=5, main_language=None,
-            partial=False, lock_timeout=LOCK_TIMEOUT, workers=1):
+            lock_timeout=LOCK_TIMEOUT, workers=1):
     return {
         "engine": engine, "language": language, "model": model, "keywords": keywords or [],
         "prompt": prompt or None, "beam_size": beam_size, "main_language": main_language,
-        "partial": partial, "lock_timeout": lock_timeout, "workers": workers,
+        "lock_timeout": lock_timeout, "workers": workers,
     }
+
+
+def missing_package(engine):
+    """The Python package ``engine`` needs that is not installed in Odoo's Python, or None.
+
+    Looked up by distribution name: ``cactus-needle`` imports as ``needle``, the name of an
+    unrelated package too. The worker runs on this same Python, so this is what it sees.
+    """
+    package = ENGINE_PACKAGES.get(engine)
+    if not package:
+        return None
+    try:
+        importlib.metadata.distribution(package)
+    except importlib.metadata.PackageNotFoundError:
+        return package
+    return None
 
 
 def warm_up(engine, model="small", workers=1):
@@ -200,9 +220,8 @@ def warm_up(engine, model="small", workers=1):
 
     def run():
         try:
-            # like a partial caption that never waits: a busy worker loads the model itself
-            _request(_header(engine, "auto", model, [], beam_size=1, partial=True, lock_timeout=0,
-                             workers=workers),
+            # never waits for a turn: a busy worker loads the model itself
+            _request(_header(engine, "auto", model, [], beam_size=1, lock_timeout=0, workers=workers),
                      _SILENCE, only_if_cold=True)
         except SttWorkerUnavailable:
             return  # busy (it then loads the model itself) or not installed: nothing to warm up
@@ -214,25 +233,23 @@ def warm_up(engine, model="small", workers=1):
 
 def transcribe_with_info(audio_bytes, engine, language="auto", model="small", keywords=None,
                          prompt=None, beam_size=5, timeout=None, lock_timeout=LOCK_TIMEOUT,
-                         main_language=None, partial=False, workers=1):
+                         main_language=None, workers=1):
     """Transcribe audio with ``engine`` ('whisper' or 'whistle') in the shared worker.
 
-    Returns ``{"text", "language", "language_probability", "confidence", "queue_seconds", "stt_seconds"}``,
-    ``confidence`` being Whistle's lowest word probability (None from Whisper). ``prompt`` is preceding text that
-    gives the model context; ``beam_size`` 1 is greedy decoding (much faster, slightly less
-    accurate). ``timeout`` raises the wait for long recordings; ``lock_timeout`` is how long to
-    queue behind other requests (of any Odoo process) before giving up with SttWorkerUnavailable.
-    With auto-detection, ``main_language`` is assumed whenever the detection is unsure. A
-    ``partial`` caption only gets the worker when no final caption is waiting for it. ``workers``
-    is how many transcriptions the worker may run at once (Whisper model replicas).
+    Returns ``{"text", "language", "language_probability", "queue_seconds", "stt_seconds"}``.
+    ``prompt`` is preceding text that gives the model context; ``beam_size`` 1 is greedy decoding
+    (much faster, slightly less accurate). ``timeout`` raises the wait for long recordings;
+    ``lock_timeout`` is how long to queue behind other requests (of any Odoo process) before
+    giving up with SttWorkerUnavailable. With auto-detection, ``main_language`` is assumed
+    whenever the detection is unsure. ``workers`` is how many transcriptions the worker may run
+    at once (Whisper model replicas).
     """
     reply = _request(_header(engine, language, model, keywords, prompt, beam_size, main_language,
-                             partial, lock_timeout, workers), audio_bytes, timeout)
+                             lock_timeout, workers), audio_bytes, timeout)
     return {
         "text": reply.get("text") or "",
         "language": reply.get("language"),
         "language_probability": reply.get("language_probability") or 0.0,
-        "confidence": reply.get("confidence"),
         "queue_seconds": reply["queue_seconds"],
         "stt_seconds": reply["stt_seconds"],
     }

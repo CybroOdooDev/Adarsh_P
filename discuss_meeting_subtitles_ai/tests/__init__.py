@@ -23,3 +23,6 @@
 from . import test_meeting_summary
 from . import test_meeting_controllers
 from . import test_stt_worker
+from . import test_cloud_whisper
+from . import test_grok_stt
+from . import test_caption_display

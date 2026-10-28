@@ -56,7 +56,10 @@
             'discuss_meeting_subtitles_ai/static/src/discuss/upload/thread_actions_patch.js',
             'discuss_meeting_subtitles_ai/static/src/discuss/summary/summary_copy.js',
         ],
+        'web.assets_tests': [
+            'discuss_meeting_subtitles_ai/static/tests/tours/*.js',
+        ],
     },
-    'external_dependencies': {'python': ['requests', 'faster-whisper', 'cactus-needle']},
+    'external_dependencies': {'python': ['requests']},
     'license': 'LGPL-3',
 }
