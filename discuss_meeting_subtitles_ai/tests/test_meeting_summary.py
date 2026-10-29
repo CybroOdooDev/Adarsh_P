@@ -579,3 +579,57 @@ class TestMeetingSettings(TransactionCase):
         options = [value for value, _label in field._description_selection(self.env)]
         self.assertIn('en-US', options)
         self.assertNotIn('auto', options)
+
+
+@tagged('post_install', '-at_install')
+class TestMeetingSummaryEdgeCases(MeetingTestCommon):
+    """Paths the main scenarios don't take: a call ending after its summary was posted, a summary
+    reused, a recording sent to OpenAI with auto-detection, empty speech turns."""
+
+    def test_call_end_after_summary_posted(self):
+        sessions = self._start_call(self.alice_member)
+        meeting = self.Summary._get_live_meeting(self.channel)
+        meeting.transcribe_enabled = True
+        self.Summary._add_transcript_line(self.channel, self.alice_member, 'Alice Martin', 'We will send the report.')
+        meeting.action_generate_summary()
+        meeting.action_post_to_channel()
+        self.Summary._add_transcript_line(self.channel, self.alice_member, 'Alice Martin', 'We agreed on March.')
+        messages = self.channel.message_ids
+        sessions.unlink()
+        self.assertEqual(meeting.state, 'posted', "stays posted")
+        self.assertFalse(meeting.transcribe_enabled)
+        self.assertEqual(len(meeting.raw_transcript.splitlines()), 2, "the full transcript is still kept")
+        self.assertGreaterEqual(meeting.duration_minutes, 1)
+        self.assertEqual(self.channel.message_ids, messages, "no 'Meeting Ended' invitation after posting")
+
+    def test_generate_and_post_reuses_summary(self):
+        meeting = self._meeting(raw_transcript='Alice: We will ship on Monday.', state='summarized',
+                                executive_summary='<p>Already summarized.</p>')
+        with patch.object(type(meeting), 'action_generate_summary') as generate:
+            meeting.action_generate_and_post_summary()
+        generate.assert_not_called()
+        self.assertEqual(meeting.state, 'posted')
+        self.assertIn('Already summarized.', self._last_message_body())
+
+        empty = self._meeting(raw_transcript='Alice: We will ship on Monday.', state='summarized')
+        empty.action_generate_and_post_summary()
+        self.assertEqual(empty.state, 'posted')
+        self.assertIn('Will ship on Monday.', empty.action_items, "no summary yet: generated first")
+
+    def test_recording_openai_auto_language(self):
+        set_param = self.env['ir.config_parameter'].sudo().set_param
+        set_param('discuss_meeting_subtitles_ai.openai_api_key', 'sk-test')
+        set_param('discuss_meeting_subtitles_ai.stt_openai_fallback', 'True')
+        set_param('discuss_meeting_subtitles_ai.subtitles_language', 'auto')
+        meeting = self._meeting(recording_file=base64.b64encode(b'ID3 fake audio'))
+        with patch(f'{SUMMARY_MODULE}.requests.post', return_value=json_response({'text': ' Hello. '})) as post:
+            self.assertEqual(meeting._transcribe_with_openai(), 'Hello.')
+        files = post.call_args.kwargs['files']
+        self.assertNotIn('language', files, "left to OpenAI to detect")
+        self.assertEqual(files['file'], ('recording.mp4', b'ID3 fake audio'), "a default name for the upload")
+
+    def test_builtin_summarizer_skips_empty_turns(self):
+        result = self.Summary._builtin_summarize("[10:00:01] Alice:\nBob: We agreed on March.")
+        self.assertEqual(result['decisions'], 'Bob: We agreed on March.')
+        self.assertEqual(result['key_discussion_points'], 'Bob: We agreed on March.')
+        self.assertNotIn('Alice:', result['key_discussion_points'])
