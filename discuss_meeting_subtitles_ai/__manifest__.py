@@ -21,7 +21,7 @@
 #############################################################################
 
 {
-    'name': 'Discuss Meeting Live Subtitles & AI Summaries',
+    'name': 'Discuss Meeting Transcripts & Captions',
     'version': '19.0.1.0.0',
     'category': 'Productivity/Discuss',
     'summary': 'Live Subtitles (Closed Captions) and AI Meeting Summaries for Odoo Discuss calls',
@@ -58,6 +58,10 @@
         ],
         'web.assets_tests': [
             'discuss_meeting_subtitles_ai/static/tests/tours/*.js',
+        ],
+        'web.assets_unit_tests': [
+            'discuss_meeting_subtitles_ai/static/tests/**/*',
+            ('remove', 'discuss_meeting_subtitles_ai/static/tests/tours/**/*'),
         ],
     },
     'external_dependencies': {'python': ['requests']},

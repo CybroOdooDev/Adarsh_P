@@ -26,3 +26,6 @@ from . import test_stt_worker
 from . import test_cloud_whisper
 from . import test_grok_stt
 from . import test_caption_display
+from . import test_stt_client
+from . import test_stt_job
+from . import test_js

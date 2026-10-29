@@ -390,13 +390,24 @@ def main():
     # to a fresh worker running the new code, between two requests.
     code_mtime = os.stat(__file__).st_mtime
     signal.signal(signal.SIGTERM, lambda *_args: sys.exit(0))  # stopped: still remove the socket
+    # The kernel may deliver the signal to a connection thread: select() below is then not
+    # interrupted, and the handler (which only runs in this thread) would wait for its timeout.
+    # The wakeup fd is written whichever thread gets the signal, so it always wakes select().
+    wakeup_r, wakeup_w = os.pipe()
+    os.set_blocking(wakeup_r, False)
+    os.set_blocking(wakeup_w, False)
+    signal.set_wakeup_fd(wakeup_w)
     log("ready (pid %d) on %s" % (os.getpid(), sock_path))
     try:
         while True:
             if scheduler.idle_seconds() and os.stat(__file__).st_mtime != code_mtime:
                 log("code changed, exiting for a fresh worker")
                 return
-            if not select.select([server], [], [], 30)[0]:
+            ready = select.select([server, wakeup_r], [], [], 30)[0]
+            if wakeup_r in ready:
+                with contextlib.suppress(BlockingIOError):
+                    os.read(wakeup_r, 512)  # a signal other than SIGTERM: keep serving
+            if server not in ready:
                 if scheduler.idle_seconds() >= IDLE_EXIT_SECONDS:
                     log("idle, exiting to free memory")
                     return

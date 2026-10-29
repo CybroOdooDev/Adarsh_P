@@ -99,3 +99,49 @@ class TestCloudWhisper(TransactionCase):
         self.assertEqual(self._error(side_effect=requests.ReadTimeout('slow')).kind, 'timeout')
         with self.assertRaisesRegex(cloud_whisper.CloudWhisperError, '25 MB'):
             cloud_whisper.transcribe(b'0' * (cloud_whisper.MAX_FILE_BYTES + 1))
+
+    def test_error_details(self):
+        not_json = _reply(502)
+        not_json.json.side_effect = ValueError('not JSON')
+        error = self._error(return_value=not_json)
+        self.assertIn('returned 502: raw reply', str(error), "a proxy's HTML page")
+        self.assertEqual((error.kind, error.status), ('error', 502))
+        error = self._error(return_value=_reply(403, {'detail': 'Forbidden'}))
+        self.assertIn("{'detail': 'Forbidden'}", str(error), "a server of your own may say it otherwise")
+        self.assertEqual(error.kind, 'auth')
+        error = self._error(return_value=_reply(400, {'error': 'x' * 500}))
+        self.assertLess(len(str(error)), 400, "a long detail is cut")
+        unreadable = _reply()
+        unreadable.json.side_effect = ValueError('not JSON')
+        error = self._error(return_value=unreadable)
+        self.assertIn('unreadable reply', str(error))
+        self.assertEqual((error.kind, error.status), ('error', None))
+        with self.assertRaises(cloud_whisper.CloudWhisperError) as caught:
+            cloud_whisper.transcribe(b'0' * (cloud_whisper.MAX_FILE_BYTES + 1))
+        self.assertEqual(caught.exception.kind, 'too_large')
+
+    def test_request_defaults_and_options(self):
+        _result, post = self._transcribe(_reply(json_data={'text': ''}), url='', model='',
+                                         filename='clip.webm', timeout=(5, 30),
+                                         keywords=['Term%03d' % i for i in range(200)])
+        self.assertEqual(post.call_args.args[0], cloud_whisper.DEFAULT_URL + '/audio/transcriptions')
+        data = post.call_args.kwargs['data']
+        self.assertEqual(data['model'], cloud_whisper.DEFAULT_MODEL)
+        self.assertEqual(data['temperature'], '0')
+        self.assertEqual(len(data['prompt']), cloud_whisper.MAX_PROMPT_CHARS, "cut to what Whisper reads")
+        self.assertTrue(data['prompt'].startswith('Term000, Term001'))
+        self.assertEqual(post.call_args.kwargs['files'], {'file': ('clip.webm', b'RIFF audio')})
+        self.assertEqual(post.call_args.kwargs['timeout'], (5, 30))
+
+    def test_reply_language(self):
+        for reported, code in [('english', 'en'), (' Malayalam ', 'ml'), ('de', 'de'), ('yue', 'yue'),
+                               ('klingon', None), ('e1', None), (None, None)]:
+            result = self._transcribe(_reply(json_data={'text': 'Hello', 'language': reported}))[0]
+            self.assertEqual(result['language'], code, reported)
+
+    def test_reply_without_text(self):
+        self.assertEqual(self._transcribe(_reply(json_data={'text': None}))[0], {'text': '', 'language': None})
+        result = self._transcribe(_reply(json_data={'segments': [
+            {'text': None}, {'text': ' Hello ', 'no_speech_prob': None, 'avg_logprob': None},
+        ]}))[0]
+        self.assertEqual(result['text'], 'Hello', "missing scores count as reliable")
