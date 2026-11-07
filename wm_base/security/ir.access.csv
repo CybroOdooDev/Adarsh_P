@@ -1,0 +1,50 @@
+id,name,model_id,group_id/id,operation,domain
+access_wm_waste_category_user,wm.waste.category.user,wm.waste.category,base.group_user,r,
+access_wm_waste_category_admin,wm.waste.category.admin,wm.waste.category,wm_base.group_wm_admin,crud,
+access_wm_category_billing_rule_dispatcher_read,wm_category_billing_rule.dispatcher.read,wm.category.billing.rule,wm_base.group_wm_dispatcher,r,
+access_wm_category_billing_rule_finance_read,wm_category_billing_rule.finance.read,wm.category.billing.rule,wm_base.group_wm_finance,r,
+access_wm_category_billing_rule_ops_manager_read,wm_category_billing_rule.ops_manager.read,wm.category.billing.rule,wm_base.group_wm_ops_manager,r,
+access_wm_category_billing_rule_admin,wm.category.billing.rule.admin,wm.category.billing.rule,wm_base.group_wm_admin,crud,
+access_wm_compliance_code_user,wm.compliance.code.user,wm.compliance.code,base.group_user,r,
+access_wm_compliance_code_admin,wm.compliance.code.admin,wm.compliance.code,wm_base.group_wm_admin,crud,
+access_wm_waste_material_user,wm.waste.material.user,wm.waste.material,base.group_user,r,
+access_wm_waste_material_admin,wm.waste.material.admin,wm.waste.material,wm_base.group_wm_admin,crud,
+access_wm_container_type_user,wm.container.type.user,wm.container.type,base.group_user,r,
+access_wm_container_type_admin,wm.container.type.admin,wm.container.type,wm_base.group_wm_admin,crud,
+access_wm_audit_log_officer,wm.audit.log.officer,wm.audit.log,wm_base.group_wm_compliance_officer,r,
+access_wm_status_transition_log_officer,wm.status.transition.log.officer,wm.status.transition.log,wm_base.group_wm_compliance_officer,r,
+access_wm_audit_log_admin,wm.audit.log.admin,wm.audit.log,wm_base.group_wm_admin,r,
+access_wm_status_transition_log_admin,wm.status.transition.log.admin,wm.status.transition.log,wm_base.group_wm_admin,r,
+access_wm_dashboard_dispatcher,access.wm.dashboard.dispatcher,wm.dashboard,wm_base.group_wm_dispatcher,r,
+access_wm_dashboard_finance,access.wm.dashboard.finance,wm.dashboard,wm_base.group_wm_finance,r,
+access_wm_dashboard_compliance_officer,access.wm.dashboard.compliance.officer,wm.dashboard,wm_base.group_wm_compliance_officer,r,
+access_wm_dashboard_ops_manager,access.wm.dashboard.ops.manager,wm.dashboard,wm_base.group_wm_ops_manager,r,
+access_wm_dashboard_admin,access.wm.dashboard.admin,wm.dashboard,wm_base.group_wm_admin,r,
+access_wm_signature_role_user,wm.signature.role.user,wm.signature.role,group_signature_user,r,
+access_wm_signature_role_mgr,wm.signature.role.mgr,wm.signature.role,group_signature_manager,crud,
+access_wm_signature_role_driver,wm.signature.role.driver,wm.signature.role,group_wm_driver,r,
+access_wm_signature_template_user,wm.signature.template.user,wm.signature.template,group_signature_user,r,
+access_wm_signature_template_mgr,wm.signature.template.mgr,wm.signature.template,group_signature_manager,crud,
+access_wm_signature_template_driver,wm.signature.template.driver,wm.signature.template,group_wm_driver,r,
+access_wm_signature_request_user,wm.signature.request.user,wm.signature.request,group_signature_user,cru,"['|', ('create_uid', '=', user.id), ('signer_ids.partner_id', '=', user.partner_id.id)]"
+access_wm_signature_request_mgr,wm.signature.request.mgr,wm.signature.request,group_signature_manager,crud,
+access_wm_signature_request_driver,wm.signature.request.driver,wm.signature.request,group_wm_driver,cru,"['|', ('create_uid', '=', user.id), ('signer_ids.partner_id', '=', user.partner_id.id)]"
+access_wm_signature_request_signer_user,wm.signature.request.signer.user,wm.signature.request.signer,group_signature_user,cru,"['|', ('request_id.create_uid', '=', user.id), ('partner_id', '=', user.partner_id.id)]"
+access_wm_signature_request_signer_mgr,wm.signature.request.signer.mgr,wm.signature.request.signer,group_signature_manager,crud,
+access_wm_signature_request_signer_driver,wm.signature.request.signer.driver,wm.signature.request.signer,group_wm_driver,cru,"['|', ('request_id.create_uid', '=', user.id), ('partner_id', '=', user.partner_id.id)]"
+access_wm_signature_item_user,wm.signature.item.user,wm.signature.item,group_signature_user,r,
+access_wm_signature_item_mgr,wm.signature.item.mgr,wm.signature.item,group_signature_manager,crud,
+access_wm_signature_item_driver,wm.signature.item.driver,wm.signature.item,group_wm_driver,r,
+access_wm_signature_request_item_value_user,wm.signature.request.item.value.user,wm.signature.request.item.value,group_signature_user,r,"['|', ('request_id.create_uid', '=', user.id), ('signer_id.partner_id', '=', user.partner_id.id)]"
+access_wm_signature_request_item_value_mgr,wm.signature.request.item.value.mgr,wm.signature.request.item.value,group_signature_manager,crud,
+access_wm_signature_request_item_value_driver,wm.signature.request.item.value.driver,wm.signature.request.item.value,group_wm_driver,r,"['|', ('request_id.create_uid', '=', user.id), ('signer_id.partner_id', '=', user.partner_id.id)]"
+access_wm_signature_request_wizard_user,wm.signature.request.wizard.user,wm.signature.request.wizard,group_signature_user,crud,
+access_wm_signature_request_wizard_signer_user,wm.signature.request.wizard.signer.user,wm.signature.request.wizard.signer,group_signature_user,crud,
+access_wm_disposal_facility_user,wm.disposal.facility.user,wm.disposal.facility,wm_base.group_wm_ops_manager,r,
+access_wm_disposal_facility_admin,wm.disposal.facility.admin,wm.disposal.facility,wm_base.group_wm_admin,crud,
+access_wm_premium_feature_wizard_user,wm.premium.feature.wizard.user,wm.premium.feature.wizard,base.group_user,crud,
+access_wm_disposal_facility_compliance_officer,wm.disposal.facility.compliance.officer,wm.disposal.facility,wm_base.group_wm_compliance_officer,crud,
+rule_wm_waste_category_company,Waste Category Multi-Company,wm.waste.category,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_wm_container_type_company,Container Type Multi-Company,wm.container.type,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_wm_signature_request_company,Signature Request Multi-Company,wm.signature.request,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+rule_wm_disposal_facility_company_base,Disposal Facility Multi-Company (Base),wm.disposal.facility,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"

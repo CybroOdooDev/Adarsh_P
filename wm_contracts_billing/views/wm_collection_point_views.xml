@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View: wm.collection.point - wm.collection.point.form.wm_billing (Header Button) -->
+    <record id="view_wm_collection_point_form_wm_billing" model="ir.ui.view">
+        <field name="name">wm.collection.point.form.wm_billing</field>
+        <field name="model">wm.collection.point</field>
+        <field name="inherit_id" ref="wm_collection.view_wm_collection_point_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_log_emergency_callout" string="Log Emergency Callout" type="object" class="btn-warning"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

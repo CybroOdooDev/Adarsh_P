@@ -1,0 +1,9 @@
+<resources>
+    <string name="app_name">WM Driver 20</string>
+    <string name="no_server">No server chosen yet.</string>
+    <string name="change_server">Change server</string>
+    <string name="retry">Retry</string>
+    <string name="exit">Exit</string>
+    <string name="cancel">Cancel</string>
+    <string name="add_photo">Add photo</string>
+</resources>

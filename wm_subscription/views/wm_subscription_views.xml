@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="view_wm_subscription_form" model="ir.ui.view">
+        <field name="name">wm.subscription.form</field>
+        <field name="model">wm.subscription</field>
+        <field name="arch" type="xml">
+            <form string="Customer Subscription">
+                <header>
+                    <button name="action_activate" string="Activate" type="object" class="btn-primary" invisible="state != 'draft'"/>
+                    <button name="action_pause" string="Pause" type="object" class="btn-warning" invisible="state != 'active'"/>
+                    <button name="action_resume" string="Resume" type="object" class="btn-primary" invisible="state != 'paused'"/>
+                    <button name="action_renew" string="Renew Billing Cycle" type="object" class="btn-info" invisible="state != 'active'"/>
+                    <button name="action_cancel" string="Cancel Subscription" type="object" class="btn-secondary" invisible="state in ('cancelled', 'expired')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,paused,cancelled,expired"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_invoices" type="object" class="oe_stat_button" icon="edit_square" invisible="invoice_count == 0">
+                            <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Subscription Info">
+                            <field name="partner_id" readonly="state != 'draft'"/>
+                            <field name="contract_id" readonly="state != 'draft'"/>
+                            <field name="plan_id" readonly="state != 'draft'"/>
+                            <field name="auto_renew" widget="boolean_toggle"/>
+                        </group>
+                        <group string="Billing &amp; Schedule">
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="next_invoice_date"/>
+                            <field name="date_end"/>
+                            <field name="recurring_price" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <!-- Read-only projections from Contract (DO NOT DUPLICATE DATA) -->
+                    <group string="Contract Projections (Read-Only)">
+                        <field name="related_sla_id" readonly="1"/>
+                        <field name="related_site_ids" widget="many2many_tags" readonly="1"/>
+                    </group>
+
+                    <group string="Active Subscriber Perks &amp; Usage">
+                        <group string="Plan Benefits">
+                            <field name="extra_pickup_discount" readonly="1"/>
+                            <field name="included_monthly_weight_kg" readonly="1"/>
+                            <field name="priority_sla_level" readonly="1"/>
+                        </group>
+                        <group string="Usage Tracking">
+                            <field name="current_cycle_weight_kg" readonly="1"/>
+                            <field name="remaining_quota_kg" readonly="1"/>
+                            <field name="is_quota_exceeded" readonly="1" widget="boolean_toggle"/>
+                            <field name="free_container_swaps_per_year" readonly="1"/>
+                            <field name="used_free_swaps_count"/>
+                        </group>
+                    </group>
+
+                    <group string="Pause &amp; Cancellation Information" invisible="state not in ('paused', 'cancelled')">
+                        <group string="Pause Details" invisible="state != 'paused'">
+                            <field name="pause_start_date" readonly="1"/>
+                            <field name="pause_end_date"/>
+                        </group>
+                        <group string="Cancellation Details" invisible="state != 'cancelled'">
+                            <field name="cancel_reason" placeholder="Reason for cancellation..."/>
+                        </group>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_wm_subscription_tree" model="ir.ui.view">
+        <field name="name">wm.subscription.list</field>
+        <field name="model">wm.subscription</field>
+        <field name="arch" type="xml">
+            <list string="Subscriptions" multi_edit="1">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="contract_id"/>
+                <field name="plan_id"/>
+                <field name="date_start"/>
+                <field name="next_invoice_date"/>
+                <field name="recurring_price" widget="monetary"/>
+                <field name="auto_renew" widget="boolean_toggle"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'paused'"
+                       decoration-muted="state in ('cancelled', 'expired')"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Kanban View -->
+    <record id="view_wm_subscription_kanban" model="ir.ui.view">
+        <field name="name">wm.subscription.kanban</field>
+        <field name="model">wm.subscription</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" sample="1">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="plan_id"/>
+                <field name="recurring_price"/>
+                <field name="state"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="card-body p-2">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <strong class="text-primary"><field name="name"/></strong>
+                                <field name="state" widget="label_selection" options="{'classes': {'draft': 'default', 'active': 'success', 'paused': 'warning', 'cancelled': 'danger', 'expired': 'muted'}}"/>
+                            </div>
+                            <div><i class="fa fa-user me-1 text-muted" title="Customer"/><field name="partner_id"/></div>
+                            <div><i class="fa fa-tag me-1 text-muted" title="Plan"/><field name="plan_id"/></div>
+                            <div class="mt-2 text-end fw-bold"><field name="recurring_price"/></div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_wm_subscription_search" model="ir.ui.view">
+        <field name="name">wm.subscription.search</field>
+        <field name="model">wm.subscription</field>
+        <field name="arch" type="xml">
+            <search string="Search Subscriptions">
+                <field name="name"/>
+                <field name="partner_id"/>
+                <field name="contract_id"/>
+                <field name="plan_id"/>
+                <filter string="Active" name="active" domain="[('state', '=', 'active')]"/>
+                <filter string="Paused" name="paused" domain="[('state', '=', 'paused')]"/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <filter string="Expired" name="expired" domain="[('state', '=', 'expired')]"/>
+                <separator/>
+                <filter string="Next Invoice Due" name="due_today" domain="[('next_invoice_date', '&lt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <group>
+                    <filter string="Customer" name="group_partner" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Contract" name="group_contract" context="{'group_by': 'contract_id'}"/>
+                    <filter string="Plan" name="group_plan" context="{'group_by': 'plan_id'}"/>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_wm_subscription" model="ir.actions.act_window">
+        <field name="name">Customer Subscriptions</field>
+        <field name="res_model">wm.subscription</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_wm_subscription_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Customer Subscription!
+            </p>
+            <p>
+                Link customer subscription billing plans to active operational contracts.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item under Configuration -> Customer -->
+    <menuitem id="menu_wm_subscription"
+              name="Customer Subscriptions"
+              parent="wm_contracts_billing.menu_wm_config_customer"
+              action="action_wm_subscription"
+              sequence="25"/>
+</odoo>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates xml:space="preserve">
+
+    <t t-name="odoo_web_map.MapController">
+        <div t-att-class="this.props.className + ' h-100'">
+            <Layout className="'o_map_view h-100'" display="this.display">
+                <t t-set-slot="layout-actions">
+                    <SearchBar autofocus="this.firstLoad"/>
+                </t>
+                <t t-set-slot="control-panel-navigation-additional">
+                <t t-component="this.searchBarToggler.component" t-props="this.searchBarToggler.props"/>
+                </t>
+                <t t-set-slot="control-panel-additional-actions">
+                    <CogMenu/>
+                </t>
+                <t t-set-slot="control-panel-bottom-right">
+                     <Pager t-props="this.pagerProps"/>
+                </t>
+                <t t-set-slot="control-panel-bottom-left">
+
+                </t>
+                <MapRenderer records="this.model.records" metaData="this.model.metaData" archInfo="this.props.archInfo" openRecord="(...args) => this.openRecord(...args)"/>
+            </Layout>
+        </div>
+    </t>
+
+    <t t-name="odoo_web_map.MapRenderer">
+        <div class="o_map_renderer h-100 w-100" t-ref="this.mapContainer">
+        </div>
+    </t>
+
+</templates>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Privilege definition for Surfaces Furnishing in Odoo 20 -->
+    <record model="res.groups.privilege" id="res_groups_privilege_surfaces_furnishing">
+        <field name="name">Surfaces Furnishing</field>
+        <field name="sequence">25</field>
+        <field name="category_id" ref="base.module_category_services"/>
+    </record>
+
+    <!-- User Group -->
+    <record id="group_furnishing_user" model="res.groups">
+        <field name="name">User / Field Technician</field>
+        <field name="sequence">10</field>
+        <field name="privilege_id" ref="res_groups_privilege_surfaces_furnishing"/>
+        <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+    </record>
+
+    <!-- Manager Group -->
+    <record id="group_furnishing_manager" model="res.groups">
+        <field name="name">Manager / Director</field>
+        <field name="sequence">20</field>
+        <field name="privilege_id" ref="res_groups_privilege_surfaces_furnishing"/>
+        <field name="implied_ids" eval="[(4, ref('group_furnishing_user'))]"/>
+        <field name="user_ids" eval="[(4, ref('base.user_root')), (4, ref('base.user_admin'))]"/>
+    </record>
+</odoo>

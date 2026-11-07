@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!-- The summary posted in the channel. Values: meeting_name, duration, when, attendees (dicts:
+         name, initials), overview (Markup), points, decisions, actions (lists of str), view_url.
+         Styled to match Odoo 20's design system and palette, using the oi/data-icon pair that
+         survives chatter mail sanitization. -->
+    <template id="meeting_summary_message">
+        <div class="o_meeting_summary_card" style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; max-width: 640px; margin: 8px 0; border: 1px solid #e9ecef; border-radius: 10px; padding: 22px 24px; background-color: #ffffff; color: #212529; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);">
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="vertical-align: top; padding: 0;">
+                        <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #714B67;">
+                            <i class="oi" data-icon="auto_awesome" style="font-size: 12px; margin-right: 4px; vertical-align: -1px;"/>Meeting Summary
+                        </div>
+                        <div style="font-size: 20px; font-weight: 700; line-height: 1.35; margin-top: 4px; color: #111827;" t-out="meeting_name"/>
+                    </td>
+                    <td style="vertical-align: top; text-align: right; padding: 0 0 0 12px; white-space: nowrap;">
+                        <span style="display: inline-block; background-color: #f3eff2; color: #714B67; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; border: 1px solid #e8dfe6;">
+                            <i class="oi" data-icon="schedule" style="font-size: 12px; margin-right: 4px; vertical-align: -1px;"/><t t-out="duration"/> min
+                        </span>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="margin-top: 12px; padding-bottom: 14px; border-bottom: 1px solid #f1f3f5; font-size: 13px; line-height: 24px; color: #6c757d;">
+                <span style="display: inline-block; margin-right: 18px; white-space: nowrap;">
+                    <i class="oi" data-icon="calendar_today" style="color: #6c757d; font-size: 13px; margin-right: 6px; vertical-align: -1px;"/><t t-out="when"/>
+                </span>
+                <span t-foreach="attendees" t-as="attendee" style="display: inline-block; margin-right: 14px; white-space: nowrap;">
+                    <span style="display: inline-block; width: 22px; height: 22px; line-height: 22px; border-radius: 9999px; background-color: #714B67; color: #ffffff; font-size: 9.5px; font-weight: 700; text-align: center; vertical-align: middle; margin-right: 6px;" t-out="attendee['initials']"/><span style="vertical-align: middle; color: #374151; font-weight: 500;" t-out="attendee['name']"/>
+                </span>
+            </div>
+
+            <div style="margin-top: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #714B67;">
+                <i class="oi" data-icon="subject" style="font-size: 12px; margin-right: 4px; vertical-align: -1px;"/>Summary
+            </div>
+            <div style="margin-top: 6px; font-size: 14px; line-height: 1.6; color: #374151; background-color: #fbf9fa; border: 1px solid #f3eff2; border-radius: 8px; padding: 12px 16px;">
+                <t t-if="overview" t-out="overview"/>
+                <p t-else="" style="margin: 0;">Summary generated from meeting transcript.</p>
+            </div>
+
+            <t t-if="points">
+                <div style="margin-top: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #854d0e;">
+                    <i class="oi" data-icon="lightbulb" style="font-size: 12px; margin-right: 4px; vertical-align: -1px; color: #eab308;"/>Key Points
+                </div>
+                <ul style="margin: 6px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #374151;">
+                    <li t-foreach="points" t-as="point" style="margin-bottom: 4px;" t-out="point"/>
+                </ul>
+            </t>
+
+            <t t-if="decisions">
+                <div style="margin-top: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #166534;">
+                    <i class="oi" data-icon="check_circle" style="font-size: 12px; margin-right: 4px; vertical-align: -1px; color: #16a34a;"/>Decisions
+                </div>
+                <ul style="margin: 6px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #374151;">
+                    <li t-foreach="decisions" t-as="decision" style="margin-bottom: 4px;" t-out="decision"/>
+                </ul>
+            </t>
+
+            <div style="margin-top: 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: #991b1b;">
+                <i class="oi" data-icon="checklist" style="font-size: 12px; margin-right: 4px; vertical-align: -1px; color: #dc2626;"/>Action Items
+            </div>
+            <ul t-if="actions" style="margin: 6px 0 0; padding-left: 20px; font-size: 14px; line-height: 1.6; color: #374151;">
+                <li t-foreach="actions" t-as="action" style="margin-bottom: 4px; font-weight: 500;" t-out="action"/>
+            </ul>
+            <div t-else="" style="margin-top: 6px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #64748b;">
+                <i class="oi" data-icon="check_circle" style="font-size: 15px; color: #10b981; margin-right: 8px; vertical-align: middle;"/><span style="vertical-align: middle;">No action items were identified in this meeting.</span>
+            </div>
+
+            <table class="o_meeting_summary_footer" style="width: 100%; border-collapse: collapse; margin-top: 20px; border-top: 1px solid #e9ecef;">
+                <tr>
+                    <td style="vertical-align: middle; padding: 14px 0 0;">
+                        <a t-att-href="view_url" style="color: #714B67; font-size: 13.5px; font-weight: 600; text-decoration: none;">View full transcript <i class="oi" data-icon="arrow_forward" style="font-size: 13px; margin-left: 4px; vertical-align: -1px;"/></a>
+                    </td>
+                    <td style="vertical-align: middle; text-align: right; padding: 14px 0 0 12px; white-space: nowrap;">
+                        <a t-att-href="view_url" class="o_meeting_summary_copy" style="display: inline-block; border: 1px solid #dee2e6; border-radius: 6px; padding: 6px 14px; background-color: #f8f9fa; color: #495057; font-size: 13px; font-weight: 600; text-decoration: none;"><i class="oi" data-icon="content_copy" style="font-size: 13px; margin-right: 6px; vertical-align: -1px;"/>Copy summary</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </template>
+
+    <!-- Posted when the call ends with a transcript. Values: duration, lines_count, generate_url, view_url -->
+    <template id="meeting_ended_message">
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Ubuntu, sans-serif; max-width: 600px; margin: 8px 0; border: 1px solid #e8dfe6; border-left: 4px solid #714B67; border-radius: 8px; padding: 16px 20px; background-color: #ffffff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);">
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px;">
+                <tr>
+                    <td style="vertical-align: middle; padding: 0;">
+                        <div style="font-size: 14px; font-weight: 700; color: #111827;">
+                            <i class="oi" data-icon="call_end" style="color: #714B67; font-size: 15px; margin-right: 6px; vertical-align: -1px;"/>Meeting Ended • Transcript Captured
+                        </div>
+                    </td>
+                    <td style="vertical-align: middle; text-align: right; padding: 0 0 0 12px; white-space: nowrap;">
+                        <span style="display: inline-block; background-color: #f3eff2; color: #714B67; font-size: 11.5px; font-weight: 600; padding: 3px 8px; border-radius: 9999px; border: 1px solid #e8dfe6;">
+                            <i class="oi" data-icon="schedule" style="font-size: 11px; margin-right: 3px; vertical-align: -1px;"/><t t-call="meeting_transcription_summary.meeting_duration"/>
+                        </span>
+                    </td>
+                </tr>
+            </table>
+
+            <div style="font-size: 13px; color: #495057; margin-bottom: 14px; line-height: 1.5;">
+                <div>Speech turns transcribed: <strong style="color: #111827;" t-out="lines_count"/></div>
+                <div style="color: #6c757d; margin-top: 2px;">Would you like to generate an executive AI summary and action items?</div>
+            </div>
+
+            <div>
+                <a t-att-href="generate_url" style="background-color: #714B67; color: #ffffff; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 600; display: inline-block; margin-right: 8px; box-shadow: 0 1px 2px rgba(0,0,0,0.08);">
+                    <i class="oi" data-icon="wand_stars" style="font-size: 13px; margin-right: 5px; vertical-align: -1px;"/>Generate AI Summary Now
+                </a>
+                <a t-att-href="view_url" target="_blank" style="background-color: #f8f9fa; color: #495057; border: 1px solid #dee2e6; text-decoration: none; padding: 6px 14px; border-radius: 6px; font-size: 13px; font-weight: 500; display: inline-block;">
+                    <i class="oi" data-icon="description" style="font-size: 13px; margin-right: 5px; vertical-align: -1px;"/>View Transcript &amp; Details
+                </a>
+            </div>
+        </div>
+    </template>
+
+    <!-- "1 min" / "N mins". Value: duration -->
+    <template id="meeting_duration">
+        <t t-if="duration == 1">1 min</t>
+        <t t-else=""><t t-out="duration"/> mins</t>
+    </template>
+</odoo>

@@ -1,0 +1,10 @@
+<resources>
+    <style name="Theme.WMDriver" parent="Theme.AppCompat.NoActionBar">
+        <item name="colorPrimary">@color/wm_green</item>
+        <item name="colorPrimaryDark">@color/wm_green_dark</item>
+        <item name="colorAccent">@color/wm_green</item>
+        <item name="android:windowBackground">@color/wm_bg</item>
+        <item name="android:textColorPrimary">@color/wm_text</item>
+        <item name="android:statusBarColor">@color/wm_bg</item>
+    </style>
+</resources>

@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- 1. ROOT APP MENU -->
+    <menuitem id="menu_surfaces_furnishing_root"
+              name="Surfaces Furnishing"
+              web_icon="surfaces_furnishing,static/description/icon.png"
+              sequence="10"/>
+
+    <!-- ==================== 2. PROJECTS ==================== -->
+    <menuitem id="menu_furnishing_projects"
+              name="Projects"
+              parent="menu_surfaces_furnishing_root"
+              sequence="10"/>
+
+    <menuitem id="menu_furnishing_projects_all"
+              name="All Projects"
+              parent="menu_furnishing_projects"
+              action="action_furnishing_project"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_site_surveys"
+              name="Site Surveys"
+              parent="menu_furnishing_projects"
+              action="action_furnishing_site_survey"
+              sequence="2"/>
+
+    <menuitem id="menu_furnishing_material_submittals"
+              name="Material Submittals"
+              parent="menu_furnishing_projects"
+              action="action_furnishing_material_submittal"
+              sequence="3"/>
+
+    <menuitem id="menu_furnishing_installation_snags"
+              name="Installation &amp; Snags"
+              parent="menu_furnishing_projects"
+              action="action_furnishing_snags"
+              sequence="4"/>
+
+    <!-- ==================== 3. SALES ==================== -->
+    <menuitem id="menu_furnishing_sales"
+              name="Sales"
+              parent="menu_surfaces_furnishing_root"
+              sequence="20"/>
+
+    <menuitem id="menu_furnishing_quotations"
+              name="Quotations &amp; Variations"
+              parent="menu_furnishing_sales"
+              action="sale.action_quotations_with_onboarding"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_orders"
+              name="Sales Orders"
+              parent="menu_furnishing_sales"
+              action="sale.action_orders"
+              sequence="2"/>
+
+    <menuitem id="menu_furnishing_products"
+              name="Products &amp; Services"
+              parent="menu_furnishing_sales"
+              action="sale.product_template_action"
+              sequence="3"/>
+
+    <menuitem id="menu_furnishing_customers"
+              name="Customers"
+              parent="menu_furnishing_sales"
+              action="account.res_partner_action_customer"
+              sequence="4"/>
+
+    <!-- ==================== 4. PROCUREMENT & TRADES ==================== -->
+    <menuitem id="menu_furnishing_procurement"
+              name="Procurement &amp; Trades"
+              parent="menu_surfaces_furnishing_root"
+              sequence="30"/>
+
+    <menuitem id="menu_furnishing_purchase_orders"
+              name="Purchase Orders"
+              parent="menu_furnishing_procurement"
+              action="purchase.purchase_form_action"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_subcontractors"
+              name="Subcontractor Orders"
+              parent="menu_furnishing_procurement"
+              action="action_furnishing_subcontractor_orders"
+              sequence="2"/>
+
+    <menuitem id="menu_furnishing_vendors"
+              name="Vendors &amp; Trades"
+              parent="menu_furnishing_procurement"
+              action="account.res_partner_action_supplier"
+              sequence="3"/>
+
+    <!-- ==================== 5. LOGISTICS ==================== -->
+    <menuitem id="menu_furnishing_logistics"
+              name="Logistics"
+              parent="menu_surfaces_furnishing_root"
+              sequence="40"/>
+
+    <menuitem id="menu_furnishing_deliveries"
+              name="Delivery Orders"
+              parent="menu_furnishing_logistics"
+              action="stock.action_picking_tree_all"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_stock"
+              name="Stock Availability"
+              parent="menu_furnishing_logistics"
+              action="stock.stock_quant_action"
+              sequence="2"/>
+
+    <!-- ==================== 6. AFTER-SALES & WARRANTY ==================== -->
+    <menuitem id="menu_furnishing_aftersales"
+              name="After-Sales &amp; Warranty"
+              parent="menu_surfaces_furnishing_root"
+              sequence="50"/>
+
+    <menuitem id="menu_furnishing_maintenance_requests"
+              name="Service Requests"
+              parent="menu_furnishing_aftersales"
+              action="action_furnishing_maintenance"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_warranty_log"
+              name="Warranty &amp; Retention Log"
+              parent="menu_furnishing_aftersales"
+              action="action_furnishing_warranty_log"
+              sequence="2"/>
+
+    <!-- ==================== 7. REPORTS ==================== -->
+    <menuitem id="menu_furnishing_reports"
+              name="Reports"
+              parent="menu_surfaces_furnishing_root"
+              sequence="60"/>
+
+    <menuitem id="menu_furnishing_report_profitability"
+              name="Project Profitability"
+              parent="menu_furnishing_reports"
+              action="action_furnishing_project_profitability_report"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_report_sales"
+              name="Revenue by Category"
+              parent="menu_furnishing_reports"
+              action="sale.action_order_report_all"
+              sequence="2"/>
+
+    <!-- ==================== 8. CONFIGURATION ==================== -->
+    <menuitem id="menu_furnishing_configuration"
+              name="Configuration"
+              parent="menu_surfaces_furnishing_root"
+              sequence="100"/>
+
+    <menuitem id="menu_furnishing_config_stages"
+              name="Project Stages"
+              parent="menu_furnishing_configuration"
+              action="action_furnishing_stages"
+              sequence="1"/>
+
+    <menuitem id="menu_furnishing_config_rooms"
+              name="Room / Zone Presets"
+              parent="menu_furnishing_configuration"
+              action="action_furnishing_room_types"
+              sequence="2"/>
+
+    <menuitem id="menu_furnishing_config_snags"
+              name="Snag / Defect Types"
+              parent="menu_furnishing_configuration"
+              action="action_furnishing_snag_types"
+              sequence="3"/>
+
+    <menuitem id="menu_furnishing_config_payment_terms"
+              name="Payment &amp; Retention Terms"
+              parent="menu_furnishing_configuration"
+              action="account.action_payment_term_form"
+              sequence="4"/>
+
+</odoo>

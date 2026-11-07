@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="portal_entry_subscriptions" model="portal.entry">
+        <field name="name">Subscriptions</field>
+        <field name="description">Manage your recurring subscription plans and billing</field>
+        <field name="url">/my/subscriptions</field>
+        <field name="placeholder_count">subscription_count</field>
+        <field name="is_config_card" eval="True"/>
+        <field name="sequence" eval="28"/>
+    </record>
+</odoo>

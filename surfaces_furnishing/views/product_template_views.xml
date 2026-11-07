@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit Product Template Form View -->
+    <record id="product_template_form_view_inherit_furnishing" model="ir.ui.view">
+        <field name="name">product.template.form.inherit.furnishing</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Warranty &amp; Guarantee" name="warranty">
+                    <group>
+                        <group name="warranty_toggle" string="Warranty Coverage">
+                            <field name="has_warranty" widget="boolean_toggle"/>
+                            <field name="warranty_duration_months" invisible="not has_warranty"/>
+                            <field name="warranty_type" invisible="not has_warranty"/>
+                        </group>
+                        <group name="warranty_details" string="Scope &amp; Conditions" invisible="not has_warranty">
+                            <field name="warranty_terms" placeholder="Specify coverage scope, exclusions, and vendor guarantees..."/>
+                        </group>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit Product Template List View -->
+    <record id="product_template_tree_view_inherit_furnishing" model="ir.ui.view">
+        <field name="name">product.template.list.inherit.furnishing</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='uom_id']" position="after">
+                <field name="has_warranty" string="Warranty" widget="boolean_toggle" optional="show"/>
+                <field name="warranty_duration_months" optional="hide"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Inherit Product Template Search View -->
+    <record id="product_template_search_view_inherit_furnishing" model="ir.ui.view">
+        <field name="name">product.template.search.inherit.furnishing</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_search_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='filter_to_sell']" position="after">
+                <separator/>
+                <filter string="Has Warranty" name="filter_has_warranty" domain="[('has_warranty', '=', True)]"/>
+                <filter string="No Warranty" name="filter_no_warranty" domain="[('has_warranty', '=', False)]"/>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

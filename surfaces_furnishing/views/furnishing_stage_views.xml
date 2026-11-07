@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_furnishing_stage_list" model="ir.ui.view">
+        <field name="name">furnishing.stage.list</field>
+        <field name="model">furnishing.stage</field>
+        <field name="arch" type="xml">
+            <list string="Project Stages">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="stage_type"/>
+                <field name="fold"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_furnishing_stage_form" model="ir.ui.view">
+        <field name="name">furnishing.stage.form</field>
+        <field name="model">furnishing.stage</field>
+        <field name="arch" type="xml">
+            <form string="Project Stage">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="stage_type"/>
+                        </group>
+                        <group>
+                            <field name="sequence"/>
+                            <field name="fold"/>
+                        </group>
+                    </group>
+                    <field name="description" placeholder="Internal guidance for this stage..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_furnishing_stages" model="ir.actions.act_window">
+        <field name="name">Project Stages</field>
+        <field name="res_model">furnishing.stage</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create the stages for tracking your interior projects.
+            </p>
+        </field>
+    </record>
+
+</odoo>

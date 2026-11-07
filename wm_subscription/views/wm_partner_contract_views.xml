@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_partner_contract_form_inherit_wm_subscription" model="ir.ui.view">
+        <field name="name">wm.partner.contract.form.inherit.wm_subscription</field>
+        <field name="model">wm.partner.contract</field>
+        <field name="inherit_id" ref="wm_contracts_billing.wm_partner_contract_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_subscriptions" type="object" class="oe_stat_button" icon="cached" invisible="subscription_count == 0">
+                    <field name="subscription_count" widget="statinfo" string="Subscriptions"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

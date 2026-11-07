@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="snag_chipped_skirting" model="furnishing.snag.type">
+        <field name="name">Chipped / Scratched Skirting Board</field>
+        <field name="category">joinery</field>
+        <field name="default_trade">Carpentry &amp; Joinery Team</field>
+        <field name="sla_hours">24</field>
+        <field name="description">Cosmetic scratch or dent on wooden baseboards/skirting.</field>
+    </record>
+
+    <record id="snag_motor_track_jam" model="furnishing.snag.type">
+        <field name="name">Motorized Curtain Track Jamming / Noise</field>
+        <field name="category">lighting</field>
+        <field name="default_trade">Automation &amp; Electrical Specialist</field>
+        <field name="sla_hours">12</field>
+        <field name="description">Curtain motor failing to stop at limits or belt tension issue.</field>
+    </record>
+
+    <record id="snag_fabric_stain" model="furnishing.snag.type">
+        <field name="name">Fabric Stain / Watermark / Pull</field>
+        <field name="category">soft_furnishing</field>
+        <field name="default_trade">Upholstery &amp; Soft Furnishings Team</field>
+        <field name="sla_hours">48</field>
+        <field name="description">Smudge or thread pull on drapery or sofa fabric requiring steam cleaning or re-wrapping.</field>
+    </record>
+
+    <record id="snag_flooring_gap" model="furnishing.snag.type">
+        <field name="name">Flooring Expansion Gap / Hollow Tile</field>
+        <field name="category">flooring</field>
+        <field name="default_trade">Flooring Subcontractor</field>
+        <field name="sla_hours">48</field>
+        <field name="description">Uneven floor plank, visible joint gap or hollow sounding tile.</field>
+    </record>
+
+    <record id="snag_wallpaper_bubble" model="furnishing.snag.type">
+        <field name="name">Wallpaper Peeling / Air Bubble</field>
+        <field name="category">wallcovering</field>
+        <field name="default_trade">Wallcovering Specialist</field>
+        <field name="sla_hours">24</field>
+        <field name="description">Air bubble, seam lifting or adhesive failure on feature wall.</field>
+    </record>
+
+</odoo>

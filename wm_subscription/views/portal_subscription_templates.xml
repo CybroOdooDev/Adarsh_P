@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Portal Breadcrumbs: Subscriptions -->
+    <template id="portal_breadcrumbs_subscriptions" name="Portal Breadcrumbs: Subscriptions" inherit_id="portal.portal_breadcrumbs">
+        <xpath expr="//ol" position="inside">
+            <li t-if="page_name == 'subscription' or subscription" t-attf-class="breadcrumb-item #{'active ' if not subscription else ''}">
+                <a t-if="subscription" href="/my/subscriptions">Subscriptions</a>
+                <t t-else="">Subscriptions</t>
+            </li>
+            <li t-if="subscription" class="breadcrumb-item active">
+                <t t-out="subscription.name"/>
+            </li>
+        </xpath>
+    </template>
+
+    <!-- Subscriptions List Template -->
+    <template id="portal_my_subscriptions" name="My Subscriptions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="True"/>
+            <t t-call="portal.portal_searchbar">
+                <t t-set="title">Recurring Subscriptions</t>
+            </t>
+
+            <t t-if="not subscriptions">
+                <div class="alert alert-info" role="alert">
+                    You currently have no recurring subscriptions.
+                </div>
+            </t>
+
+            <t t-if="subscriptions">
+                <div class="table-responsive">
+                    <table class="table table-hover bg-white border">
+                        <thead class="thead-light">
+                            <tr>
+                                <th>Subscription #</th>
+                                <th>Plan</th>
+                                <th>Billing Cycle</th>
+                                <th>Next Invoice</th>
+                                <th>Status</th>
+                                <th class="text-end">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="subscriptions" t-as="sub">
+                                <tr>
+                                    <td>
+                                        <a t-attf-href="/my/subscriptions/#{sub.id}">
+                                            <span t-field="sub.name"/>
+                                        </a>
+                                    </td>
+                                    <td><span t-field="sub.plan_id.name"/></td>
+                                    <td><span t-field="sub.plan_id.billing_cycle"/></td>
+                                    <td>
+                                        <span t-field="sub.next_invoice_date" t-options='{"widget": "date"}'/>
+                                    </td>
+                                    <td>
+                                        <span t-if="sub.state == 'active'" class="badge rounded-pill text-bg-success">Active</span>
+                                        <span t-elif="sub.state == 'paused'" class="badge rounded-pill text-bg-warning">Paused</span>
+                                        <span t-elif="sub.state == 'draft'" class="badge rounded-pill text-bg-secondary">Draft</span>
+                                        <span t-elif="sub.state == 'cancelled'" class="badge rounded-pill text-bg-danger">Cancelled</span>
+                                        <span t-elif="sub.state == 'expired'" class="badge rounded-pill text-bg-dark">Expired</span>
+                                    </td>
+                                    <td class="text-end">
+                                        <span t-field="sub.recurring_price" t-options='{"widget": "monetary", "display_currency": sub.currency_id or sub.company_id.currency_id}'/>
+                                    </td>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+                <div t-if="pager" class="o_portal_pager text-center">
+                    <t t-call="portal.pager"/>
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <!-- Subscription Detail Template -->
+    <template id="portal_my_subscription_detail" name="My Subscription Detail">
+        <t t-call="portal.portal_layout">
+            <div class="container py-3">
+                <!-- Header with Title, Status & PDF Button -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h2>Subscription <t t-out="subscription.name"/></h2>
+                        <span t-if="subscription.state == 'active'" class="badge text-bg-success fs-6">Active</span>
+                        <span t-elif="subscription.state == 'paused'" class="badge text-bg-warning fs-6">Paused</span>
+                        <span t-elif="subscription.state == 'draft'" class="badge text-bg-secondary fs-6">Draft</span>
+                        <span t-elif="subscription.state == 'cancelled'" class="badge text-bg-danger fs-6">Cancelled</span>
+                        <span t-elif="subscription.state == 'expired'" class="badge text-bg-dark fs-6">Expired</span>
+                    </div>
+                    <div>
+                        <a t-attf-href="/my/subscriptions/#{subscription.id}/pdf" class="btn btn-secondary me-2">
+                            <i class="fa fa-download"/> Download PDF
+                        </a>
+                        <t t-if="subscription.state in ('draft', 'active', 'paused')">
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#cancelSubscriptionModal">
+                                Cancel Subscription
+                            </button>
+                        </t>
+                    </div>
+                </div>
+
+                <!-- Plan Summary Card -->
+                <div class="card mb-4 shadow-sm">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Plan &amp; Billing Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Subscription Plan</small>
+                                <strong><span t-field="subscription.plan_id.name"/></strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Recurring Price</small>
+                                <strong><span t-field="subscription.recurring_price" t-options='{"widget": "monetary", "display_currency": subscription.currency_id or subscription.company_id.currency_id}'/></strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Billing Cycle</small>
+                                <strong><span t-field="subscription.plan_id.billing_cycle"/></strong>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Next Invoice Date</small>
+                                <strong><span t-field="subscription.next_invoice_date"/></strong>
+                            </div>
+                        </div>
+                        <hr/>
+                        <div class="row">
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Start Date</small>
+                                <span><t t-out="subscription.date_start or 'N/A'"/></span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">End Date</small>
+                                <span><t t-out="subscription.date_end or 'Ongoing'"/></span>
+                            </div>
+                            <div class="col-md-3">
+                                <small class="text-muted d-block">Auto Renew</small>
+                                <span><t t-if="subscription.auto_renew">Yes</t><t t-else="">No</t></span>
+                            </div>
+                            <div class="col-md-3" t-if="subscription.state == 'paused'">
+                                <small class="text-muted d-block">Resume Date</small>
+                                <span><t t-out="subscription.pause_end_date or 'Indefinite'"/></span>
+                            </div>
+                        </div>
+                        <div class="row mt-3" t-if="subscription.cancel_reason">
+                            <div class="col-12">
+                                <small class="text-muted d-block">Cancellation Reason</small>
+                                <span class="text-danger"><t t-out="subscription.cancel_reason"/></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Associated Contract Projections -->
+                <div class="card mb-4 shadow-sm" t-if="subscription.contract_id">
+                    <div class="card-header bg-light">
+                        <h5 class="mb-0">Associated Waste Management Contract</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Contract Reference</small>
+                                <strong><a t-attf-href="/my/contracts/#{subscription.contract_id.id}"><span t-field="subscription.contract_id.name"/></a></strong>
+                            </div>
+                            <div class="col-md-6">
+                                <small class="text-muted d-block">Service SLA</small>
+                                <span><t t-out="subscription.related_sla_id.name or 'Standard SLA'"/></span>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <small class="text-muted d-block">Covered Sites</small>
+                                <ul class="list-group list-group-flush">
+                                    <t t-foreach="subscription.related_site_ids" t-as="site">
+                                        <li class="list-group-item px-0">
+                                            <i class="fa fa-map-marker text-danger me-2"/>
+                                            <strong><t t-out="site.name"/></strong> - <t t-out="site.street"/>, <t t-out="site.city"/>
+                                        </li>
+                                    </t>
+                                    <t t-if="not subscription.related_site_ids">
+                                        <li class="list-group-item px-0 text-muted">No specific sites linked.</li>
+                                    </t>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal for Self-Service Cancel -->
+                <div class="modal fade" id="cancelSubscriptionModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <form t-attf-action="/my/subscriptions/#{subscription.id}/cancel" method="post">
+                                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="cancelModalLabel">Cancel Subscription</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Are you sure you want to cancel subscription <strong><t t-out="subscription.name"/></strong>?</p>
+                                    <div class="mb-3">
+                                        <label for="reason" class="form-label">Please state your reason for cancellation:</label>
+                                        <textarea class="form-control" id="reason" name="reason" rows="3" required="required" placeholder="Provide details..."></textarea>
+                                    </div>
+                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Keep Subscription</button>
+                                    <button type="submit" class="btn btn-secondary">Confirm Cancellation</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </t>
+    </template>
+
+</odoo>

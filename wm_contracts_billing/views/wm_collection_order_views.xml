@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View: wm.collection.order - wm.collection.order.search.wm_billing (Field) -->
+    <record id="view_wm_collection_order_search_wm_billing" model="ir.ui.view">
+        <field name="name">wm.collection.order.search.wm_billing</field>
+        <field name="model">wm.collection.order</field>
+        <field name="inherit_id" ref="wm_collection.view_wm_collection_order_search"/>
+        <field name="arch" type="xml">
+            <field name="route_id" position="after">
+                <field name="consolidated_invoice_id"/>
+            </field>
+            <xpath expr="//group" position="inside">
+                <filter name="groupby_monthly_invoice" context="{'group_by': 'consolidated_invoice_id'}" string="Monthly Invoice"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- View: wm.collection.order - wm.collection.order.form.wm_billing (Header Button) -->
+    <record id="view_wm_collection_order_form_wm_billing" model="ir.ui.view">
+        <field name="name">wm.collection.order.form.wm_billing</field>
+        <field name="model">wm.collection.order</field>
+        <field name="inherit_id" ref="wm_collection.view_wm_collection_order_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_create_invoice"
+                        string="Create Invoice"
+                        type="object"
+                        class="oe_highlight"
+                        groups="wm_base.group_wm_finance,account.group_account_manager"
+                        invisible="state not in ('completed', 'signed') or is_billed"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_invoices" type="object" class="oe_stat_button" icon="edit_square" invisible="invoice_count == 0">
+                    <field name="invoice_count" widget="statinfo" string="Invoices"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>

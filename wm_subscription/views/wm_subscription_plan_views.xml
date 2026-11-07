@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Form View -->
+    <record id="view_wm_subscription_plan_form" model="ir.ui.view">
+        <field name="name">wm.subscription.plan.form</field>
+        <field name="model">wm.subscription.plan</field>
+        <field name="arch" type="xml">
+            <form string="Subscription Plan">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Plan Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Commercial Business Plus"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. PLAN-BIZ-PLUS"/>
+                            <field name="billing_cycle"/>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                        <group>
+                            <field name="recurring_price"/>
+                            <field name="currency_id" groups="base.group_multi_currency"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Subscriber Benefits &amp; Perks">
+                            <group string="Financial &amp; Rate Discounts">
+                                <group>
+                                    <field name="extra_pickup_discount"/>
+                                    <field name="included_monthly_weight_kg"/>
+                                    <field name="allow_rollover_weight" widget="boolean_toggle"/>
+                                </group>
+                                <group>
+                                    <field name="free_container_swaps_per_year"/>
+                                    <field name="priority_sla_level"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Description">
+                            <field name="description" placeholder="Internal or customer-facing plan description..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_wm_subscription_plan_tree" model="ir.ui.view">
+        <field name="name">wm.subscription.plan.list</field>
+        <field name="model">wm.subscription.plan</field>
+        <field name="arch" type="xml">
+            <list string="Subscription Plans" multi_edit="1">
+                <field name="name"/>
+                <field name="code"/>
+                <field name="recurring_price"/>
+                <field name="billing_cycle" widget="badge" decoration-info="billing_cycle == 'monthly'" decoration-success="billing_cycle == 'annually'"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_wm_subscription_plan_search" model="ir.ui.view">
+        <field name="name">wm.subscription.plan.search</field>
+        <field name="model">wm.subscription.plan</field>
+        <field name="arch" type="xml">
+            <search string="Search Subscription Plans">
+                <field name="name"/>
+                <field name="code"/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Billing Cycle" name="group_cycle" context="{'group_by': 'billing_cycle'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_wm_subscription_plan" model="ir.actions.act_window">
+        <field name="name">Subscription Plans</field>
+        <field name="res_model">wm.subscription.plan</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_wm_subscription_plan_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Subscription Plan!
+            </p>
+            <p>
+                Define recurring subscription tiers (Monthly, Quarterly, Annually) for customer billing plans.
+            </p>
+        </field>
+    </record>
+
+    <!-- Menu Item under Configuration -> Customer -->
+    <menuitem id="menu_wm_subscription_plan"
+              name="Subscription Plans"
+              parent="wm_contracts_billing.menu_wm_config_customer"
+              action="action_wm_subscription_plan"
+              sequence="30"/>
+</odoo>

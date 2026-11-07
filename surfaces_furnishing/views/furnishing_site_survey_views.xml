@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Site Survey List View -->
+    <record id="view_furnishing_site_survey_list" model="ir.ui.view">
+        <field name="name">furnishing.site.survey.list</field>
+        <field name="model">furnishing.site.survey</field>
+        <field name="arch" type="xml">
+            <list string="Site Surveys">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="surveyor_id" widget="many2one_avatar_user"/>
+                <field name="survey_date"/>
+                <field name="property_type"/>
+                <field name="site_readiness" widget="badge"/>
+                <field name="total_floor_area_sqm" string="Total Floor (m²)"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-primary="state == 'scheduled'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'completed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Site Survey Form View -->
+    <record id="view_furnishing_site_survey_form" model="ir.ui.view">
+        <field name="name">furnishing.site.survey.form</field>
+        <field name="model">furnishing.site.survey</field>
+        <field name="arch" type="xml">
+            <form string="Site Survey &amp; Measurements">
+                <header>
+                    <button name="action_schedule" string="Schedule Visit" type="object" invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_start" string="Start Survey" type="object" invisible="state != 'scheduled'" class="btn-primary"/>
+                    <button name="action_complete" string="Complete Survey" type="object" invisible="state != 'in_progress'" class="btn-success"/>
+                    <button name="action_create_quotation" string="Generate Quotation" type="object" invisible="state != 'completed'" class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object" invisible="state in ('completed', 'cancelled')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,in_progress,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name"/></span>
+                        <h1>
+                            <field name="project_id" placeholder="Select Project..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="survey_details">
+                            <field name="partner_id"/>
+                            <field name="surveyor_id" widget="many2one_avatar_user"/>
+                            <field name="survey_date"/>
+                            <field name="property_type"/>
+                        </group>
+                        <group name="site_conditions">
+                            <field name="site_readiness"/>
+                            <field name="ac_operational"/>
+                            <field name="power_available"/>
+                            <field name="total_floor_area_sqm" readonly="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="site_address"/>
+                        <field name="access_constraints"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Room &amp; Zone Measurements" name="measurements">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="room_name"/>
+                                    <field name="room_type_id"/>
+                                    <field name="floor_level"/>
+                                    <field name="service_scope"/>
+                                    <field name="room_length"/>
+                                    <field name="room_width"/>
+                                    <field name="floor_area_sqm" sum="Total Area"/>
+                                    <field name="skirting_perimeter_lm" sum="Total Skirting"/>
+                                    <field name="subfloor_condition"/>
+                                    <field name="window_reference"/>
+                                    <field name="window_width"/>
+                                    <field name="curtain_drop_height"/>
+                                    <field name="motorized_curtains"/>
+                                    <field name="special_notes"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Sign-Offs" name="signatures">
+                            <group>
+                                <group string="Surveyor Sign-Off">
+                                    <field name="surveyor_signature" widget="signature"/>
+                                </group>
+                                <group string="Customer / Site Contractor Sign-Off">
+                                    <field name="customer_signature" widget="signature"/>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Site Survey Search View -->
+    <record id="view_furnishing_site_survey_search" model="ir.ui.view">
+        <field name="name">furnishing.site.survey.search</field>
+        <field name="model">furnishing.site.survey</field>
+        <field name="arch" type="xml">
+            <search string="Search Site Surveys">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="surveyor_id"/>
+                <filter name="my_surveys" string="My Surveys" domain="[('surveyor_id', '=', uid)]"/>
+                <filter name="completed" string="Completed" domain="[('state', '=', 'completed')]"/>
+                <group>
+                    <filter name="group_project" string="Project" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_surveyor" string="Surveyor" context="{'group_by': 'surveyor_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_furnishing_site_survey" model="ir.actions.act_window">
+        <field name="name">Site Surveys</field>
+        <field name="res_model">furnishing.site.survey</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_furnishing_site_survey_search"/>
+    </record>
+
+</odoo>

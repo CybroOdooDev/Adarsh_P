@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Sequence for Project -->
+    <record id="seq_furnishing_project" model="ir.sequence">
+        <field name="name">Furnishing Project</field>
+        <field name="code">furnishing.project</field>
+        <field name="prefix">PRJ/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Site Survey -->
+    <record id="seq_furnishing_site_survey" model="ir.sequence">
+        <field name="name">Furnishing Site Survey</field>
+        <field name="code">furnishing.site.survey</field>
+        <field name="prefix">SRV/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Material Submittal -->
+    <record id="seq_furnishing_material_submittal" model="ir.sequence">
+        <field name="name">Furnishing Material Submittal</field>
+        <field name="code">furnishing.material.submittal</field>
+        <field name="prefix">SUB/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Snag -->
+    <record id="seq_furnishing_snag" model="ir.sequence">
+        <field name="name">Furnishing Snag</field>
+        <field name="code">furnishing.snag</field>
+        <field name="prefix">SNG/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Maintenance Ticket -->
+    <record id="seq_furnishing_maintenance" model="ir.sequence">
+        <field name="name">Furnishing Maintenance Ticket</field>
+        <field name="code">furnishing.maintenance</field>
+        <field name="prefix">MNT/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

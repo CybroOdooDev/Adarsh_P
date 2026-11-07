@@ -1,0 +1,14 @@
+id,name,model_id,group_id/id,operation,domain
+access_wm_recycling_order_operator,access.recycling.order.operator,recycling.order,wm_base.group_wm_inventory_operator,r,
+access_wm_recycling_order_user,access.recycling.order.user,recycling.order,wm_base.group_wm_recycler,cru,
+access_wm_recycling_order_admin,access.recycling.order.admin,recycling.order,wm_base.group_wm_admin,crud,
+rule_recycling_order_company,Recycling Order Multi-Company,recycling.order,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_recycling_line_operator,access.recycling.line.operator,recycling.line,wm_base.group_wm_inventory_operator,r,
+access_wm_recycling_line_user,access.recycling.line.user,recycling.line,wm_base.group_wm_recycler,cru,
+access_wm_recycling_line_admin,access.recycling.line.admin,recycling.line,wm_base.group_wm_admin,crud,
+rule_recycling_line_company,Recycling Line Multi-Company,recycling.line,,crud,"['|', ('order_id.company_id', '=', False), ('order_id.company_id', 'in', company_ids)]"
+access_wm_recycling_efficiency_report_recycler_read,wm_recycling_efficiency_report.recycler.read,wm.recycling.efficiency.report,wm_base.group_wm_recycler,r,
+rule_wm_recycling_efficiency_report_company,Recycling Efficiency Report Multi-Company,wm.recycling.efficiency.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_carbon_accounting_report_recycler_read,wm_carbon_accounting_report.recycler.read,wm.carbon.accounting.report,wm_base.group_wm_recycler,r,
+access_wm_carbon_accounting_report_compliance_officer_read,wm_carbon_accounting_report.compliance_officer.read,wm.carbon.accounting.report,wm_base.group_wm_compliance_officer,r,
+rule_wm_carbon_accounting_report_company,Carbon Accounting Report Multi-Company,wm.carbon.accounting.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"

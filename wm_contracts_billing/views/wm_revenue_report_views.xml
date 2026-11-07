@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- View: wm.revenue.report - wm.revenue.report.pivot (Pivot) -->
+    <record id="view_wm_revenue_report_pivot" model="ir.ui.view">
+        <field name="name">wm.revenue.report.pivot</field>
+        <field name="model">wm.revenue.report</field>
+        <field name="arch" type="xml">
+            <pivot string="Revenue Analysis" sample="1">
+                <field name="waste_category_id" type="row"/>
+                <field name="date" interval="month" type="col"/>
+                <field name="invoiced_amount" type="measure"/>
+                <field name="weight_kg" type="measure"/>
+                <field name="revenue_per_kg" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- View: wm.revenue.report - wm.revenue.report.graph (Graph) -->
+    <record id="view_wm_revenue_report_graph" model="ir.ui.view">
+        <field name="name">wm.revenue.report.graph</field>
+        <field name="model">wm.revenue.report</field>
+        <field name="arch" type="xml">
+            <graph string="Revenue Analysis" type="bar" sample="1">
+                <field name="waste_category_id"/>
+                <field name="invoiced_amount" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- View: wm.revenue.report - wm.revenue.report.search (Search) -->
+    <record id="view_wm_revenue_report_search" model="ir.ui.view">
+        <field name="name">wm.revenue.report.search</field>
+        <field name="model">wm.revenue.report</field>
+        <field name="arch" type="xml">
+            <search string="Revenue Analysis">
+                <field name="waste_category_id"/>
+                <field name="partner_id"/>
+                <group>
+                    <filter string="Waste Category" name="group_category" context="{'group_by':'waste_category_id'}"/>
+                    <filter string="Customer" name="group_partner" context="{'group_by':'partner_id'}"/>
+                    <filter string="Invoice Date" name="group_date" context="{'group_by':'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action: Revenue Analysis -->
+    <record id="action_wm_revenue_report" model="ir.actions.act_window">
+        <field name="name">Revenue Analysis</field>
+        <field name="res_model">wm.revenue.report</field>
+        <field name="view_mode">graph,pivot</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No data to display</p>
+            <p>There are no records matching the current filters yet.</p>
+        </field>
+    </record>
+</odoo>

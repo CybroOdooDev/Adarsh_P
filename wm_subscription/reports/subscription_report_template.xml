@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_wm_subscription_document">
+            <t t-call="web.html_container">
+                <t t-foreach="docs" t-as="o">
+                    <t t-call="web.external_layout">
+                        <div class="page">
+                            <div class="oe_structure"/>
+
+                            <!-- Title -->
+                            <div class="row mt-4">
+                                <div class="col-12">
+                                    <h2>
+                                        <span>Recurring Subscription Summary</span>
+                                    </h2>
+                                    <h4>
+                                        Subscription Reference: <span t-field="o.name"/>
+                                    </h4>
+                                </div>
+                            </div>
+
+                            <!-- Customer & Company Info -->
+                            <div class="row mt-4 mb-4">
+                                <div class="col-6">
+                                    <strong>Customer:</strong>
+                                    <div t-field="o.partner_id"
+                                         t-options='{"widget": "contact", "fields": ["address", "name", "phone", "email"], "no_marker": True}'/>
+                                </div>
+                                <div class="col-6">
+                                    <strong>Service Provider:</strong>
+                                    <div t-field="o.company_id.partner_id"
+                                         t-options='{"widget": "contact", "fields": ["address", "name", "phone", "email"], "no_marker": True}'/>
+                                </div>
+                            </div>
+
+                            <!-- Subscription Details Grid -->
+                            <div class="card mb-4">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Subscription Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row">
+                                        <div class="col-3">
+                                            <strong>Subscription Plan:</strong>
+                                            <p class="m-0" t-field="o.plan_id.name"/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>Recurring Price:</strong>
+                                            <p class="m-0" t-field="o.recurring_price" t-options='{"widget": "monetary", "display_currency": o.currency_id or o.company_id.currency_id}'/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>Billing Cycle:</strong>
+                                            <p class="m-0" t-field="o.plan_id.billing_cycle"/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>Status:</strong>
+                                            <p class="m-0" t-field="o.state"/>
+                                        </div>
+                                    </div>
+                                    <div class="row mt-3">
+                                        <div class="col-3">
+                                            <strong>Start Date:</strong>
+                                            <p class="m-0" t-field="o.date_start"/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>Next Invoice Date:</strong>
+                                            <p class="m-0" t-field="o.next_invoice_date"/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>End Date:</strong>
+                                            <p class="m-0" t-field="o.date_end"/>
+                                        </div>
+                                        <div class="col-3">
+                                            <strong>Auto Renew:</strong>
+                                            <p class="m-0"><t t-if="o.auto_renew">Yes</t><t t-else="">No</t></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Associated Legal Contract (Authoritative Projections) -->
+                            <div class="card mb-4" t-if="o.contract_id">
+                                <div class="card-header bg-light">
+                                    <h5 class="mb-0">Associated Contract Details</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row mb-3">
+                                        <div class="col-6">
+                                            <strong>Legal Contract Reference:</strong>
+                                            <p class="m-0" t-field="o.contract_id.name"/>
+                                        </div>
+                                        <div class="col-6">
+                                            <strong>SLA Terms:</strong>
+                                            <p class="m-0" t-field="o.related_sla_id.name"/>
+                                        </div>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <strong>Covered Service Sites:</strong>
+                                            <ul>
+                                                <t t-foreach="o.related_site_ids" t-as="site">
+                                                    <li><span t-field="site.name"/> - <span t-field="site.street"/>, <span t-field="site.city"/></li>
+                                                </t>
+                                                <t t-if="not o.related_site_ids">
+                                                    <li><em>No specific sites assigned.</em></li>
+                                                </t>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="oe_structure"/>
+                        </div>
+                    </t>
+                </t>
+            </t>
+        </template>
+    </data>
+</odoo>

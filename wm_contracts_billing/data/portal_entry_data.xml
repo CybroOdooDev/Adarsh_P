@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="portal_entry_collection_orders" model="portal.entry">
+        <field name="name">Collection Orders</field>
+        <field name="description">Track your collection history and upcoming collections</field>
+        <field name="url">/my/collection/orders</field>
+        <field name="placeholder_count">collection_order_count</field>
+        <field name="is_config_card" eval="True"/>
+        <field name="sequence" eval="30"/>
+    </record>
+
+    <record id="portal_entry_contracts" model="portal.entry">
+        <field name="name">Contracts</field>
+        <field name="description">View and manage your waste agreements</field>
+        <field name="url">/my/contracts</field>
+        <field name="placeholder_count">contract_count</field>
+        <field name="is_config_card" eval="True"/>
+        <field name="sequence" eval="25"/>
+    </record>
+
+    <record id="portal_entry_service_requests" model="portal.entry">
+        <field name="name">Service Requests</field>
+        <field name="description">Submit extra pickups, container swaps, missed collections &amp; service holds</field>
+        <field name="url">/my/service-requests</field>
+        <field name="placeholder_count">service_request_count</field>
+        <field name="is_config_card" eval="True"/>
+        <field name="sequence" eval="35"/>
+    </record>
+</odoo>

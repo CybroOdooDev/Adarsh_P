@@ -1,0 +1,620 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template for the signing portal page -->
+    <template id="signature_portal_page_template" name="Signature Portal">
+        <t t-call="web.layout">
+            <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
+            <t t-set="body_classname" t-value="'bg-dark d-flex flex-column h-100 overflow-hidden'"/>
+            <t t-set="title"><t t-out="sig_request.template_id.name"/> - Sign Document</t>
+            
+            <head>
+                <t t-call-assets="web.assets_frontend" t-css="true"/>
+                <script src="/wm_base/static/src/js/pdf_define_off.js"></script>
+                <script type="text/javascript" src="/wm_base/static/src/vendor/pdf.min.js"></script>
+                <script src="/wm_base/static/src/js/pdf_define_restore.js"></script>
+                <style>
+                    body {
+                        font-family: 'Inter', sans-serif;
+                    }
+                    .portal-header {
+                        height: 60px;
+                        background-color: #1F2235;
+                        border-bottom: 1px solid #2C304A;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0 20px;
+                        color: #fff;
+                        z-index: 100;
+                    }
+                    .portal-body {
+                        height: calc(100vh - 60px);
+                        display: flex;
+                        overflow: hidden;
+                    }
+                    .portal-sidebar {
+                        width: 320px;
+                        background-color: #1A1D2E;
+                        border-right: 1px solid #2C304A;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        height: 100%;
+                        color: #fff;
+                    }
+                    .portal-canvas-container {
+                        flex: 1;
+                        background-color: #2D3142;
+                        overflow-y: auto;
+                        padding: 30px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .pdf-page-wrapper {
+                        box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+                        position: relative;
+                        background-color: #fff;
+                        border-radius: 4px;
+                    }
+                    .pdf-page-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        z-index: 10;
+                    }
+                    .field-box {
+                        position: absolute;
+                        border: 2px dashed #ffc107;
+                        background-color: rgba(255, 193, 7, 0.1);
+                        border-radius: 4px;
+                        box-sizing: border-box;
+                        cursor: not-allowed;
+                        user-select: none;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: center;
+                        align-items: center;
+                        text-align: center;
+                        font-size: 0.75rem;
+                        font-weight: 600;
+                        padding: 2px;
+                        transition: all 0.2s ease;
+                    }
+                    .field-box.interactive {
+                        cursor: pointer;
+                        border: 2px solid #2EC4B6;
+                        background-color: rgba(46, 196, 182, 0.15);
+                        color: #2EC4B6;
+                    }
+                    .field-box.interactive:hover {
+                        background-color: rgba(46, 196, 182, 0.28);
+                        box-shadow: 0 0 10px rgba(46, 196, 182, 0.4);
+                    }
+                    .field-box.filled {
+                        border: 2px solid #2EC4B6 !important;
+                        background-color: rgba(46, 196, 182, 0.18) !important;
+                        color: #2EC4B6 !important;
+                    }
+                    .field-box img {
+                        max-width: 100%;
+                        max-height: 100%;
+                        object-fit: contain;
+                    }
+                    .font-select-card {
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    }
+                    .font-select-card.active {
+                        border-color: #2EC4B6 !important;
+                        background-color: rgba(46, 196, 182, 0.08);
+                    }
+                </style>
+            </head>
+
+            <div class="portal-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="mb-0 fw-bold"><t t-out="sig_request.template_id.name"/></h5>
+                    <span class="badge ms-2" style="background-color: #2EC4B6; color: #ffffff;">Sign Document</span>
+                </div>
+                <div>
+                    <button class="btn btn-success fw-bold px-4 disabled" id="submit-signature" disabled="disabled">
+                        <i class="fa fa-check me-1"></i> Sign Document
+                    </button>
+                </div>
+            </div>
+
+            <div class="portal-body">
+                <!-- Left Sidebar -->
+                <div class="portal-sidebar p-3">
+                    <div class="overflow-auto" style="flex: 1;">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Document Details</h6>
+                        <div class="mb-4 small text-light">
+                            <div class="d-flex justify-content-between mb-1">
+                                <span class="text-muted">Reference:</span>
+                                <span class="fw-semibold" t-out="sig_request.name"/>
+                            </div>
+                            <div class="d-flex justify-content-between mb-1" t-if="ref_doc_name">
+                                <span class="text-muted">Linked Doc:</span>
+                                <span class="fw-semibold text-truncate" style="max-width: 180px;" t-out="ref_doc_name"/>
+                            </div>
+                        </div>
+
+                        <t t-if="ref_doc_details">
+                            <h6 class="fw-bold text-uppercase text-muted small mb-2">Details</h6>
+                            <table class="table table-dark table-sm table-borderless small mb-4">
+                                <tbody>
+                                    <tr t-foreach="ref_doc_details" t-as="detail">
+                                        <td class="text-muted py-1" t-out="detail[0]"/>
+                                        <td class="fw-semibold text-end py-1" t-out="detail[1]"/>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </t>
+
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Signer Role</h6>
+                        <div class="bg-dark rounded p-3 mb-4 border border-secondary">
+                            <small class="text-muted d-block text-uppercase" style="font-size: 0.65rem;">Signing As</small>
+                            <span class="fw-bold text-light d-block" t-out="signer.partner_id.name"/>
+                            <span class="badge bg-secondary mt-1" t-out="signer.role_id.name"/>
+                        </div>
+
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Signing Status</h6>
+                        <div id="signing-progress-text" class="small mb-3 text-warning">
+                            Please fill all the blue fields highlighted on the document.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Canvas (PDF Viewer + Signature Overlay) -->
+                <div class="portal-canvas-container" id="pdf-canvas-wrapper" style="position:relative;overflow:auto;flex:1;">
+                    <div style="position:relative;display:inline-block;min-width:100%;" id="pdf-iframe-container">
+                        <canvas id="pdf-sign-canvas"
+                            style="display:block;border:none;width:850px;height:auto;background-color:#fff;"
+                            aria-label="Sign Document">
+                        </canvas>
+                        <!-- Overlay for signature fields, positioned on top of the rendered PDF -->
+                        <div id="pdf-sign-overlay"
+                            style="position:absolute;top:0;left:0;width:850px;height:1200px;pointer-events:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Signature Modal -->
+            <div class="modal fade" id="signatureModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="signatureModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content border-0 shadow text-dark">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold" id="signatureModalLabel">Adopt Your Signature</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <!-- Nav tabs -->
+                            <ul class="nav nav-tabs nav-fill mb-3" id="signatureTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active fw-semibold" id="draw-tab" data-bs-toggle="tab" data-bs-target="#draw-pane" type="button" role="tab">Draw</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-semibold" id="type-tab" data-bs-toggle="tab" data-bs-target="#type-pane" type="button" role="tab">Type</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link fw-semibold" id="upload-tab" data-bs-toggle="tab" data-bs-target="#upload-pane" type="button" role="tab">Upload</button>
+                                </li>
+                            </ul>
+                            
+                            <!-- Tab contents -->
+                            <div class="tab-content border rounded bg-white p-3 mb-3" id="signatureTabContent" style="min-height: 220px;">
+                                
+                                <!-- Draw Pane -->
+                                <div class="tab-pane fade show active" id="draw-pane" role="tabpanel">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <button type="button" class="btn btn-outline-dark active" id="color-black">Black Ink</button>
+                                            <button type="button" class="btn btn-outline-primary" id="color-blue">Blue Ink</button>
+                                        </div>
+                                        <button type="button" class="btn btn-sm btn-link text-danger p-0 text-decoration-none" id="clear-canvas">Clear</button>
+                                    </div>
+                                    <canvas id="signature-pad" class="w-100 border rounded bg-light" style="height: 150px; cursor: crosshair;"></canvas>
+                                </div>
+                                
+                                <!-- Type Pane -->
+                                <div class="tab-pane fade" id="type-pane" role="tabpanel">
+                                    <div class="mb-3">
+                                        <label for="typed-name" class="form-label text-muted small">Enter your full name</label>
+                                        <input type="text" class="form-control" id="typed-name" t-att-value="signer.partner_id.name" placeholder="Type signature..."/>
+                                    </div>
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <div class="border rounded p-2 text-center cursor-pointer font-select-card active" data-font="Caveat" style="font-family: 'Caveat', cursive; font-size: 1.8rem; min-height: 50px; line-height: 1;">
+                                                <span class="preview-text" t-out="signer.partner_id.name"/>
+                                            </div>
+                                        </div>
+                                        <div class="col-6">
+                                            <div class="border rounded p-2 text-center cursor-pointer font-select-card" data-font="Pacifico" style="font-family: 'Pacifico', cursive; font-size: 1.3rem; min-height: 50px; line-height: 1;">
+                                                <span class="preview-text" t-out="signer.partner_id.name"/>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- Upload Pane -->
+                                <div class="tab-pane fade" id="upload-pane" role="tabpanel">
+                                    <div class="text-center py-3">
+                                        <input class="form-control form-control-sm w-75 mx-auto" type="file" id="upload-signature-file" accept="image/png, image/jpeg"/>
+                                        <small class="text-muted d-block mt-2">Only PNG or JPG files under 2MB.</small>
+                                        <div class="mt-2 d-none" id="upload-preview-container">
+                                            <img id="upload-preview" src="#" alt="Preview" style="max-height: 60px; max-width: 200px;" class="border p-1 bg-light"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="consent-check"/>
+                                <label class="form-check-label text-muted small" for="consent-check">
+                                    I agree that this electronic signature is the legally binding equivalent to my handwritten signature.
+                                </label>
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary fw-bold disabled" id="adopt-signature-btn" disabled="disabled">Adopt &amp; Sign</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inline Text Modal -->
+            <div class="modal fade" id="textInputModal" tabindex="-1" aria-labelledby="textInputModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered modal-sm">
+                    <div class="modal-content border-0 shadow text-dark">
+                        <div class="modal-header bg-light py-2">
+                            <h6 class="modal-title fw-bold" id="textInputModalLabel">Enter Value</h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-3">
+                            <input type="text" class="form-control" id="inline-text-input" placeholder="Type value..."/>
+                        </div>
+                        <div class="modal-footer bg-light py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-sm btn-primary fw-bold" id="save-inline-text">Confirm</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page data for signature_portal_sign.js -->
+            <div id="wm-sign-config" class="d-none"
+                 t-att-data-token="signer.access_token"
+                 t-att-data-signer-role-id="signer.role_id.id or 0"
+                 t-att-data-template-items="template_items"
+                 t-att-data-filled-values="filled_values"
+                 t-att-data-active-role-ids="active_role_ids"
+                 t-att-data-partner-name="signer.partner_id.name or ''"
+                 t-att-data-partner-email="signer.partner_id.email or ''"
+                 t-att-data-partner-phone="signer.partner_id.phone or ''"
+                 t-att-data-partner-company="signer.partner_id.commercial_company_name or ''"/>
+            <script src="/wm_base/static/src/js/signature_portal_sign.js"></script>
+        </t>
+    </template>
+
+    <!-- Template for thank you / landing page -->
+    <template id="signature_thank_you_page_template" name="Signature Success">
+        <t t-call="web.layout">
+            <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
+            <t t-set="body_classname" t-value="'bg-light d-flex flex-column h-100'"/>
+            <t t-set="title">Thank You - Signature Captured</t>
+            
+            <head>
+                <t t-call-assets="web.assets_frontend" t-css="true"/>
+            </head>
+
+            <div class="container my-auto py-5">
+                <div class="row justify-content-center text-center">
+                    <div class="col-md-6 col-lg-5">
+                        <div class="card border-0 shadow-sm p-4 py-5">
+                            <div class="card-body">
+                                <div class="text-success mb-4">
+                                    <i class="fa fa-check-circle-o" style="font-size: 5rem;"></i>
+                                </div>
+                                <h3 class="fw-bold text-dark mb-2">Signature Captured!</h3>
+                                <p class="text-muted mb-4">Thank you, <span class="fw-bold text-dark" t-out="name"/>! Your signature has been securely submitted and logged in our system.</p>
+                                <div t-if="signer" class="bg-light rounded p-3 mb-4 text-start border">
+                                    <small class="text-muted d-block text-center">Signature Record</small>
+                                    <div class="d-flex justify-content-between mt-2 font-monospace" style="font-size: 0.85rem;">
+                                        <span class="text-muted">Request:</span>
+                                        <span class="fw-bold" t-out="signer.request_id.name"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1 font-monospace" style="font-size: 0.85rem;">
+                                        <span class="text-muted">Signed on:</span>
+                                        <span class="fw-bold" t-out="signer.signed_date" t-options="{'widget': 'datetime'}"/>
+                                    </div>
+                                    <div class="d-flex justify-content-between mt-1 font-monospace" style="font-size: 0.85rem;">
+                                        <span class="text-muted">Request status:</span>
+                                        <span t-if="signer.request_id.state == 'signed'" class="text-success fw-bold">Fully signed</span>
+                                        <span t-else="" class="text-warning fw-bold">Waiting for other signers</span>
+                                    </div>
+                                </div>
+                                <div id="iframe-done-container" class="mt-4 d-none">
+                                    <button id="iframe-done-btn" class="btn btn-primary fw-bold px-4 py-2 w-100 shadow-sm">Return to Dashboard</button>
+                                </div>
+                                <div class="mt-4">
+                                    <a t-att-href="back_url" class="btn btn-primary fw-bold px-4 py-2 w-100 shadow-sm">
+                                        <i class="fa fa-arrow-left me-1"></i> <t t-out="back_label"/>
+                                    </a>
+                                </div>
+                                <p class="text-muted small mt-3">You may close this browser window now.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <script src="/wm_base/static/src/js/signature_thank_you.js"></script>
+        </t>
+    </template>
+    <!-- Template for the drag-and-drop editor workspace -->
+    <template id="signature_template_editor_page_template" name="Signature Template Editor">
+        <t t-call="web.layout">
+            <t t-set="html_data" t-value="{'style': 'height: 100%;'}"/>
+            <t t-set="body_classname" t-value="'bg-dark d-flex flex-column h-100 overflow-hidden'"/>
+            <t t-set="title">Template Editor - <t t-out="template.name"/></t>
+
+            <head>
+                <t t-call-assets="web.assets_frontend" t-css="true"/>
+                <script src="/wm_base/static/src/js/pdf_define_off.js"></script>
+                <script type="text/javascript" src="/wm_base/static/src/vendor/pdf.min.js"></script>
+                <script src="/wm_base/static/src/js/pdf_define_restore.js"></script>
+                <style>
+                    body {
+                        font-family: 'Inter', sans-serif;
+                    }
+                    .editor-header {
+                        height: 60px;
+                        background-color: #1a1a1a;
+                        border-bottom: 1px solid #333;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        padding: 0 20px;
+                        color: #fff;
+                    }
+                    .editor-body {
+                        height: calc(100vh - 60px);
+                        display: flex;
+                        overflow: hidden;
+                    }
+                    .editor-sidebar {
+                        width: 280px;
+                        background-color: #262626;
+                        border-right: 1px solid #3d3d3d;
+                        display: flex;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        height: 100%;
+                        color: #fff;
+                    }
+                    .editor-canvas-container {
+                        flex: 1;
+                        background-color: #333;
+                        overflow-y: auto;
+                        padding: 30px;
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                    }
+                    .draggable-field-item {
+                        background-color: #333;
+                        color: #ddd;
+                        border: 1px solid #444;
+                        margin-bottom: 10px;
+                        padding: 12px;
+                        border-radius: 6px;
+                        cursor: grab;
+                        transition: all 0.2s ease;
+                        font-weight: 500;
+                    }
+                    .draggable-field-item:hover {
+                        background-color: #3d3d3d;
+                        color: #fff;
+                        border-color: #555;
+                    }
+                    .pdf-page-wrapper {
+                        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+                        position: relative;
+                        background-color: #fff;
+                    }
+                    .pdf-page-overlay {
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        z-index: 10;
+                    }
+                    .field-box {
+                        position: absolute;
+                        border: 2px dashed #007bff;
+                        background-color: rgba(0, 123, 255, 0.15);
+                        border-radius: 4px;
+                        padding: 4px 8px;
+                        font-size: 0.8rem;
+                        color: #007bff;
+                        font-weight: 600;
+                        cursor: move;
+                        user-select: none;
+                        box-sizing: border-box;
+                        display: flex;
+                        align-items: center;
+                        justify-content: space-between;
+                        min-width: 80px;
+                        min-height: 30px;
+                        box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+                    }
+                    .field-box.active {
+                        border: 2px solid #fff !important;
+                        box-shadow: 0 0 12px rgba(255, 255, 255, 0.6);
+                    }
+                    .field-box .field-label {
+                        white-space: nowrap;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        pointer-events: none;
+                    }
+                    .field-box .delete-btn {
+                        cursor: pointer;
+                        color: #ff4d4d;
+                        margin-left: 8px;
+                        font-size: 1.1rem;
+                        font-weight: bold;
+                    }
+                    .field-box .delete-btn:hover {
+                        color: #ff1a1a;
+                    }
+                    .role-badge {
+                        font-size: 0.7rem;
+                        padding: 1px 4px;
+                        border-radius: 3px;
+                        background-color: #555;
+                        color: #fff;
+                        margin-top: 2px;
+                        display: inline-block;
+                        pointer-events: none;
+                    }
+                </style>
+            </head>
+
+            <div class="editor-header">
+                <div class="d-flex align-items-center">
+                    <a t-att-href="back_url if back_url else f'/web#model=wm.signature.template&amp;id={template.id}&amp;view_type=form'" class="btn btn-outline-light btn-sm me-3" id="back-to-odoo-btn">
+                        <i class="fa fa-chevron-left me-1"></i> Back to Odoo
+                    </a>
+                    <h5 class="mb-0 fw-bold"><t t-out="template.name"/></h5>
+                    <span class="badge bg-secondary ms-2">Template Designer</span>
+                </div>
+                <div>
+                    <button class="btn btn-primary fw-bold px-4" id="save-template-fields">
+                        <i class="fa fa-save me-1"></i> Save Fields
+                    </button>
+                    <button class="btn btn-primary fw-bold px-4 ms-2" id="send-request-button">
+                        <i class="fa fa-paper-plane me-1"></i> Send
+                    </button>
+                    <button class="btn btn-success fw-bold px-4 ms-2" id="sign-now-button">
+                        <i class="fa fa-pencil me-1"></i> Sign Now
+                    </button>
+                </div>
+            </div>
+
+            <div class="editor-body">
+                <!-- Left Sidebar -->
+                <div class="editor-sidebar p-3">
+                    <div>
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Default Signer Role</h6>
+                        <select class="form-select form-select-sm bg-dark text-white border-secondary mb-4" id="default-signer-role">
+                            <t t-foreach="roles" t-as="role">
+                                <option t-att-value="role.id" t-out="role.name"/>
+                            </t>
+                        </select>
+
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Drag Fields onto Document</h6>
+                        <div class="list-group list-group-flush mb-4">
+                            <div class="draggable-field-item" draggable="true" data-type="signature">
+                                <i class="fa fa-pencil me-2 text-primary"></i> Signature
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="name">
+                                <i class="fa fa-user me-2 text-success"></i> Name
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="email">
+                                <i class="fa fa-envelope me-2 text-warning"></i> Email
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="phone">
+                                <i class="fa fa-phone me-2 text-danger"></i> Phone
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="company">
+                                <i class="fa fa-building me-2" style="color: #a855f7;"></i> Company
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="text">
+                                <i class="fa fa-file-text-o me-2" style="color: #ec4899;"></i> Text Block
+                            </div>
+                            <div class="draggable-field-item" draggable="true" data-type="date">
+                                <i class="fa fa-calendar me-2 text-light"></i> Date
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Field Properties -->
+                    <div class="border-top pt-3 border-secondary" id="properties-panel">
+                        <h6 class="fw-bold text-uppercase text-muted small mb-3">Field Properties</h6>
+                        <div id="no-field-selected" class="text-muted small">
+                            Select a field on the document to edit its settings.
+                        </div>
+                        <div id="field-selected-controls" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Assigned Signer Role</label>
+                                <select class="form-select form-select-sm bg-dark text-white border-secondary" id="field-role-select">
+                                    <t t-foreach="roles" t-as="role">
+                                        <option t-att-value="role.id" t-out="role.name"/>
+                                    </t>
+                                </select>
+                            </div>
+                            <button class="btn btn-outline-danger btn-sm w-100" id="delete-selected-field">
+                                <i class="fa fa-trash me-1"></i> Delete Field
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Main Canvas (PDF Viewer + Drag-Drop Overlay) -->
+                <div class="editor-canvas-container" id="pdf-canvas-wrapper" style="position:relative;overflow:auto;">
+                    <div style="position:relative;display:inline-block;min-width:100%;" id="pdf-iframe-container">
+                        <canvas id="pdf-canvas"
+                            style="display:block;border:none;width:850px;height:auto;background-color:#fff;"
+                            aria-label="Document canvas">
+                        </canvas>
+                        <!-- Overlay for drag-and-drop fields, positioned on top of iframe -->
+                        <div id="pdf-overlay"
+                            style="position:absolute;top:0;left:0;width:850px;height:1100px;pointer-events:none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Send Request Modal -->
+            <div class="modal fade" id="sendRequestModal" data-bs-backdrop="static" tabindex="-1" aria-labelledby="sendRequestModalLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered text-dark">
+                    <div class="modal-content border-0 shadow">
+                        <div class="modal-header bg-light">
+                            <h5 class="modal-title fw-bold" id="sendRequestModalLabel">Send for Signature</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-4">
+                            <div id="signer-inputs-container">
+                                <!-- Filled dynamically by JS -->
+                            </div>
+                        </div>
+                        <div class="modal-footer bg-light">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" class="btn btn-primary fw-bold" id="confirm-send-request-btn">Send Request</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Page data for signature_template_editor.js -->
+            <div id="wm-editor-config" class="d-none"
+                 t-att-data-template-id="template.id"
+                 t-att-data-order-id="order_id"
+                 t-att-data-inspection-id="inspection_id"
+                 t-att-data-existing-items="existing_items">
+                <span t-foreach="roles" t-as="role" class="wm-editor-role"
+                      t-att-data-id="role.id"
+                      t-att-data-name="role.name"
+                      t-att-data-color="role.id == roles[0].id and 'rgba(0,123,255,0.15)' or (role.id == roles[-1].id and 'rgba(40,167,69,0.15)' or 'rgba(255,193,7,0.15)')"
+                      t-att-data-border-color="role.id == roles[0].id and '#007bff' or (role.id == roles[-1].id and '#28a745' or '#ffc107')"/>
+            </div>
+            <script src="/wm_base/static/src/js/signature_template_editor.js"></script>
+        </t>
+    </template>
+</odoo>

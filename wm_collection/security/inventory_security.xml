@@ -1,0 +1,26 @@
+<odoo>
+    <data noupdate="0">
+        <!-- Master gate: granted when wm_enable_sorting is checked in Settings -->
+        <record id="group_wm_sorting_enabled" model="res.groups">
+            <field name="name">Sorting Enabled</field>
+        </record>
+
+        <!-- User Group: Sort by Material -->
+        <record id="group_sort_by_material" model="res.groups">
+            <field name="name">Sort by Material</field>
+            <field name="implied_ids" eval="[(4, ref('group_wm_sorting_enabled'))]"/>
+        </record>
+
+        <!-- User Group: Sort by Category -->
+        <record id="group_sort_by_category" model="res.groups">
+            <field name="name">Sort by Category</field>
+            <field name="implied_ids" eval="[(4, ref('group_wm_sorting_enabled'))]"/>
+        </record>
+
+        <!-- User Group: wm_base.group_wm_inventory_operator -->
+        <record id="wm_base.group_wm_inventory_operator" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_sort_by_material')), (4, ref('stock.group_stock_user'))]"/>
+        </record>
+
+        </data>
+</odoo>

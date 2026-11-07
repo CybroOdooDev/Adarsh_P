@@ -1,0 +1,104 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Release signing credentials, in order of preference: -P flags on the command
+// line, then keystore.properties beside this file, then the one kept with the
+// key in ~/.wm-driver-keystore. None of them is in the module.
+def keystoreProps = new Properties()
+def keystorePropsFile = rootProject.file('keystore.properties')
+if (!keystorePropsFile.exists()) {
+    keystorePropsFile = new File(System.getProperty('user.home'), '.wm-driver-keystore/keystore.properties')
+}
+if (keystorePropsFile.exists()) {
+    keystorePropsFile.withInputStream { keystoreProps.load(it) }
+}
+
+def wmSigning = { String flag, String key ->
+    project.findProperty(flag) ?: keystoreProps.getProperty(key)
+}
+
+def wmKeystore = wmSigning('WM_KEYSTORE', 'storeFile')
+
+gradle.taskGraph.whenReady {
+    if (wmKeystore == null && it.hasTask(':app:assembleRelease')) {
+        logger.warn('WARNING: no release keystore - signing with the DEBUG key. ' +
+                'This APK will NOT install over a release-signed build of ' +
+                'com.cybrosys.wmdriver.v20. See README.md.')
+    }
+}
+
+android {
+    namespace 'com.cybrosys.wmdriver'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.cybrosys.wmdriver.v20"
+        minSdk 23
+        targetSdk 34
+        versionCode 1
+        versionName "20.1.0"
+    }
+
+    // Signing: credentials come from keystore.properties next to this build (kept
+    // out of the repo) or from -PWM_KEYSTORE=... on the command line. Without
+    // either, the debug key is used so a release build is still installable - but
+    // that APK carries a different signature from the released one and Android
+    // refuses to install it over an existing install, so the build says so loudly.
+    signingConfigs {
+        release {
+            if (wmKeystore != null) {
+                storeFile file(wmKeystore)
+                storePassword wmSigning('WM_KEYSTORE_PASSWORD', 'storePassword')
+                keyAlias wmSigning('WM_KEY_ALIAS', 'keyAlias')
+                keyPassword wmSigning('WM_KEY_PASSWORD', 'keyPassword')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig wmKeystore != null ? signingConfigs.release : signingConfigs.debug
+        }
+    }
+
+    buildFeatures {
+        buildConfig true
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+// The app's screens ship in assets/web. Before each build they are copied in
+// from the Odoo module this project sits in (tools/sync_web_assets.py);
+// -PWM_MODULE_DIR=... points at another copy of the module.
+def wmModuleDir = file(project.findProperty('WM_MODULE_DIR') ?: "${rootDir}/..")
+
+tasks.register('syncWebAssets', Exec) {
+    onlyIf {
+        def found = new File(wmModuleDir, 'views/driver_app_template.xml').exists()
+        if (!found) {
+            logger.warn("WARNING: wm_driver_app not found at ${wmModuleDir}; " +
+                    'building with the screens already in app/src/main/assets/web.')
+        }
+        found
+    }
+    commandLine 'python3', "${rootDir}/tools/sync_web_assets.py", wmModuleDir.path
+}
+preBuild.dependsOn 'syncWebAssets'
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+
+    // AndroidX drags in both kotlin-stdlib 1.8.x and the old jdk7/jdk8 split
+    // artifacts, whose classes were folded into the main one in 1.8 - aligning
+    // the versions makes the duplicates disappear.
+    constraints {
+        implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.8.22'
+        implementation 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.8.22'
+    }
+}

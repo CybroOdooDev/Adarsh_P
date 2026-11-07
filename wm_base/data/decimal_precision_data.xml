@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Per-kg rates are small numbers (120 per tonne = 0.12 per kg, 87.5 per
+         tonne = 0.0875 per kg): keep 4 decimals instead of the 2 of
+         "Product Price". -->
+    <record id="decimal_wm_rate" model="decimal.precision" forcecreate="True">
+        <field name="name">WM Rate</field>
+        <field name="digits">4</field>
+    </record>
+</odoo>

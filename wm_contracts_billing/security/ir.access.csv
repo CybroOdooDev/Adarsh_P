@@ -1,0 +1,66 @@
+id,name,model_id,group_id/id,operation,domain
+access_wm_partner_contract_manager,wm.partner.contract.manager,wm.partner.contract,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_partner_contract_finance,wm.partner.contract.finance,wm.partner.contract,wm_base.group_wm_finance,r,
+access_wm_partner_contract_driver,wm.partner.contract.driver,wm.partner.contract,wm_base.group_wm_driver,r,
+access_wm_partner_contract_inventory,wm.partner.contract.inventory,wm.partner.contract,wm_base.group_wm_inventory_operator,r,
+access_wm_partner_contract_compliance,wm.partner.contract.compliance,wm.partner.contract,wm_base.group_wm_compliance_officer,r,
+rule_wm_partner_contract_company,Partner Contract Multi-Company Rule,wm.partner.contract,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_partner_contract_line_manager,wm.partner.contract.line.manager,wm.partner.contract.line,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_partner_contract_line_finance,wm.partner.contract.line.finance,wm.partner.contract.line,wm_base.group_wm_finance,r,
+access_wm_partner_contract_line_driver,wm.partner.contract.line.driver,wm.partner.contract.line,wm_base.group_wm_driver,r,
+access_wm_partner_contract_line_inventory,wm.partner.contract.line.inventory,wm.partner.contract.line,wm_base.group_wm_inventory_operator,r,
+access_wm_partner_contract_line_compliance,wm.partner.contract.line.compliance,wm.partner.contract.line,wm_base.group_wm_compliance_officer,r,
+rule_wm_partner_contract_line_company,Partner Contract Line Multi-Company Rule,wm.partner.contract.line,,crud,"['|', ('contract_id.company_id', '=', False), ('contract_id.company_id', 'in', company_ids)]"
+access_wm_sla_manager,wm.sla.manager,wm.sla,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_sla_ops,wm.sla.ops,wm.sla,wm_base.group_wm_ops_manager,r,
+access_wm_sla_line_manager,wm.sla.line.manager,wm.sla.line,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_sla_line_ops,wm.sla.line.ops,wm.sla.line,wm_base.group_wm_ops_manager,r,
+access_wm_sla_send_email_wizard_manager,wm.sla.send.email.wizard.manager,wm.sla.send.email.wizard,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_customer_profitability_report_manager,wm.customer.profitability.report.manager,wm.customer.profitability.report,wm_contracts_billing.group_wm_contract_manager,r,
+access_wm_customer_profitability_report_finance,wm.customer.profitability.report.finance,wm.customer.profitability.report,wm_base.group_wm_finance,r,
+access_wm_customer_profitability_report_ops,wm.customer.profitability.report.ops,wm.customer.profitability.report,wm_base.group_wm_ops_manager,r,
+rule_wm_customer_profitability_report_company,Customer Profitability Report Multi-Company Rule,wm.customer.profitability.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_lead_conv_wizard_user,wm.lead.conversion.wizard user,wm.lead.conversion.wizard,base.group_user,crud,
+access_crm_lead_line_user,crm.lead.line user,crm.lead.line,base.group_user,r,
+access_crm_lead_line_dispatcher,crm.lead.line dispatcher,crm.lead.line,wm_base.group_wm_dispatcher,crud,
+access_crm_lead_line_contract_mgr,crm.lead.line contract manager,crm.lead.line,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_collection_point_contract_mgr,wm.collection.point.contract.manager,wm.collection.point,wm_contracts_billing.group_wm_contract_manager,cru,
+access_wm_consolidated_invoice_finance,wm.consolidated.invoice.finance,wm.consolidated.invoice,wm_base.group_wm_finance,crud,
+access_wm_consolidated_invoice_ops,wm.consolidated.invoice.ops,wm.consolidated.invoice,wm_base.group_wm_ops_manager,r,
+rule_wm_consolidated_invoice_company,Consolidated Invoice Multi-Company Rule,wm.consolidated.invoice,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_consolidated_billing_wizard_finance,wm.consolidated.billing.wizard.finance,wm.consolidated.billing.wizard,wm_base.group_wm_finance,crud,
+access_wm_pricing_rule_finance,wm.pricing.rule.finance,wm.pricing.rule,wm_base.group_wm_finance,crud,
+access_wm_pricing_rule_ops,wm.pricing.rule.ops,wm.pricing.rule,wm_base.group_wm_ops_manager,r,
+rule_wm_pricing_rule_company,Pricing Rule Multi-Company Rule,wm.pricing.rule,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_pricing_rule_summary_wizard_finance,wm.pricing.rule.summary.wizard.finance,wm.pricing.rule.summary.wizard,wm_base.group_wm_finance,crud,
+access_wm_revenue_report_finance,wm.revenue.report.finance,wm.revenue.report,wm_base.group_wm_finance,r,
+access_wm_revenue_report_ops,wm.revenue.report.ops,wm.revenue.report,wm_base.group_wm_ops_manager,r,
+rule_wm_revenue_report_company,Revenue Report Multi-Company Rule,wm.revenue.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_weight_revenue_report_finance,wm.weight.revenue.report.finance,wm.weight.revenue.report,wm_base.group_wm_finance,r,
+access_wm_weight_revenue_report_ops,wm.weight.revenue.report.ops,wm.weight.revenue.report,wm_base.group_wm_ops_manager,r,
+rule_wm_weight_revenue_report_company,Weight Revenue Report Multi-Company Rule,wm.weight.revenue.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_operations_report_finance,wm.operations.report.finance,wm.operations.report,wm_base.group_wm_finance,r,
+access_wm_operations_report_ops,wm.operations.report.ops,wm.operations.report,wm_base.group_wm_ops_manager,r,
+rule_wm_operations_report_company,Operations Report Multi-Company Rule,wm.operations.report,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_monthly_billing_run_finance,wm.monthly.billing.run.finance,wm.monthly.billing.run,wm_base.group_wm_finance,crud,
+access_wm_monthly_billing_run_ops,wm.monthly.billing.run.ops,wm.monthly.billing.run,wm_base.group_wm_ops_manager,r,
+rule_wm_monthly_billing_run_company,Monthly Billing Run Multi-Company Rule,wm.monthly.billing.run,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_monthly_billing_run_line_finance,wm.monthly.billing.run.line.finance,wm.monthly.billing.run.line,wm_base.group_wm_finance,crud,
+access_wm_monthly_billing_run_line_ops,wm.monthly.billing.run.line.ops,wm.monthly.billing.run.line,wm_base.group_wm_ops_manager,r,
+rule_wm_monthly_billing_run_line_company,Monthly Billing Run Line Multi-Company Rule,wm.monthly.billing.run.line,,crud,"['|', ('run_id.company_id', '=', False), ('run_id.company_id', 'in', company_ids)]"
+access_wm_portal_service_request_user,wm.portal.service.request.user,wm.portal.service.request,base.group_user,r,
+rule_wm_portal_service_request_portal,Service Request: portal own records,wm.portal.service.request,base.group_portal,r,"[('partner_id', 'child_of', user.commercial_partner_id.id)]"
+rule_wm_portal_service_request_company,Service Request: Company Scope,wm.portal.service.request,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_portal_service_request_manager,wm.portal.service.request.manager,wm.portal.service.request,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_portal_service_request_dispatcher,wm.portal.service.request.dispatcher,wm.portal.service.request,wm_base.group_wm_dispatcher,cru,
+access_wm_billable_event_dispatcher,wm_billable_event.dispatcher,wm.billable.event,wm_base.group_wm_dispatcher,cru,
+rule_wm_billable_event_portal,Billable Event: portal own records,wm.billable.event,base.group_portal,r,"[('partner_id', 'child_of', user.commercial_partner_id.id)]"
+access_wm_billable_event_manager,wm.billable.event.manager,wm.billable.event,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_billable_event_finance,wm.billable.event.finance,wm.billable.event,wm_base.group_wm_finance,crud,
+rule_wm_billable_event_company,Billable Event Multi-Company Rule,wm.billable.event,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_event_pricing_rule_dispatcher_read,wm_event_pricing_rule.dispatcher.read,wm.event.pricing.rule,wm_base.group_wm_dispatcher,r,
+access_wm_event_pricing_rule_manager,wm.event.pricing.rule.manager,wm.event.pricing.rule,wm_contracts_billing.group_wm_contract_manager,crud,
+access_wm_event_pricing_rule_finance,wm.event.pricing.rule.finance,wm.event.pricing.rule,wm_base.group_wm_finance,crud,
+rule_wm_event_pricing_rule_company,Event Pricing Rule Multi-Company Rule,wm.event.pricing.rule,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_wm_portal_request_reject_wizard_dispatcher,wm.portal.request.reject.wizard.dispatcher,wm.portal.request.reject.wizard,wm_base.group_wm_dispatcher,crud,
+access_wm_portal_request_reject_wizard_contract,wm.portal.request.reject.wizard.contract,wm.portal.request.reject.wizard,wm_contracts_billing.group_wm_contract_manager,crud,

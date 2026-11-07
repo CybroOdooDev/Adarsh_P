@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="stage_inquiry" model="furnishing.stage">
+        <field name="name">Inquiry &amp; Scope</field>
+        <field name="sequence">1</field>
+        <field name="stage_type">inquiry</field>
+        <field name="description">Initial lead received, customer requirements and project location logged.</field>
+    </record>
+
+    <record id="stage_survey" model="furnishing.stage">
+        <field name="name">Site Survey &amp; Measurements</field>
+        <field name="sequence">2</field>
+        <field name="stage_type">survey</field>
+        <field name="description">Site engineer conducting room dimensions, window drop and site readiness inspection.</field>
+    </record>
+
+    <record id="stage_design" model="furnishing.stage">
+        <field name="name">3D Design &amp; Specs</field>
+        <field name="sequence">3</field>
+        <field name="stage_type">design</field>
+        <field name="description">3D Visualization, mood boards, spatial layouts and technical material specifications.</field>
+    </record>
+
+    <record id="stage_quotation" model="furnishing.stage">
+        <field name="name">Quotation &amp; BOQ</field>
+        <field name="sequence">4</field>
+        <field name="stage_type">quotation</field>
+        <field name="description">Room-by-room BOQ estimation and commercial proposal awaiting customer sign-off.</field>
+    </record>
+
+    <record id="stage_sourcing" model="furnishing.stage">
+        <field name="name">Material Approvals &amp; Sourcing</field>
+        <field name="sequence">5</field>
+        <field name="stage_type">sourcing</field>
+        <field name="description">Material submittals approved, advance received, purchase orders placed with mills and suppliers.</field>
+    </record>
+
+    <record id="stage_installation" model="furnishing.stage">
+        <field name="name">Site Installation</field>
+        <field name="sequence">6</field>
+        <field name="stage_type">installation</field>
+        <field name="description">Goods delivered to site, installation teams active fitting flooring, drapery and furniture.</field>
+    </record>
+
+    <record id="stage_handover" model="furnishing.stage">
+        <field name="name">Handover &amp; Snag Clearance</field>
+        <field name="sequence">7</field>
+        <field name="stage_type">handover</field>
+        <field name="description">Snag list punch audit, final touch-ups and customer completion certificate sign-off.</field>
+    </record>
+
+    <record id="stage_completed" model="furnishing.stage">
+        <field name="name">Completed / Warranty Active</field>
+        <field name="sequence">8</field>
+        <field name="stage_type">completed</field>
+        <field name="fold">True</field>
+        <field name="description">Project handed over successfully, 1-year guarantee and DLP retention timer active.</field>
+    </record>
+
+</odoo>

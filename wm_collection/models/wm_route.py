@@ -1,0 +1,1296 @@
+#############################################################################
+#
+#    Cybrosys Technologies Pvt. Ltd.
+#
+#    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
+#    Author: Cybrosys Techno Solutions (odoo@cybrosys.com)
+#
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
+#
+#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
+#    (LGPL v3) along with this program.
+#    If not, see <https://www.gnu.org/licenses/>.
+#
+#############################################################################
+import json
+import logging
+import math
+from datetime import datetime, time
+
+import pytz
+
+from odoo import api, fields, models
+from odoo.exceptions import UserError, ValidationError
+
+_logger = logging.getLogger(__name__)
+
+
+def _haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate the great-circle distance in kilometers between two points on
+    Earth.
+    """
+    R = 6371.0  # Earth radius in kilometers
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (math.sin(dlat / 2.0) ** 2 +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon / 2.0) ** 2)
+    c = 2.0 * math.atan2(math.sqrt(a), math.sqrt(1.0 - a))
+    return R * c
+
+
+def _solve_tsp_shortest_path(lines_with_coords):
+    """
+    Given a list of tuples (line_record, lat, lon),
+    returns a reordered list of line_records minimizing total travel distance
+    using Nearest Neighbor heuristic followed by 2-opt local search optimization.
+    """
+    if len(lines_with_coords) <= 2:
+        return [item[0] for item in lines_with_coords]
+
+    n = len(lines_with_coords)
+    dist_matrix = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            if i != j:
+                dist_matrix[i][j] = _haversine_distance(
+                    lines_with_coords[i][1], lines_with_coords[i][2],
+                    lines_with_coords[j][1], lines_with_coords[j][2]
+                )
+
+    # 1. Nearest Neighbor starting from point 0
+    unvisited = set(range(1, n))
+    current = 0
+    path = [0]
+    while unvisited:
+        next_node = min(unvisited, key=lambda node: dist_matrix[current][node])
+        path.append(next_node)
+        unvisited.remove(next_node)
+        current = next_node
+
+    # 2. 2-opt local search optimization to eliminate edge crossings
+    improved = True
+
+    def calculate_total_dist(p):
+        """
+        Sum the distances between ordered collection points on this route using
+        configured geo-coordinates, computing the estimated total route
+        distance for driver briefings.
+        """
+        return sum(dist_matrix[p[k]][p[k + 1]] for k in range(len(p) - 1))
+
+    best_dist = calculate_total_dist(path)
+    while improved:
+        improved = False
+        for i in range(1, n - 1):
+            for j in range(i + 1, n):
+                new_path = path[:i] + path[i:j + 1][::-1] + path[j + 1:]
+                new_dist = calculate_total_dist(new_path)
+                if new_dist < best_dist - 1e-6:
+                    path = new_path
+                    best_dist = new_dist
+                    improved = True
+                    break
+            if improved:
+                break
+
+    return [lines_with_coords[idx][0] for idx in path]
+
+
+class WmRoute(models.Model):
+    """Waste collection route grouping ordered collection stops, assigned vehicle, driver, and schedule."""
+    _name = 'wm.route'
+    _description = 'Collection Route'
+    _inherit = ['mail.thread', 'mail.activity.mixin', 'wm.audit.mixin']
+
+    name = fields.Char(string='Reference', help='Provides information about reference', required=True, copy=False, readonly=True, index=True, default=lambda self: 'New')
+    sequence = fields.Integer(help='Provides information about sequence', default=10)
+    zone_id = fields.Many2one('wm.service.zone', tracking=True)
+    use_route_zones = fields.Boolean(compute='_compute_use_settings')
+    date = fields.Date(help='Provides information about date', required=True, default=fields.Date.context_today)
+    company_id = fields.Many2one('res.company', required=True, default=lambda self: self.env.company)
+
+    valid_vehicle_ids = fields.Many2many('fleet.vehicle', compute='_compute_valid_vehicle_ids')
+    vehicle_id = fields.Many2one('fleet.vehicle', help='Provides information about vehicle')
+    driver_id = fields.Many2one('res.partner', help='Provides information about driver')
+    state = fields.Selection([
+        ('to_start', 'To Start'),
+        ('dispatched', 'Dispatched'),
+        ('running', 'Running'),
+        ('completed', 'Completed'),
+    ], string='Status', default='to_start', tracking=True, copy=False)
+    is_ready_to_dispatch = fields.Boolean(
+        string='Ready to Dispatch',
+        compute='_compute_is_ready_to_dispatch',
+        store=True,
+        tracking=True,
+        help="Indicates whether all prerequisites for route dispatching are met."
+    )
+    collection_order_ids = fields.One2many('wm.collection.order', 'route_id', string='Collection Orders')
+    collection_order_count = fields.Integer(string='Collection Orders Count', compute='_compute_collection_order_count', store=True)
+    waste_batch_ids = fields.One2many('waste.batch', 'route_id', string='Waste Batches')
+    line_ids = fields.One2many('wm.route.line', 'route_id', string='Route Lines', help='Provides information about route lines')
+    selected_point_ids = fields.Many2many('wm.collection.point', compute='_compute_selected_point_ids')
+    estimated_duration = fields.Float(help='Provides information about estimated duration')
+    estimated_distance_km = fields.Float(
+        string='Estimated Distance (km)', readonly=True, copy=False,
+        help='Straight-line (haversine) distance along the stop sequence, set when the route is optimized.')
+    route_map_data = fields.Text(help='Provides information about route map data', compute='_compute_route_map_data')
+    driver_change_history_ids = fields.One2many('wm.driver.change.history', 'route_id')
+    driver_history_count = fields.Integer(string='Driver Changes', compute='_compute_driver_history_count', store=True)
+    inspection_ids = fields.One2many('survey.user_input', 'route_id', domain=[('checklist_type', 'in', ['pre_trip', 'post_trip'])], string='Inspections')
+    inspection_count = fields.Integer(compute='_compute_inspection_count', store=True)
+    gate_entry_count = fields.Integer(compute='_compute_gate_entry_count')
+    actual_start = fields.Datetime(string='Actual Start Time', readonly=True, copy=False, help='Timestamp when the route was started.')
+    actual_end = fields.Datetime(string='Actual End Time', readonly=True, copy=False, help='Timestamp when the route was completed.')
+    shift_id = fields.Many2one('wm.driver.shift', string='Driver Shift', readonly=True, copy=False, help='Linked driver shift record for operating hours and shift tracking.')
+    is_inspected = fields.Boolean(
+        compute='_compute_is_inspected',
+        store=True,
+        readonly=False,
+        string='Inspection Passed',
+        help='Indicates whether the latest vehicle pre-trip inspection passed. Can be toggled to re-enable inspection.'
+    )
+    fill_level_percentage = fields.Float(string='Fill Level (%)', compute='_compute_fill_level_percentage', store=True)
+
+    def _compute_use_settings(self):
+        """
+        Load route module feature flags (map integration, vehicle inspection
+        requirements) from system configuration to control route planning and
+        dispatch features.
+        """
+        use_zones = self.env['ir.config_parameter'].sudo().get_bool('wm_collection.use_route_zones')
+        for route in self:
+            route.use_route_zones = use_zones
+
+    def _compute_gate_entry_count(self):
+        """Gate entries of the route's collection orders."""
+        GateEntry = self.env['wm.facility.gate.entry']
+        for route in self:
+            route.gate_entry_count = GateEntry.search_count(
+                [('collection_order_id.route_id', '=', route.id)]) if route.id else 0
+
+    def action_view_gate_entries(self):
+        self.ensure_one()
+        enabled = self.env['ir.config_parameter'].sudo().get_bool('wm_collection.use_facility_gate_entry', True)
+        if not enabled:
+            raise UserError(self.env._("Facility Gate Entries feature is disabled in settings."))
+        return {
+            'name': self.env._('Facility Gate Entries'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'wm.facility.gate.entry',
+            'view_mode': 'list,form',
+            'domain': [('collection_order_id.route_id', '=', self.id)],
+            'context': {
+                'default_vehicle_id': self.vehicle_id.id if self.vehicle_id else False,
+                'default_driver_id': self.driver_id.id if self.driver_id else False,
+            },
+        }
+
+    def action_view_driver_shift(self):
+        self.ensure_one()
+        if not self.shift_id:
+            return None
+        return {
+            'name': self.env._('Driver Shift'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'wm.driver.shift',
+            'res_id': self.shift_id.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    @api.onchange('zone_id')
+    def _onchange_zone_id(self):
+        """
+        When a service zone is selected on the route, automatically assign
+        the zone's default vehicle and driver if configured.
+        """
+        if self.zone_id:
+            if self.zone_id.default_vehicle_id and not self.is_inspected:
+                self.vehicle_id = self.zone_id.default_vehicle_id
+                self.driver_id = self.zone_id.default_vehicle_id.driver_id or self.zone_id.default_driver_id
+            elif self.zone_id.default_driver_id:
+                self.driver_id = self.zone_id.default_driver_id
+
+    @api.onchange('vehicle_id')
+    def _onchange_vehicle_id(self):
+        """
+        Method to default the route driver from the selected vehicle.
+        """
+        self.driver_id = self.vehicle_id.driver_id if self.vehicle_id else False
+
+    @api.depends('inspection_ids')
+    def _compute_inspection_count(self):
+        """
+        Count the vehicle maintenance checklist inspections linked to this route.
+        """
+        for route in self:
+            route.inspection_count = len(route.inspection_ids)
+
+    @api.depends('inspection_ids.state', 'inspection_ids.checklist_type', 'inspection_ids.scoring_success', 'inspection_ids.create_date', 'inspection_ids.vehicle_id', 'vehicle_id', 'date')
+    def _compute_is_inspected(self):
+        """
+        Determine whether the latest vehicle pre-trip inspection passed for this route,
+        enabling pre-dispatch inspection enforcement.
+        """
+        for route in self:
+            done_pre_trips = route.inspection_ids.filtered(
+                # An inspection recorded on the route without a vehicle counts for
+                # it; one recorded for another vehicle (before a swap) does not.
+                lambda i: i.checklist_type == 'pre_trip' and i.state == 'done' and (
+                    not route.vehicle_id or not i.vehicle_id or i.vehicle_id == route.vehicle_id)
+            ).sorted(key=lambda i: (i.create_date or fields.Datetime.now(), i.id), reverse=True)
+            latest_pre_trip = done_pre_trips[:1]
+            if latest_pre_trip:
+                route.is_inspected = bool(getattr(latest_pre_trip, 'scoring_success', True))
+            else:
+                route.is_inspected = route._has_valid_pretrip_checklist()
+
+    def _has_own_passed_inspection(self):
+        """True when a pre-trip inspection done on this route itself passed."""
+        self.ensure_one()
+        return any(
+            bool(getattr(inspection, 'scoring_success', True))
+            for inspection in self.inspection_ids
+            if inspection.checklist_type == 'pre_trip' and inspection.state == 'done' and (
+                not self.vehicle_id or not inspection.vehicle_id or inspection.vehicle_id == self.vehicle_id)
+        )
+
+    def _get_previous_started_route(self):
+        """Return the vehicle's most recent other route that was started or
+        completed before this one (empty recordset when there is none).
+
+        A route not started yet comes after every started route; a started
+        route only looks at routes started before its own actual start.
+        """
+        self.ensure_one()
+        Route = self.env['wm.route'].sudo()
+        if not self.vehicle_id:
+            return Route
+        base = [
+            ('vehicle_id', '=', self.vehicle_id.id),
+            ('state', 'in', ('running', 'completed')),
+            ('id', '!=', self._origin.id or 0),
+        ]
+        own_start = self.actual_start if self.state in ('running', 'completed') else False
+        timed_domain = base + [('actual_start', '!=', False)]
+        untimed_domain = base + [('actual_start', '=', False)]
+        if own_start:
+            timed_domain.append(('actual_start', '<', own_start))
+            untimed_domain.append(('date', '<', fields.Date.context_today(self, own_start)))
+        candidates = Route.search(timed_domain, order='actual_start desc, id desc', limit=1)
+        candidates |= Route.search(untimed_domain, order='date desc, id desc', limit=1)
+        if not candidates:
+            return Route
+        return max(candidates, key=lambda r: (
+            r.actual_start or datetime.combine(r.date, time.min), r.id))
+
+    def _has_valid_pretrip_checklist(self):
+        """A checked pre-trip maintenance checklist stays valid until the
+        vehicle runs a route: it counts when it was done after the start of
+        the vehicle's previous started route (any checklist counts when the
+        vehicle has not run a route yet)."""
+        self.ensure_one()
+        if not self.vehicle_id:
+            return False
+        domain = [
+            ('vehicle_id', '=', self.vehicle_id.id),
+            ('checklist_type', '=', 'pre_trip'),
+            ('state', '=', 'checked'),
+        ]
+        previous = self._get_previous_started_route()
+        if not previous:
+            return bool(self.env['wm.vehicle.maintenance.checklist'].sudo().search_count(domain, limit=1))
+        if not previous.actual_start:
+            # Only the previous route's day is known: require a later checklist.
+            domain.append(('date', '>', previous.date))
+            return bool(self.env['wm.vehicle.maintenance.checklist'].sudo().search_count(domain, limit=1))
+        start = previous.actual_start
+        start_day = fields.Date.context_today(self, start)
+        # Checklists only carry a date: a later day always counts, the same
+        # day counts when the checklist was recorded after the route started.
+        domain += ['|', ('date', '>', start_day),
+                   '&', ('date', '=', start_day), ('create_date', '>=', start)]
+        return bool(self.env['wm.vehicle.maintenance.checklist'].sudo().search_count(domain, limit=1))
+
+    @api.depends('collection_order_ids.confirmed_weight', 'vehicle_id.wm_capacity_weight')
+    def _compute_fill_level_percentage(self):
+        """
+        Estimate the current vehicle fill level as a percentage by summing
+        collected waste weights on the route relative to the assigned vehicle's
+        maximum payload capacity.
+        """
+        for route in self:
+            if route.vehicle_id and route.vehicle_id.wm_capacity_weight > 0:
+                total_confirmed = sum(route.collection_order_ids.mapped('confirmed_weight'))
+                route.fill_level_percentage = (total_confirmed / route.vehicle_id.wm_capacity_weight) * 100
+            else:
+                route.fill_level_percentage = 0.0
+
+    @api.depends(
+        'state', 'vehicle_id', 'driver_id', 'line_ids',
+        'collection_order_ids.partner_id', 'collection_order_ids.collection_point_id',
+        'collection_order_ids.scheduled_start', 'collection_order_ids.scheduled_end',
+        'is_inspected'
+    )
+    def _compute_is_ready_to_dispatch(self):
+        """
+        Determine if the route has all prerequisites met for dispatch: an
+        assigned driver, a valid vehicle with a current inspection, and at
+        least one confirmed collection order.
+        """
+        for route in self:
+            if route.state != 'to_start':
+                route.is_ready_to_dispatch = False
+                continue
+            has_vehicle = bool(route.vehicle_id)
+            has_driver = bool(route.driver_id)
+            has_stops = bool(route.line_ids)
+            has_pretrip = bool(route.vehicle_id and route.is_inspected)
+
+            orders_valid = bool(route.collection_order_ids)
+            for order in route.collection_order_ids:
+                if not (order.partner_id and order.collection_point_id and order.scheduled_start and order.scheduled_end):
+                    orders_valid = False
+                    break
+
+            route.is_ready_to_dispatch = has_vehicle and has_driver and has_stops and has_pretrip and orders_valid
+
+    @api.model
+    def _get_wm_tz(self, company=None):
+        """Timezone used to map route dates to UTC datetimes: the user's,
+        else the company partner's, else UTC."""
+        company = company or self.env.company
+        for tz_name in (self.env.user.tz, company.partner_id.tz if company else False):
+            if not tz_name:
+                continue
+            try:
+                return pytz.timezone(tz_name)
+            except pytz.UnknownTimeZoneError:
+                _logger.warning("Ignoring unknown timezone %r", tz_name)
+        return pytz.UTC
+
+    @api.model
+    def _cron_auto_assign_orders_to_routes(self):
+        """
+        Daily cron (00:15) to group draft collection orders by zone and date,
+        assigning them to under-capacity routes or creating new ones.
+        """
+        use_zones = self.env['ir.config_parameter'].sudo().get_bool('wm_collection.use_route_zones')
+        if not use_zones:
+            return
+
+        draft_orders = self.env['wm.collection.order'].search([
+            ('state', '=', 'draft'),
+            ('route_id', '=', False),
+            ('collection_point_id.zone_id', '!=', False)
+        ])
+        if not draft_orders:
+            return
+
+        grouped_orders = {}
+        for order in draft_orders:
+            company = order.company_id or self.env.company
+            zone = order.collection_point_id.zone_id
+            tz = self._get_wm_tz(company)
+            today = fields.Datetime.now().replace(tzinfo=pytz.UTC).astimezone(tz).date()
+            # scheduled_start is stored in UTC: take the local calendar day.
+            sched_date = (
+                pytz.UTC.localize(order.scheduled_start).astimezone(tz).date()
+                if order.scheduled_start else today
+            )
+            key = (company, zone, sched_date)
+            grouped_orders.setdefault(key, []).append(order)
+
+        routes_to_optimize = self.env['wm.route']
+
+        for (company, zone, sched_date), orders in grouped_orders.items():
+            max_stops = zone.max_stops_per_route or 25
+            existing_routes = self.search([
+                ('company_id', '=', company.id),
+                ('zone_id', '=', zone.id),
+                ('date', '=', sched_date),
+                ('state', '=', 'to_start')
+            ])
+
+            current_route = False
+            for r in existing_routes:
+                if len(r.line_ids) < max_stops:
+                    current_route = r
+                    break
+
+            if not current_route:
+                current_route = self.create({
+                    'name': 'New',
+                    'company_id': company.id,
+                    'zone_id': zone.id,
+                    'date': sched_date,
+                    'vehicle_id': zone.default_vehicle_id.id if zone.default_vehicle_id else False,
+                    'driver_id': zone.default_driver_id.id if zone.default_driver_id else False,
+                    'state': 'to_start',
+                })
+
+            for order in orders:
+                if len(current_route.line_ids) >= max_stops:
+                    current_route = self.create({
+                        'name': 'New',
+                        'company_id': company.id,
+                        'zone_id': zone.id,
+                        'date': sched_date,
+                        'vehicle_id': zone.default_vehicle_id.id if zone.default_vehicle_id else False,
+                        'driver_id': zone.default_driver_id.id if zone.default_driver_id else False,
+                        'state': 'to_start',
+                    })
+
+                order.write({
+                    'route_id': current_route.id,
+                    'vehicle_id': current_route.vehicle_id.id if current_route.vehicle_id else order.vehicle_id.id,
+                    'driver_id': current_route.driver_id.id if current_route.driver_id else order.driver_id.id,
+                })
+                if not current_route.line_ids.filtered(lambda ln: ln.collection_point_id == order.collection_point_id):
+                    seq = max(current_route.line_ids.mapped('sequence') or [0]) + 10
+                    self.env['wm.route.line'].create({
+                        'route_id': current_route.id,
+                        'collection_point_id': order.collection_point_id.id,
+                        'sequence': seq
+                    })
+            routes_to_optimize |= current_route
+
+        for route in routes_to_optimize:
+            try:
+                with self.env.cr.savepoint():
+                    route.action_optimize_route()
+            except Exception:
+                _logger.exception("Auto-optimisation failed for route %s", route.display_name)
+
+    @api.model
+    def _cron_auto_dispatch_ready_routes(self):
+        """
+        Hourly cron evaluating all routes in 'to_start' state and
+        auto-dispatching those that are ready.
+        """
+        to_start_routes = self.search([('state', '=', 'to_start')])
+        for route in to_start_routes:
+            route._compute_is_ready_to_dispatch()
+
+        ready_routes = self.search([
+            ('state', '=', 'to_start'),
+            ('is_ready_to_dispatch', '=', True)
+        ])
+
+        enabled = self.env['ir.config_parameter'].sudo().get_bool('wm_collection.auto_dispatch_enabled')
+        if enabled and ready_routes:
+            for route in ready_routes:
+                try:
+                    with self.env.cr.savepoint():
+                        route.action_dispatch_route()
+                        for order in route.collection_order_ids.filtered(lambda o: o.state == 'draft'):
+                            order.action_dispatch()
+                except Exception:
+                    _logger.exception("Auto-dispatch failed for route %s", route.display_name)
+
+    def action_inspect_vehicle(self):
+        """
+        Open the vehicle pre-trip inspection checklist wizard for the assigned
+        vehicle, enforcing inspection completion before route dispatch is
+        permitted.
+        """
+        self.ensure_one()
+        survey = self.env['survey.survey'].search([('title', 'ilike', 'Pre-Trip')], limit=1)
+        if survey and self.vehicle_id:
+            checklist = self.env['survey.user_input'].create({
+                'survey_id': survey.id,
+                'checklist_type': 'pre_trip',
+                'vehicle_id': self.vehicle_id.id,
+                'route_id': self.id,
+                'partner_id': self.driver_id.id if self.driver_id else self.env.user.partner_id.id,
+            })
+            return {
+                'type': 'ir.actions.act_window',
+                'name': 'Pre-Trip Inspection',
+                'res_model': 'survey.user_input',
+                'res_id': checklist.id,
+                'view_mode': 'form',
+                'target': 'current',
+            }
+
+    def action_view_inspections(self):
+        """
+        Open the list of vehicle inspection checklists associated with this
+        route, allowing the dispatcher to verify pre-trip inspection compliance
+        before dispatch.
+        """
+        self.ensure_one()
+        return {
+            'name': self.env._('Inspections'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'survey.user_input',
+            'view_mode': 'list,form',
+            'domain': [('route_id', '=', self.id), ('checklist_type', 'in', ['pre_trip', 'post_trip'])],
+            'context': {'default_route_id': self.id},
+        }
+
+    def _check_route_rights(self):
+        """
+        Validate that the current user has the 'Dispatcher' or 'Fleet Manager'
+        role before allowing route state transitions, preventing unauthorised
+        dispatch or cancellation.
+        """
+        if not (self.env.user.has_group('wm_base.group_wm_dispatcher') or self.env.user.has_group('wm_base.group_wm_driver') or self.env.user.has_group('wm_base.group_wm_ops_manager') or self.env.is_admin()):
+            raise UserError(self.env._("You do not have permission to manage routes."))
+
+    def action_dispatch_route(self):
+        """
+        Validate vehicle availability and driver assignment, then transition
+        the route from 'planned' to 'dispatched', notifying the driver and
+        updating fleet status.
+        """
+        self._check_route_rights()
+        for route in self:
+            if route.state != 'to_start':
+                raise UserError(self.env._("Route '%s' has already been dispatched, started or completed.", route.name))
+            if not route.vehicle_id:
+                raise ValidationError(self.env._("Cannot dispatch route '%s': A vehicle must be assigned to the route before dispatching.", route.name))
+            if not route.line_ids:
+                raise ValidationError(self.env._("You cannot dispatch a route without any collection points. Please add at least one collection point in the Route Lines tab."))
+
+            if not route.is_inspected:
+                raise ValidationError(self.env._("Cannot dispatch route '%(route_name)s': Vehicle '%(vehicle_id_name)s' has not passed pre-trip inspection. Please inspect the vehicle before dispatching.", route_name=route.name, vehicle_id_name=route.vehicle_id.name))
+
+            route.state = 'dispatched'
+
+            # Move this route's orders, and unrouted orders at its points due on
+            # the route date, to dispatched
+            orders = route._get_route_orders(('draft',))
+            for order in orders:
+                order_vals = {'state': 'dispatched', 'route_id': route.id}
+                if route.vehicle_id:
+                    order_vals['vehicle_id'] = route.vehicle_id.id
+                if route.driver_id:
+                    order_vals['driver_id'] = route.driver_id.id
+                order._write_programmatic(order_vals)
+
+    def _get_route_orders(self, states):
+        """
+        Orders this route should carry: those already on the route, plus
+        unrouted orders at the route's collection points scheduled on the
+        route date (in the operations timezone, see ``_get_wm_tz``). Orders of other routes or other
+        days at the same points are left alone.
+        """
+        self.ensure_one()
+        own_domain = [('route_id', '=', self.id)]
+        point_ids = self.line_ids.mapped('collection_point_id').ids
+        if point_ids and self.date:
+            tz = self._get_wm_tz(self.company_id)
+            day_start = tz.localize(datetime.combine(self.date, time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            day_end = tz.localize(datetime.combine(self.date, time.max)).astimezone(pytz.UTC).replace(tzinfo=None)
+            own_domain = ['|'] + own_domain + [
+                '&', '&', '&',
+                ('route_id', '=', False),
+                ('collection_point_id', 'in', point_ids),
+                ('scheduled_start', '>=', day_start),
+                ('scheduled_start', '<=', day_end),
+            ]
+        return self.env['wm.collection.order'].search([('state', 'in', list(states))] + own_domain)
+
+    def action_start_route(self):
+        """
+        Record the actual route start time, transition the route to
+        'running', create or link a Driver Shift record, and synchronise the
+        vehicle/driver onto linked collection orders.
+
+        Orders are intentionally kept in 'dispatched' state here.  Each order
+        moves to 'in_progress' only when the driver taps "Started" on that
+        individual stop in the Driver App, which triggers the status-log
+        side-effect in wm_collection_order_status_log.create().  This gives
+        the driver control over each stop independently.
+        """
+        self._check_route_rights()
+        now = fields.Datetime.now()
+        for route in self:
+            if route.state not in ('to_start', 'dispatched'):
+                raise UserError(self.env._("Route '%s' cannot be started from its current status.", route.name))
+            if not route.vehicle_id:
+                raise ValidationError(self.env._("Cannot start route '%s': A vehicle must be assigned to the route before starting.", route.name))
+            # Same gate as dispatch: a route whose vehicle was swapped after
+            # dispatch (failed pre-trip, standby vehicle) needs a new inspection.
+            if not route.is_inspected:
+                raise ValidationError(self.env._("Cannot start route '%(route)s': the pre-trip inspection for vehicle '%(vehicle)s' has not passed.",
+                                        route=route.name, vehicle=route.vehicle_id.name))
+            route.state = 'running'
+            route.actual_start = now
+
+            # Manage Driver Shift record creation / linkage
+            if route.driver_id and route.vehicle_id and not route.shift_id:
+                active_shift = self.env['wm.driver.shift'].search([
+                    ('driver_id', '=', route.driver_id.id),
+                    ('shift_end', '=', False)
+                ], limit=1)
+                if active_shift:
+                    route.shift_id = active_shift.id
+                else:
+                    shift = self.env['wm.driver.shift'].create({
+                        'driver_id': route.driver_id.id,
+                        'vehicle_id': route.vehicle_id.id,
+                        'shift_start': now,
+                    })
+                    route.shift_id = shift.id
+
+            # Sync vehicle/driver onto linked orders without changing their state.
+            # Orders remain 'dispatched'; they advance to 'in_progress' stop-by-stop.
+            orders = route._get_route_orders(('draft', 'dispatched'))
+            for order in orders:
+                order_vals = {'route_id': route.id}
+                if route.vehicle_id:
+                    order_vals['vehicle_id'] = route.vehicle_id.id
+                if route.driver_id:
+                    order_vals['driver_id'] = route.driver_id.id
+                order._write_programmatic(order_vals)
+
+    def action_complete_route(self):
+        """
+        Finalise the route by validating that all collection orders are
+        completed or missed, recording actual end time, closing the linked driver shift,
+        computing distance, and transitioning to 'completed'.
+        """
+        self._check_route_rights()
+        now = fields.Datetime.now()
+        for route in self:
+            if route.state == 'completed':
+                raise UserError(self.env._("Route '%s' is already completed.", route.name))
+            domain = [('route_id', '=', route.id), ('state', 'in', ('draft', 'dispatched', 'in_progress'))]
+            pending_orders = self.env['wm.collection.order'].search(domain)
+            if pending_orders:
+                raise ValidationError(self.env._("Cannot complete route '%(route_name)s': %(count)d collection order(s) are still pending. "
+                    "All collection orders on the route must be marked as Completed, Missed, or Cancelled before completing the route.", route_name=route.name, count=len(pending_orders)))
+
+            route.state = 'completed'
+            route.actual_end = now
+
+            # Close linked driver shift
+            if route.shift_id and not route.shift_id.shift_end:
+                route.shift_id.write({'shift_end': now})
+            elif route.driver_id:
+                active_shift = self.env['wm.driver.shift'].search([
+                    ('driver_id', '=', route.driver_id.id),
+                    ('shift_end', '=', False)
+                ], limit=1)
+                if active_shift:
+                    active_shift.write({'shift_end': now})
+                    route.shift_id = active_shift.id
+            route.action_create_route_category_batches()
+            if route.vehicle_id:
+                survey = self.env['survey.survey'].search([('title', 'ilike', 'Post-Trip')], limit=1)
+                if survey:
+                    self.env['survey.user_input'].create({
+                        'survey_id': survey.id,
+                        'checklist_type': 'post_trip',
+                        'vehicle_id': route.vehicle_id.id,
+                        'route_id': route.id,
+                        'partner_id': route.driver_id.id if route.driver_id else self.env.user.partner_id.id,
+                    })
+
+    def action_create_route_category_batches(self):
+        """
+        Create consolidated category-level Waste Batches for the entire route
+        across all completed collection orders.
+        """
+        self.ensure_one()
+        # Only include completed orders that have not already been batched outside of this route (e.g. at a gate entry)
+        completed_orders = self.collection_order_ids.filtered(
+            lambda o: o.state == 'completed' and not any(b.route_id != self for b in o._get_linked_waste_batches())
+        )
+        if not completed_orders:
+            return self.env['waste.batch']
+
+        lines_by_category = {}
+        for order in completed_orders:
+            for line in order.order_line_ids:
+                if line.category_id:
+                    lines_by_category.setdefault(line.category_id, []).append((order, line))
+
+        company = self.company_id or self.env.company
+        warehouse = self.env['stock.warehouse'].search([('company_id', '=', company.id)], limit=1) or self.env['stock.warehouse'].search([], limit=1)
+        location = warehouse.lot_stock_id if warehouse and warehouse.lot_stock_id else self.env['stock.location'].search([('usage', '=', 'internal')], limit=1)
+
+        created_batches = self.env['waste.batch']
+        for category, items in lines_by_category.items():
+            orders_involved = self.env['wm.collection.order'].concat({_ord for _ord, line in items})
+
+            # Search for an existing open (Draft) route batch for this category
+            existing_batch = self.env['waste.batch'].search([
+                ('route_id', '=', self.id),
+                ('category_id', '=', category.id),
+                ('status', '=', 'draft'),
+                ('batch_type', '=', 'collection'),
+            ], limit=1)
+
+            if existing_batch:
+                # Identify newly completed orders that haven't been linked to this batch yet
+                new_orders = orders_involved - existing_batch.collection_order_ids
+                if new_orders:
+                    new_items = [item for item in items if item[0] in new_orders]
+                    add_weight = sum(line.weight for _ord, line in new_items)
+
+                    existing_batch.write({
+                        'draft_quantity': existing_batch.draft_quantity + add_weight,
+                        'intake_weight': existing_batch.intake_weight + add_weight,
+                        'collection_order_ids': [(4, o.id) for o in new_orders],
+                    })
+
+                    for _ord, line in new_items:
+                        if line.product_id:
+                            batch_line = existing_batch.line_ids.filtered(lambda bl: bl.product_id == line.product_id)
+                            if batch_line:
+                                batch_line[0].write({'quantity': batch_line[0].quantity + (line.weight or 1.0)})
+                            else:
+                                self.env['waste.batch.line'].create({
+                                    'batch_id': existing_batch.id,
+                                    'product_id': line.product_id.id,
+                                    'quantity': line.weight or 1.0,
+                                    'category_id': category.id,
+                                })
+
+                all_orders = existing_batch.collection_order_ids
+                if len(all_orders) == 1:
+                    existing_batch.collection_order_id = all_orders.id
+                else:
+                    existing_batch.collection_order_id = False
+
+                created_batches |= existing_batch
+            else:
+                total_weight = sum(line.weight for _ord, line in items)
+                product_qty = {}
+                for _ord, line in items:
+                    if line.product_id:
+                        product_qty[line.product_id] = product_qty.get(line.product_id, 0.0) + (line.weight or 1.0)
+
+                batch_lines = []
+                for prod, qty in product_qty.items():
+                    batch_lines.append((0, 0, {
+                        'product_id': prod.id,
+                        'quantity': qty,
+                        'category_id': category.id,
+                    }))
+
+                batch_vals = {
+                    'route_id': self.id,
+                    'collection_order_ids': [(6, 0, orders_involved.ids)],
+                    'category_id': category.id,
+                    'draft_quantity': total_weight,
+                    'intake_weight': total_weight,
+                    'intake_date': fields.Datetime.now(),
+                    'warehouse_id': warehouse.id if warehouse else False,
+                    'location_id': location.id if location else False,
+                    'status': 'draft',
+                    'batch_type': 'collection',
+                    'sorting_status': 'unsorted',
+                }
+                if len(orders_involved) == 1:
+                    batch_vals['collection_order_id'] = orders_involved.id
+                if batch_lines:
+                    batch_vals['line_ids'] = batch_lines
+
+                batch = self.env['waste.batch'].create(batch_vals)
+                created_batches |= batch
+
+        return created_batches
+
+    def action_cancel_route(self):
+        """
+        Cancel the route and reset all linked collection orders back to
+        'scheduled' state, releasing the vehicle and driver for reassignment.
+        """
+        self._check_route_rights()
+        for route in self:
+            if route.state == 'completed':
+                raise UserError(self.env._("Cannot cancel route '%s' because it is already completed.", route.name))
+            # Orders not yet worked go back to draft; in-progress, completed
+            # and missed orders are left untouched.
+            dispatched_orders = route.collection_order_ids.filtered(lambda o: o.state == 'dispatched')
+            if dispatched_orders:
+                dispatched_orders._write_programmatic({'state': 'draft'})
+
+            # Close the driver shift when no other active route uses it. The
+            # shift is never deleted so worked time stays on record.
+            shift = route.shift_id.sudo()
+            other_active = (shift.route_ids - route).filtered(
+                lambda r: r.state in ('dispatched', 'running'))
+            if shift and not shift.shift_end and not other_active:
+                shift.write({'shift_end': fields.Datetime.now()})
+                note = self.env._("Driver shift %(shift)s was closed by the cancellation of route %(route)s.",
+                         shift=shift.display_name, route=route.name)
+                route.message_post(body=note)
+                shift.message_post(body=note)
+            route._write_programmatic({
+                'state': 'to_start',
+                'actual_start': False,
+                'shift_id': False,
+            })
+
+    @api.onchange('vehicle_id', 'driver_id', 'date')
+    def _onchange_check_double_booking(self):
+        """
+        Method to warn on double booking of vehicle or driver on the same day.
+        """
+        if not self.date:
+            return None
+
+        domain = [('date', '=', self.date)]
+        if self._origin and self._origin.id:
+            domain.append(('id', '!=', self._origin.id))
+
+        warnings = []
+
+        if self.vehicle_id:
+            vehicle_routes = self.env['wm.route'].search(domain + [('vehicle_id', '=', self.vehicle_id.id)])
+            if vehicle_routes:
+                warnings.append(self.env._("Vehicle '%(vehicle_id_name)s' is already booked on %(date)s.", vehicle_id_name=self.vehicle_id.name, date=self.date))
+
+        if self.driver_id:
+            driver_routes = self.env['wm.route'].search(domain + [('driver_id', '=', self.driver_id.id)])
+            if driver_routes:
+                warnings.append(self.env._("Driver '%(driver_id_name)s' is already booked on %(date)s.", driver_id_name=self.driver_id.name, date=self.date))
+
+        if warnings:
+            return {
+                'warning': {
+                    'title': self.env._("Double Booking Conflict"),
+                    'message': "\n".join(warnings)
+                }
+            }
+
+    @api.depends('date')
+    def _compute_valid_vehicle_ids(self):
+        """
+        Filter available fleet vehicles to those with a valid waste-transport
+        licence and sufficient payload capacity for the collections on this
+        route.
+        """
+        for route in self:
+            try:
+                checklists = self.env['survey.user_input'].search([('checklist_type', '=', 'pre_trip'), ('state', '=', 'done')])
+                route.valid_vehicle_ids = checklists.mapped('vehicle_id')
+            except Exception as e:
+                _logger.warning("Failed to compute valid vehicle IDs from pre-trip survey: %s", e)
+                route.valid_vehicle_ids = self.env['fleet.vehicle'].search([('active', '=', True)])
+
+    @api.depends('line_ids', 'line_ids.sequence', 'line_ids.collection_point_id',
+                 'line_ids.collection_point_id.latitude', 'line_ids.collection_point_id.longitude',
+                 'line_ids.collection_point_id.name', 'line_ids.collection_point_id.contact_address',
+                 'state', 'zone_id', 'company_id')
+    def _compute_route_map_data(self):
+        """
+        Compile an ordered list of collection point coordinates and metadata
+        into a JSON-serializable structure for rendering on the interactive
+        route map view.
+        """
+        can_add_stops = self.env['wm.route.line'].has_access('create')
+        for route in self:
+            ordered_lines = route.line_ids.sorted(key=lambda x: x.sequence)
+
+            route_point_ids = set()
+            route_points = []
+            idx = 1
+            for line in ordered_lines:
+                pt = line.collection_point_id
+                if pt and pt.latitude and pt.longitude:
+                    route_point_ids.add(pt.id)
+                    route_points.append({
+                        'index': idx,
+                        'name': pt.name,
+                        'address': pt.contact_address or '',
+                        'lat': pt.latitude,
+                        'lng': pt.longitude,
+                        'id': pt.id,
+                        'is_route_point': True,
+                    })
+                    idx += 1
+
+            # Candidate stops for the map's "Add to Route" action: geolocated
+            # points of the route's company (same zone when one is set) that
+            # are not on the route yet. Bounded to keep the payload small, and
+            # only offered to users who are allowed to add stops.
+            other_points = []
+            if route.state != 'completed' and can_add_stops:
+                domain = [
+                    ('id', 'not in', list(route_point_ids | set(route.line_ids.collection_point_id.ids))),
+                    ('latitude', '!=', 0.0),
+                    ('longitude', '!=', 0.0),
+                    '|', ('partner_id', '=', False),
+                    ('partner_id.company_id', 'in', [False, route.company_id.id or self.env.company.id]),
+                ]
+                if route.zone_id:
+                    domain.append(('zone_id', '=', route.zone_id.id))
+                for pt in self.env['wm.collection.point'].search(domain, limit=200, order='name, id'):
+                    other_points.append({
+                        'name': pt.name,
+                        'address': pt.contact_address or '',
+                        'lat': pt.latitude,
+                        'lng': pt.longitude,
+                        'id': pt.id,
+                        'is_route_point': False,
+                    })
+
+            data = {
+                'route_points': route_points,
+                'other_points': other_points,
+            }
+            route.route_map_data = json.dumps(data)
+
+    @api.model
+    def get_map_config(self):
+        """Map tile and OSRM routing server URLs from Settings, for the route map widgets."""
+        params = self.env['ir.config_parameter'].sudo()
+        tile = params.get_str('wm_collection.map_tile_url').strip()
+        osrm = params.get_str('wm_collection.osrm_router_url').strip()
+        # Only http(s) endpoints are handed to the browser
+        return {
+            'tile_url': tile if tile.startswith(('https://', 'http://')) else False,
+            'osrm_url': osrm if osrm.startswith(('https://', 'http://')) else False,
+        }
+
+    def action_optimize_route(self):
+        """
+        Optimizes the order of route lines to achieve the shortest travel path.
+        """
+        for route in self:
+            if route.state in ('dispatched', 'running', 'completed') and not self.env.context.get('bypass_sequence_lock'):
+                raise UserError(self.env._("Cannot re-optimize or re-sequence route '%(route_name)s' because its status is '%(state)s'. Route sequence is locked for active driver dispatch.", route_name=route.name, state=route.state))
+
+            valid_lines = []
+            invalid_lines = []
+            for line in route.line_ids:
+                pt = line.collection_point_id
+                if pt and pt.latitude and pt.longitude:
+                    valid_lines.append((line, pt.latitude, pt.longitude))
+                else:
+                    invalid_lines.append(line)
+
+            if valid_lines:
+                ordered_lines = _solve_tsp_shortest_path(valid_lines)
+                all_lines = ordered_lines + invalid_lines
+
+                # Re-assign sequence numbers (10, 20, 30...)
+                seq = 10
+                for line in all_lines:
+                    line.sequence = seq
+                    seq += 10
+
+                # Compute total estimated distance & duration
+                total_distance_km = 0.0
+                for k in range(len(valid_lines) - 1):
+                    p1 = ordered_lines[k].collection_point_id
+                    p2 = ordered_lines[k + 1].collection_point_id
+                    total_distance_km += _haversine_distance(p1.latitude, p1.longitude, p2.latitude, p2.longitude)
+
+                # Estimate duration: average speed 30 km/h + 15 min stop per point
+                driving_hours = total_distance_km / 30.0 if total_distance_km > 0 else 0.0
+                stop_hours = len(valid_lines) * 0.25
+                route.estimated_duration = round(driving_hours + stop_hours, 2)
+                route.estimated_distance_km = round(total_distance_km, 2)
+
+                route.message_post(body=self.env._(
+                    "Route optimized for shortest path. Total estimated distance: %(km).2f km.",
+                    km=total_distance_km))
+
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'display_notification',
+            'params': {
+                'title': 'Route Optimized',
+                'message': 'Collection points re-ordered for the shortest path!',
+                'sticky': False,
+                'type': 'success',
+                'next': {'type': 'ir.actions.act_window_close'}
+            }
+        }
+
+    def action_add_collection_point(self, point_id, optimize=True):
+        """
+        Append a selected collection point to the route's ordered stop list,
+        recalculating the estimated total distance and updating the map data
+        field.
+        """
+        self.ensure_one()
+        point = self.env['wm.collection.point'].browse(point_id)
+        if not point.exists():
+            return False
+        existing_line = self.line_ids.filtered(lambda ln: ln.collection_point_id.id == point_id)
+        if not existing_line:
+            max_seq = max(self.line_ids.mapped('sequence') or [0])
+            self.env['wm.route.line'].create({
+                'route_id': self.id,
+                'collection_point_id': point.id,
+                'sequence': max_seq + 10,
+            })
+
+            # Check if an existing unassigned or active collection order exists for this point today
+            target_date = self.date or fields.Date.today()
+            # Route dates are local days; scheduled_start is stored in UTC.
+            tz = self._get_wm_tz(self.company_id)
+            start_dt = tz.localize(datetime.combine(target_date, time.min)).astimezone(pytz.UTC).replace(tzinfo=None)
+            end_dt = tz.localize(datetime.combine(target_date, time.max)).astimezone(pytz.UTC).replace(tzinfo=None)
+
+            existing_order = self.env['wm.collection.order'].search([
+                ('collection_point_id', '=', point.id),
+                ('route_id', 'in', (False, self.id)),
+                ('state', 'in', ('draft', 'dispatched')),
+                '|',
+                    ('scheduled_start', '=', False),
+                    '&', ('scheduled_start', '>=', start_dt), ('scheduled_start', '<=', end_dt),
+            ], limit=1)
+
+            if existing_order:
+                order_update = {'route_id': self.id}
+                if self.vehicle_id:
+                    order_update['vehicle_id'] = self.vehicle_id.id
+                if self.driver_id:
+                    order_update['driver_id'] = self.driver_id.id
+                existing_order.write(order_update)
+            else:
+                order_vals = {
+                    'partner_id': point.partner_id.id if point.partner_id else False,
+                    'collection_point_id': point.id,
+                    'route_id': self.id,
+                    'company_id': self.company_id.id,
+                    'vehicle_id': self.vehicle_id.id if self.vehicle_id else False,
+                    'driver_id': self.driver_id.id if self.driver_id else False,
+                    'scheduled_start': tz.localize(datetime.combine(target_date, time(9, 0, 0))).astimezone(pytz.UTC).replace(tzinfo=None),
+                    'state': 'draft',
+                }
+
+                if point.category_ids:
+                    lines = []
+                    for cat in point.category_ids:
+                        materials = cat.material_ids or self.env['product.product'].search([('wm_waste_category_id', '=', cat.id)])
+                        if materials:
+                            for mat in materials:
+                                lines.append((0, 0, {
+                                    'category_id': cat.id,
+                                    'product_id': mat.id,
+                                    'price': cat.price or mat.list_price or 0.0,
+                                    'weight': 0.0,
+                                }))
+                        else:
+                            fallback_product = self.env['product.product'].search([('is_waste_material', '=', True)], limit=1)
+                            if fallback_product:
+                                lines.append((0, 0, {
+                                    'category_id': cat.id,
+                                    'product_id': fallback_product.id,
+                                    'price': cat.price or fallback_product.list_price or 0.0,
+                                    'weight': 0.0,
+                                }))
+                    if lines:
+                        order_vals['order_line_ids'] = lines
+
+                self.env['wm.collection.order'].create(order_vals)
+
+            if optimize and self.state == 'to_start':
+                self.action_optimize_route()
+        return True
+
+    def action_remove_collection_point(self, point_id):
+        """
+        Remove a collection point from the route's stop list, recalculating
+        distance and verifying that the route has at least one remaining stop.
+        """
+        self.ensure_one()
+        lines = self.line_ids.filtered(lambda ln: ln.collection_point_id.id == point_id)
+        if lines:
+            lines.unlink()
+
+            draft_orders = self.env['wm.collection.order'].search([
+                ('route_id', '=', self.id),
+                ('collection_point_id', '=', point_id),
+                ('state', '=', 'draft')
+            ])
+            if draft_orders:
+                draft_orders.write({'route_id': False})
+
+            if self.state == 'to_start':
+                self.action_optimize_route()
+        return True
+
+    def action_view_route_map(self):
+        """
+        Open the interactive collection route map view, displaying all ordered
+        stop markers, the driver's current estimated position, and navigation
+        waypoints.
+        """
+        self.ensure_one()
+        if self.state == 'to_start':
+            self.action_optimize_route()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'wm_collection.route_map_client_action',
+            'name': 'Route Map: %s' % self.name,
+            'params': {
+                'route_id': self.id,
+            },
+            'context': self.env.context,
+        }
+
+    @api.depends('line_ids.collection_point_id')
+    def _compute_selected_point_ids(self):
+        """
+        Derive the list of already-selected collection point IDs from the
+        route's stop lines, used to filter the add-stop domain to prevent
+        duplicate entries.
+        """
+        for route in self:
+            route.selected_point_ids = route.line_ids.mapped('collection_point_id')
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        """
+        Override create to auto-generate the route sequence reference, apply
+        default vehicle and driver assignments from zone configuration, and log
+        the creation event.
+        """
+        for vals in vals_list:
+            if vals.get('name', 'New') == 'New':
+                vals['name'] = self.env['ir.sequence'].next_by_code('wm.route') or 'New'
+        return super().create(vals_list)
+
+    def _write_programmatic(self, vals):
+        """Write an internal change past the completed/inspected locks on
+        behalf of the current user, who must be allowed to write these routes.
+        The context flag only counts under sudo(), so an RPC client cannot
+        forge it."""
+        self.check_access('write')
+        return self.sudo().with_context(programmatic_state_change=True).write(vals)
+
+    def write(self, vals):
+        """ Prevent modifying essential route details once completed, or changing vehicle once inspected. """
+        if not (self.env.su and self.env.context.get('programmatic_state_change')):
+            restricted_fields = {'line_ids', 'zone_id', 'date', 'vehicle_id', 'driver_id'}
+            if not self.env.su and restricted_fields.intersection(vals.keys()):
+                for route in self:
+                    if route.state == 'completed':
+                        raise UserError(self.env._(
+                            "Cannot modify route '%(name)s' because it is already completed.",
+                            name=route.name,
+                        ))
+            if 'vehicle_id' in vals:
+                for route in self:
+                    if vals['vehicle_id'] == route.vehicle_id.id:
+                        continue
+                    # A to_start route may switch vehicles while only the
+                    # vehicle's own pre-trip checklist covers it (is_inspected
+                    # then recomputes for the new vehicle); its own passed
+                    # inspection, or dispatch, pins the vehicle.
+                    if route.state == 'to_start':
+                        locked = route._has_own_passed_inspection()
+                    else:
+                        locked = route.state in ('dispatched', 'running', 'completed') or route.is_inspected
+                    if locked:
+                        raise UserError(self.env._(
+                            "Cannot change vehicle for route '%(name)s' because it is already dispatched or its pre-trip inspection has been passed for vehicle '%(vehicle)s'.",
+                            name=route.name,
+                            vehicle=route.vehicle_id.name or '',
+                        ))
+        old_vehicles = self.vehicle_id if {'state', 'actual_start', 'vehicle_id'} & set(vals) else False
+        res = super().write(vals)
+        if old_vehicles is not False:
+            # A pre-trip checklist is valid until the vehicle runs a route:
+            # starting/completing/cancelling a route changes whether the
+            # vehicle's other open routes are still inspected.
+            self.env['wm.vehicle.maintenance.checklist']._trigger_route_inspection_recompute(
+                old_vehicles | self.vehicle_id, exclude_routes=self)
+        return res
+
+    @api.ondelete(at_uninstall=False)
+    def _unlink_except_active_route(self):
+        """ Prevent deleting running or completed routes. """
+        for route in self:
+            if route.state in ('running', 'completed'):
+                raise UserError(self.env._(
+                    "Cannot delete route '%(name)s' because it is in '%(state)s' status.",
+                    name=route.name,
+                    state=dict(self._fields['state'].selection).get(route.state, route.state),
+                ))
+
+    def action_change_driver_wizard(self):
+        """
+        Open the Change Driver wizard pre-populated with the current route
+        driver, allowing supervisors to reassign routes mid-operation with a
+        documented reason.
+        """
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': self.env._('Change Driver'),
+            'res_model': 'wm.change.driver.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_route_id': self.id,
+            },
+        }
+
+    @api.depends('driver_change_history_ids')
+    def _compute_driver_history_count(self):
+        """
+        Compute the total number of associated driver history records linked to
+        this WmRoute to update smart buttons and summary badges.
+        """
+        for route in self:
+            route.driver_history_count = len(route.driver_change_history_ids)
+
+    def action_view_driver_history(self):
+        """
+        Display the full driver change history log for this route, showing each
+        reassignment event with timestamps and supervisor authorisation
+        details.
+        """
+        self.ensure_one()
+        return {
+            'name': self.env._('Driver History'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'wm.driver.change.history',
+            'view_mode': 'list',
+            'domain': [('route_id', '=', self.id)],
+            'context': dict(self.env.context, create=False, edit=False),
+        }
+
+    @api.depends('collection_order_ids')
+    def _compute_collection_order_count(self):
+        """
+        Compute the total number of associated collection order records linked
+        to this WmRoute to update smart buttons and summary badges.
+        """
+        for route in self:
+            route.collection_order_count = len(route.collection_order_ids)
+
+    def action_view_collection_orders(self):
+        """
+        Open the list of all collection orders assigned to this route, allowing
+        dispatchers to monitor completion status and outstanding pickups.
+        """
+        self.ensure_one()
+        action = {
+            'name': self.env._('Collection Orders — %s', self.name),
+            'type': 'ir.actions.act_window',
+            'res_model': 'wm.collection.order',
+            'view_mode': 'list,form',
+            'domain': [('route_id', '=', self.id)],
+            'context': {
+                'default_route_id': self.id,
+                'default_driver_id': self.driver_id.id if self.driver_id else False,
+                'default_vehicle_id': self.vehicle_id.id if self.vehicle_id else False,
+            },
+        }
+        if len(self.collection_order_ids) == 1:
+            action.update({
+                'view_mode': 'form',
+                'res_id': self.collection_order_ids.id,
+            })
+        return action

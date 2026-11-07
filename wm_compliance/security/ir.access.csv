@@ -1,0 +1,32 @@
+id,name,model_id,group_id/id,operation,domain
+access_digital_signature_officer,Digital Signature Officer,wm.digital.signature,wm_base.group_wm_compliance_officer,ru,
+access_digital_signature_ops,Digital Signature Ops,wm.digital.signature,wm_base.group_wm_ops_manager,r,
+rule_wm_digital_signature_company,Digital Signature Multi-Company Rule,wm.digital.signature,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_manifest_officer,Compliance Manifest Officer,wm.compliance.manifest,wm_base.group_wm_compliance_officer,crud,
+access_compliance_manifest_ops,Compliance Manifest Ops,wm.compliance.manifest,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_manifest_company,Compliance Manifest Multi-Company Rule,wm.compliance.manifest,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_manifest_line_officer,Compliance Manifest Line Officer,wm.compliance.manifest.line,wm_base.group_wm_compliance_officer,crud,
+access_compliance_manifest_line_ops,Compliance Manifest Line Ops,wm.compliance.manifest.line,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_manifest_line_company,Compliance Manifest Line Multi-Company Rule,wm.compliance.manifest.line,,crud,"['|', ('manifest_id.company_id', '=', False), ('manifest_id.company_id', 'in', company_ids)]"
+access_compliance_custody_officer,Compliance Custody Officer,wm.compliance.custody,wm_base.group_wm_compliance_officer,crud,
+access_compliance_custody_ops,Compliance Custody Ops,wm.compliance.custody,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_custody_company,Chain of Custody Multi-Company Rule,wm.compliance.custody,,crud,"['|', ('manifest_id.company_id', '=', False), ('manifest_id.company_id', 'in', company_ids)]"
+access_compliance_certificate_officer,Compliance Certificate Officer,wm.compliance.certificate,wm_base.group_wm_compliance_officer,crud,
+access_compliance_certificate_ops,Compliance Certificate Ops,wm.compliance.certificate,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_certificate_company,Compliance Certificate Multi-Company Rule,wm.compliance.certificate,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_document_officer,Compliance Doc Officer,wm.compliance.document,wm_base.group_wm_compliance_officer,crud,
+access_compliance_document_ops,Compliance Doc Ops,wm.compliance.document,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_document_company,Compliance Document Multi-Company Rule,wm.compliance.document,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_target_officer,Compliance Target Officer,wm.compliance.target,wm_base.group_wm_compliance_officer,crud,
+access_compliance_target_ops,Compliance Target Ops,wm.compliance.target,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_target_company,Compliance Target Multi-Company Rule,wm.compliance.target,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_report_officer,Compliance Report Officer,wm.compliance.report,wm_base.group_wm_compliance_officer,crud,
+access_compliance_report_ops,Compliance Report Ops,wm.compliance.report,wm_base.group_wm_ops_manager,crud,
+access_compliance_dashboard_officer,Compliance Dashboard Officer,wm.compliance.dashboard,wm_base.group_wm_compliance_officer,crud,
+access_compliance_dashboard_ops,Compliance Dashboard Ops,wm.compliance.dashboard,wm_base.group_wm_ops_manager,crud,
+access_safety_incident_officer,Safety Incident Officer,wm.safety.incident,wm_base.group_wm_compliance_officer,crud,
+access_safety_incident_ops,Safety Incident Ops,wm.safety.incident,wm_base.group_wm_ops_manager,crud,
+rule_wm_safety_incident_company,Safety Incident Multi-Company Rule,wm.safety.incident,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+access_compliance_rule_set_officer,Compliance Rule Set Officer,wm.compliance.rule.set,wm_base.group_wm_compliance_officer,crud,
+access_compliance_rule_set_ops,Compliance Rule Set Ops,wm.compliance.rule.set,wm_base.group_wm_ops_manager,r,
+rule_wm_compliance_rule_set_company,Compliance Rule Set Multi-Company Rule,wm.compliance.rule.set,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"

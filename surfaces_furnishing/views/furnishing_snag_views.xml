@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Snag Kanban View -->
+    <record id="view_furnishing_snag_kanban" model="ir.ui.view">
+        <field name="name">furnishing.snag.kanban</field>
+        <field name="model">furnishing.snag</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" class="o_kanban_small_column" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="description"/>
+                <field name="location_detail"/>
+                <field name="project_id"/>
+                <field name="severity"/>
+                <field name="state"/>
+                <field name="photo"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="badge text-bg-secondary"><field name="name"/></span>
+                            <t t-if="record.severity.raw_value == 'critical'">
+                                <span class="badge text-bg-danger">Critical</span>
+                            </t>
+                            <t t-elif="record.severity.raw_value == 'medium'">
+                                <span class="badge text-bg-warning">Medium</span>
+                            </t>
+                            <t t-else="">
+                                <span class="badge text-bg-info">Minor</span>
+                            </t>
+                        </div>
+                        <div class="text-center my-2" t-if="record.photo.raw_value">
+                            <field name="photo" widget="image" class="rounded" style="max-height: 90px; max-width: 100%; object-fit: cover;"/>
+                        </div>
+                        <div class="fw-bold mb-1">
+                            <field name="location_detail"/>
+                        </div>
+                        <div class="text-muted small mb-1">
+                            <field name="description"/>
+                        </div>
+                        <div class="d-flex justify-content-between text-muted small pt-1 border-top">
+                            <span><i class="oi oi-fw me-1" data-icon="folder" title="Project"/> <field name="project_id"/></span>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Snag List View -->
+    <record id="view_furnishing_snag_list" model="ir.ui.view">
+        <field name="name">furnishing.snag.list</field>
+        <field name="model">furnishing.snag</field>
+        <field name="arch" type="xml">
+            <list string="Installation Snags &amp; Defects">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="location_detail"/>
+                <field name="defect_type_id"/>
+                <field name="responsible_trade"/>
+                <field name="severity" widget="badge"
+                       decoration-danger="severity == 'critical'"
+                       decoration-warning="severity == 'medium'"
+                       decoration-info="severity == 'minor'"/>
+                <field name="reported_date"/>
+                <field name="assigned_to_id" widget="many2one_avatar_user"/>
+                <field name="state" widget="badge"
+                       decoration-danger="state == 'open'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-info="state == 'resolved'"
+                       decoration-success="state == 'verified'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Snag Form View -->
+    <record id="view_furnishing_snag_form" model="ir.ui.view">
+        <field name="name">furnishing.snag.form</field>
+        <field name="model">furnishing.snag</field>
+        <field name="arch" type="xml">
+            <form string="Installation Snag / Defect">
+                <header>
+                    <button name="action_start" string="Start Rectification" type="object" invisible="state != 'open'" class="btn-primary"/>
+                    <button name="action_resolve" string="Mark Rectified" type="object" invisible="state not in ('open', 'in_progress')" class="btn-success"/>
+                    <button name="action_verify" string="Verify &amp; Clear" type="object" invisible="state != 'resolved'" class="btn-primary"/>
+                    <button name="action_reopen" string="Reopen Defect" type="object" invisible="state not in ('resolved', 'verified')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="open,in_progress,resolved,verified"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <span class="o_form_label"><field name="name"/></span>
+                        <h1>
+                            <field name="location_detail" placeholder="Room and Location (e.g. Master Bedroom, Window 2 Skirting)"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="snag_main">
+                            <field name="project_id"/>
+                            <field name="partner_id"/>
+                            <field name="room_type_id"/>
+                            <field name="defect_type_id"/>
+                            <field name="severity"/>
+                        </group>
+                        <group name="assignment">
+                            <field name="responsible_trade"/>
+                            <field name="assigned_to_id" widget="many2one_avatar_user"/>
+                            <field name="reported_date"/>
+                            <field name="target_date"/>
+                            <field name="resolved_date"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="description" placeholder="Exact nature of the defect (e.g. 5cm scratch on baseboard near AC vent)..."/>
+                    </group>
+                    <notebook>
+                        <page string="Photo Evidence" name="photos">
+                            <group>
+                                <group string="Defect Photo (Before)">
+                                    <field name="photo" widget="image" class="oe_avatar" options="{'size': [250, 250]}"/>
+                                </group>
+                                <group string="Rectification Photo (After Fix)">
+                                    <field name="rectification_photo" widget="image" class="oe_avatar" options="{'size': [250, 250]}"/>
+                                </group>
+                            </group>
+                            <field name="resolution_notes" placeholder="Actions taken to fix and rectify this snag..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Snag Search View -->
+    <record id="view_furnishing_snag_search" model="ir.ui.view">
+        <field name="name">furnishing.snag.search</field>
+        <field name="model">furnishing.snag</field>
+        <field name="arch" type="xml">
+            <search string="Search Snags">
+                <field name="name"/>
+                <field name="location_detail"/>
+                <field name="project_id"/>
+                <field name="responsible_trade"/>
+                <filter name="open" string="Open &amp; In Progress" domain="[('state', 'in', ('open', 'in_progress'))]"/>
+                <filter name="critical" string="Critical Snags" domain="[('severity', '=', 'critical')]"/>
+                <filter name="my_assigned" string="Assigned to Me" domain="[('assigned_to_id', '=', uid)]"/>
+                <group>
+                    <filter name="group_project" string="Project" context="{'group_by': 'project_id'}"/>
+                    <filter name="group_severity" string="Severity" context="{'group_by': 'severity'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                    <filter name="group_trade" string="Trade" context="{'group_by': 'responsible_trade'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_furnishing_snags" model="ir.actions.act_window">
+        <field name="name">Installation &amp; Snags</field>
+        <field name="res_model">furnishing.snag</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_furnishing_snag_search"/>
+    </record>
+
+</odoo>

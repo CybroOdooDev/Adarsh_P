@@ -1,0 +1,5 @@
+id,name,model_id,group_id/id,operation,domain
+access_discuss_meeting_summary_user,discuss.meeting.summary: members of the channel,discuss.meeting.summary,base.group_user,crud,"[('channel_id.is_member', '=', True)]"
+access_discuss_meeting_summary_manager,discuss.meeting.summary: administrators,discuss.meeting.summary,base.group_system,crud,
+access_discuss_meeting_transcript_line_user,discuss.meeting.transcript.line: members of the channel,discuss.meeting.transcript.line,base.group_user,r,"[('summary_id.channel_id.is_member', '=', True)]"
+access_discuss_meeting_transcript_line_manager,discuss.meeting.transcript.line: administrators,discuss.meeting.transcript.line,base.group_system,crud,

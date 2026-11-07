@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- The module is installed: hide the premium placeholder menus of
+         wm_contracts_billing, the real menus take their place. -->
+    <record id="wm_contracts_billing.menu_wm_subscription_premium" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+
+    <record id="wm_contracts_billing.menu_wm_subscription_plan_premium" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+
+</odoo>
