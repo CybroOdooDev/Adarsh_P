@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Measurement Type List View -->
+    <record id="view_project_measurement_type_list" model="ir.ui.view">
+        <field name="name">project.measurement.type.list</field>
+        <field name="model">project.measurement.type</field>
+        <field name="arch" type="xml">
+            <list string="Measurement Types" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="description"/>
+                <field name="active" widget="boolean_toggle"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Measurement Type Form View -->
+    <record id="view_project_measurement_type_form" model="ir.ui.view">
+        <field name="name">project.measurement.type.form</field>
+        <field name="model">project.measurement.type</field>
+        <field name="arch" type="xml">
+            <form string="Measurement Type">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Measurement Type"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Window / Curtain Track"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group>
+                            <field name="active" widget="boolean_toggle"/>
+                        </group>
+                    </group>
+                    <group string="Description">
+                        <field name="description" nolabel="1" placeholder="Describe where and when to use this measurement type..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Measurement Type Search View -->
+    <record id="view_project_measurement_type_search" model="ir.ui.view">
+        <field name="name">project.measurement.type.search</field>
+        <field name="model">project.measurement.type</field>
+        <field name="arch" type="xml">
+            <search string="Search Measurement Types">
+                <field name="name" string="Type"/>
+                <field name="code"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Measurement Type Action -->
+    <record id="action_project_measurement_type" model="ir.actions.act_window">
+        <field name="name">Measurement Types</field>
+        <field name="res_model">project.measurement.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_project_measurement_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Measurement Type!
+            </p>
+            <p>
+                Define categories for dimensions recorded during site surveys (e.g. Wall, Floor Area, Window, Joinery).
+            </p>
+        </field>
+    </record>
+
+</odoo>

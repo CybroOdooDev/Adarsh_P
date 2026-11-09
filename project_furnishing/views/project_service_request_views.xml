@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Service Request List View -->
+    <record id="view_project_service_request_list" model="ir.ui.view">
+        <field name="name">project.service.request.list</field>
+        <field name="model">project.service.request</field>
+        <field name="arch" type="xml">
+            <list string="Service Requests" sample="1">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="service_type"/>
+                <field name="is_under_warranty" widget="boolean_toggle"/>
+                <field name="priority" widget="priority"/>
+                <field name="technician_id" widget="many2one_avatar_user"/>
+                <field name="scheduled_date"/>
+                <field name="resolution_date" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-primary="state == 'scheduled'"
+                       decoration-warning="state == 'in_progress'"
+                       decoration-success="state == 'resolved'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Service Request Form View -->
+    <record id="view_project_service_request_form" model="ir.ui.view">
+        <field name="name">project.service.request.form</field>
+        <field name="model">project.service.request</field>
+        <field name="arch" type="xml">
+            <form string="Service Request">
+                <header>
+                    <button name="action_schedule" string="Schedule Visit" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_start" string="Start Service" type="object" class="oe_highlight"
+                            invisible="state != 'scheduled'"/>
+                    <button name="action_resolve" string="Mark Resolved" type="object" class="oe_highlight"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('resolved', 'cancelled')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,scheduled,in_progress,resolved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Service Request Reference"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Project &amp; Customer">
+                            <field name="project_id" options="{'no_create_edit': False}"/>
+                            <field name="partner_id"/>
+                            <field name="site_address" placeholder="Site / Delivery Address..."/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Warranty &amp; Service Classification">
+                            <field name="is_under_warranty" widget="boolean_toggle"/>
+                            <field name="project_has_warranty" invisible="1"/>
+                            <field name="warranty_end_date" invisible="not is_under_warranty"/>
+                            <field name="service_type"/>
+                            <field name="priority" widget="priority"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group string="Assignment &amp; Schedule">
+                            <field name="technician_id" widget="many2one_avatar_user"/>
+                            <field name="request_date"/>
+                            <field name="scheduled_date"/>
+                            <field name="resolution_date" invisible="state != 'resolved'"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Issue Description" name="issue">
+                            <field name="issue_description" placeholder="Customer complaint, defects reported, or maintenance scope..."/>
+                        </page>
+                        <page string="Resolution Notes" name="resolution">
+                            <field name="resolution_notes" placeholder="Actions taken by technician, replaced parts, or handover observations..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Service Request Search View -->
+    <record id="view_project_service_request_search" model="ir.ui.view">
+        <field name="name">project.service.request.search</field>
+        <field name="model">project.service.request</field>
+        <field name="arch" type="xml">
+            <search string="Search Service Requests">
+                <field name="name" string="Reference"/>
+                <field name="project_id"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="technician_id"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="Scheduled" name="scheduled" domain="[('state', '=', 'scheduled')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Resolved" name="resolved" domain="[('state', '=', 'resolved')]"/>
+                <separator/>
+                <filter string="Under Warranty" name="under_warranty" domain="[('is_under_warranty', '=', True)]"/>
+                <filter string="Paid Service" name="paid_service" domain="[('is_under_warranty', '=', False)]"/>
+                <group>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Warranty Coverage" name="group_warranty" context="{'group_by': 'is_under_warranty'}"/>
+                    <filter string="Service Type" name="group_service_type" context="{'group_by': 'service_type'}"/>
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Technician" name="group_technician" context="{'group_by': 'technician_id'}"/>
+                    <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Service Request Window Action -->
+    <record id="action_project_service_request" model="ir.actions.act_window">
+        <field name="name">Service Requests</field>
+        <field name="res_model">project.service.request</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_project_service_request_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Log your first Service &amp; Warranty Request!
+            </p>
+            <p>
+                Track post-handover customer issues, repairs, touch-ups, and warranty claims under the project's Defects Liability Period (DLP).
+            </p>
+        </field>
+    </record>
+
+</odoo>

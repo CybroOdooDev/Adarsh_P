@@ -1,0 +1,472 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- DEDICATED VIEWS FOR INDEPENDENT FURNISHING PROJECTS APP       -->
+    <!-- ============================================================ -->
+
+    <!-- Kanban View -->
+    <record id="view_project_furnishing_project_kanban" model="ir.ui.view">
+        <field name="name">project.project.furnishing.kanban</field>
+        <field name="model">project.project</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <kanban highlight_color="color" class="o_project_kanban" sample="1">
+                <field name="id"/>
+                <field name="color"/>
+                <field name="currency_id"/>
+                <field name="state"/>
+                <field name="priority"/>
+                <field name="has_warranty"/>
+                <field name="task_count"/>
+                <field name="survey_count"/>
+                <field name="installation_count"/>
+                <field name="service_request_count"/>
+                <field name="total_quoted_amount"/>
+                <field name="estimated_budget"/>
+                <field name="profit_margin"/>
+                <field name="scheduled_date"/>
+                <field name="completion_date"/>
+                <field name="site_address"/>
+                <templates>
+                    <t t-name="menu" groups="base.group_user">
+                        <div class="container">
+                            <div class="row">
+                                <div name="card_menu_view" class="col-6">
+                                    <h5 role="menuitem" class="o_kanban_card_manage_title">
+                                        <span>View</span>
+                                    </h5>
+                                    <div role="menuitem">
+                                        <a name="action_view_tasks" type="object">Tasks</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="action_view_site_surveys" type="object">Site Surveys</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="action_view_installations" type="object">Installations</a>
+                                    </div>
+                                    <div role="menuitem">
+                                        <a name="action_view_service_requests" type="object">Service Requests</a>
+                                    </div>
+                                </div>
+                                <div class="col-6 o_kanban_card_manage_settings">
+                                    <h5 role="menuitem" class="o_kanban_card_manage_title">
+                                        <span>Settings</span>
+                                    </h5>
+                                    <div role="menuitem">
+                                        <a class="dropdown-item" role="menuitem" type="open">Edit Project</a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="o_kanban_card_manage_settings row mt-2 pt-2 border-top">
+                                <div role="menuitem" aria-haspopup="true" class="col-12">
+                                    <field name="color" widget="kanban_color_picker"/>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                    <t t-name="card">
+                        <main class="o_project_kanban_main">
+                            <!-- Card Header: Priority, Title, and Badges -->
+                            <div class="d-flex align-items-start justify-content-between mb-2">
+                                <strong class="o_kanban_record_title fs-6 text-truncate flex-grow-1 min-w-0" t-att-title="record.name.value">
+                                    <field name="name"/>
+                                </strong>
+                                <div class="d-flex flex-wrap gap-1 ms-2">
+                                    <span class="badge text-bg-light border" t-if="record.property_type_id.value">
+                                        <field name="property_type_id"/>
+                                    </span>
+                                    <span class="badge text-bg-secondary" t-if="record.state.raw_value == 'to_do'">To Do</span>
+                                    <span class="badge text-bg-warning" t-if="record.state.raw_value == 'survey'">Survey</span>
+                                    <span class="badge text-bg-primary" t-if="record.state.raw_value == 'design'">Design</span>
+                                    <span class="badge text-bg-info" t-if="record.state.raw_value == 'approved'">Approved</span>
+                                    <span class="badge text-bg-dark" t-if="record.state.raw_value == 'installation'">Installation</span>
+                                    <span class="badge text-bg-success" t-if="record.state.raw_value == 'completed'">Completed</span>
+                                    <span class="badge text-bg-danger" t-if="record.state.raw_value == 'cancelled'">Cancelled</span>
+                                </div>
+                            </div>
+
+                            <!-- Customer Line -->
+                            <div class="text-muted small d-flex align-items-baseline mb-1" t-if="record.partner_id.value">
+                                <span class="oi oi-fw me-1" data-icon="person" title="Customer"/>
+                                <field name="partner_id" class="text-truncate"/>
+                            </div>
+
+                            <!-- Site Address Line -->
+                            <div class="text-muted small text-truncate mb-2" t-if="record.site_address.value" t-att-title="record.site_address.value">
+                                <span class="oi oi-fw me-1" data-icon="home" title="Site Address"/>
+                                <field name="site_address"/>
+                            </div>
+
+                            <!-- Dates Line -->
+                            <div class="text-muted small d-flex flex-wrap align-items-center gap-3 mb-2" t-if="record.scheduled_date.value or record.completion_date.value">
+                                <span t-if="record.scheduled_date.value" class="d-flex align-items-center" title="Scheduled Start Date">
+                                    <span class="oi oi-fw me-1 text-primary" data-icon="calendar_today"/>
+                                    <field name="scheduled_date"/>
+                                </span>
+                                <span t-if="record.completion_date.value" class="d-flex align-items-center" title="Target / Completion Date">
+                                    <span class="oi oi-fw me-1 text-success" data-icon="event_available"/>
+                                    <field name="completion_date"/>
+                                </span>
+                            </div>
+
+                            <!-- Financial KPIs Pill Bar -->
+                            <div class="d-flex justify-content-between align-items-center py-1 px-2 rounded bg-light border small mb-2"
+                                 t-if="record.total_quoted_amount.value or record.estimated_budget.value or record.profit_margin.value">
+                                <span class="text-muted" t-if="record.total_quoted_amount.value">
+                                    Rev: <field name="total_quoted_amount" widget="monetary"/>
+                                </span>
+                                <span class="text-muted" t-elif="record.estimated_budget.value">
+                                    Budget: <field name="estimated_budget" widget="monetary"/>
+                                </span>
+                                <span class="fw-bold text-success" t-if="record.profit_margin.value">
+                                    Margin: <field name="profit_margin" widget="monetary"/>
+                                </span>
+                            </div>
+
+                            <!-- Quick Navigation Stats Row: Tasks, Surveys, Installations, Services -->
+                            <div class="d-flex align-items-center flex-wrap gap-3 text-nowrap small text-muted mb-2">
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_tasks" type="object" title="View Tasks">
+                                    <span class="oi oi-fw me-1 text-primary" data-icon="check"/>
+                                    <span class="fw-bold text-dark me-1"><field name="task_count"/></span>Tasks
+                                </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_site_surveys" type="object" t-if="record.survey_count.raw_value &gt; 0" title="View Site Surveys">
+                                    <span class="oi oi-fw me-1 text-info" data-icon="design_services"/>
+                                    <span class="fw-bold text-dark me-1"><field name="survey_count"/></span>Surveys
+                                </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_installations" type="object" t-if="record.installation_count.raw_value &gt; 0" title="View Installations">
+                                    <span class="oi oi-fw me-1 text-warning" data-icon="build"/>
+                                    <span class="fw-bold text-dark me-1"><field name="installation_count"/></span>Installations
+                                </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_service_requests" type="object" t-if="record.service_request_count.raw_value &gt; 0" title="View Service Requests">
+                                    <span class="oi oi-fw me-1 text-danger" data-icon="support_agent"/>
+                                    <span class="fw-bold text-dark me-1"><field name="service_request_count"/></span>Services
+                                </a>
+                            </div>
+                        </main>
+
+                        <!-- Card Footer: Warranty DLP Badge on Left, Priority Star & Manager Avatar on Right -->
+                        <footer class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                            <div>
+                                <span class="badge text-bg-warning-subtle text-warning-emphasis border border-warning-subtle"
+                                      t-if="record.has_warranty.raw_value" title="Warranty / Defects Liability Period (DLP) Active">
+                                    <span class="oi oi-fw me-1" data-icon="verified"/>Warranty DLP
+                                </span>
+                            </div>
+                            <div class="ms-auto d-flex align-items-center">
+                                <field name="priority" widget="priority" class="me-2"/>
+                                <field name="user_id" widget="many2one_avatar_user" title="Project Manager"/>
+                            </div>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- List View -->
+    <record id="view_project_furnishing_project_list" model="ir.ui.view">
+        <field name="name">project.project.furnishing.list</field>
+        <field name="model">project.project</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <list string="Furnishing Projects" sample="1">
+                <field name="priority" widget="priority" optional="show" nolabel="1"/>
+                <field name="name" string="Project Name"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="property_type_id"/>
+                <field name="scheduled_date"/>
+                <field name="completion_date"/>
+                <field name="estimated_budget" widget="monetary"/>
+                <field name="total_quoted_amount" widget="monetary"/>
+                <field name="total_cost_amount" widget="monetary"/>
+                <field name="profit_margin" widget="monetary"/>
+                <field name="has_warranty" widget="boolean_toggle"/>
+                <field name="state" widget="badge"
+                       decoration-info="state in ('draft', 'to_do')"
+                       decoration-warning="state in ('survey', 'design')"
+                       decoration-primary="state in ('approved', 'installation')"
+                       decoration-success="state == 'completed'"
+                       decoration-muted="state == 'cancelled'"/>
+                <field name="currency_id" column_invisible="True"/>
+                <field name="company_id" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_project_furnishing_project_form" model="ir.ui.view">
+        <field name="name">project.project.furnishing.form</field>
+        <field name="model">project.project</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <form string="Furnishing Project">
+                <header>
+                    <button name="action_create_task" string="Create Task" type="object" class="btn-secondary"
+                            invisible="state == 'cancelled'"/>
+                    <button name="action_create_survey" string="Create Survey" type="object" class="oe_highlight"
+                            invisible="state not in ('draft', 'to_do', 'survey')"/>
+                    <button name="action_approve" string="Approve" type="object" class="oe_highlight"
+                            invisible="state != 'design'"/>
+                    <button name="action_create_installation" string="Create Installation" type="object" class="oe_highlight"
+                            invisible="state not in ('approved', 'installation')"/>
+                    <button name="action_complete" string="Complete Project" type="object" class="oe_highlight"
+                            invisible="state != 'installation'"/>
+                    <button name="action_cancel" string="Cancel Project" type="object"
+                            invisible="state in ('completed', 'cancelled')"/>
+                    <button name="action_reset_draft" string="Reset to To Do" type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="to_do,survey,design,approved,installation,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object" name="action_view_tasks" icon="check"
+                                invisible="task_count == 0">
+                            <field string="Tasks" name="task_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_site_surveys" icon="design_services"
+                                invisible="survey_count == 0">
+                            <field string="Site Surveys" name="survey_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_installations" icon="build"
+                                invisible="installation_count == 0">
+                            <field string="Installations" name="installation_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_service_requests" icon="support_agent"
+                                invisible="service_request_count == 0">
+                            <field string="Service Requests" name="service_request_count" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Project Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Luxury Villa Interior &amp; Fit-Out"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Customer &amp; Site Details">
+                            <field name="partner_id" string="Customer" required="1"/>
+                            <field name="site_address" placeholder="Site / Delivery Address (auto-populated from customer)..."/>
+                            <field name="property_type_id" options="{'no_create_edit': False}"/>
+                        </group>
+                        <group string="Schedule &amp; Planning">
+                            <field name="priority" widget="priority"/>
+                            <field name="scheduled_date"/>
+                            <field name="completion_date"/>
+                            <field name="user_id" string="Project Manager" widget="many2one_avatar_user"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="active" invisible="1"/>
+                            <field name="is_furnishing_project" invisible="1"/>
+                            <field name="is_template" invisible="1"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Budget &amp; Financials" name="budget_tab">
+                            <group>
+                                <group string="Budget &amp; Revenue">
+                                    <field name="estimated_budget" widget="monetary"/>
+                                    <field name="total_quoted_amount" widget="monetary"/>
+                                </group>
+                                <group string="Cost &amp; Profit">
+                                    <field name="total_cost_amount" widget="monetary"/>
+                                    <field name="profit_margin" widget="monetary"/>
+                                </group>
+                            </group>
+                        </page>
+                        <page string="Warranty &amp; Retention (DLP)" name="warranty_tab">
+                            <group>
+                                <group string="Warranty &amp; DLP Status">
+                                    <field name="has_warranty" widget="boolean_toggle"/>
+                                    <field name="warranty_start_date" invisible="not has_warranty"/>
+                                    <field name="warranty_end_date" invisible="not has_warranty"/>
+                                </group>
+                                <group string="Retention Money" invisible="not has_warranty">
+                                    <field name="retention_amount" widget="monetary"/>
+                                    <field name="retention_release_date"/>
+                                </group>
+                            </group>
+                            <group string="Warranty Coverage &amp; Terms" invisible="not has_warranty">
+                                <field name="warranty_notes" nolabel="1" placeholder="Specify warranty terms, DLP period terms, and coverage details..."/>
+                            </group>
+                        </page>
+                        <page name="settings" string="Settings">
+                            <group>
+                                <group>
+                                    <field name="alias_id" invisible="1"/>
+                                    <field name="label_tasks" string="Name of Tasks" placeholder="e.g. Tasks"/>
+                                    <label for="alias_name" string="Project's Email" invisible="is_template"/>
+                                    <field name="alias_email" widget="email" readonly="1" nolabel="1" groups="!project.group_project_manager" invisible="is_template"/>
+                                    <div class="row" groups="project.group_project_manager" invisible="is_template">
+                                        <div class="d-flex col-10 gap-1">
+                                            <field name="alias_name" placeholder="alias" class="o_field_highlight"/>@
+                                            <field name="alias_domain_id" class="o_field_highlight" placeholder="e.g. mycompany.com"
+                                                options="{'no_create': True, 'no_open': True}"/>
+                                        </div>
+                                        <div class="col-2 p-0" invisible="not alias_email">
+                                            <field name="alias_email" widget="CopyClipboardButton"
+                                                class="copy_alias_email" options="{'btn_class': 'link'}" string=""/>
+                                        </div>
+                                    </div>
+                                    <field name="alias_contact" class="oe_inline" string="Accept Emails From"
+                                           invisible="not alias_email"/>
+                                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}" placeholder="Visible to all"/>
+                                </group>
+                                <div class="o_col">
+                                    <group name="other_section">
+                                    </group>
+                                    <group name="analytic" groups="analytic.group_analytic_accounting">
+                                        <div class="o_flexible_margin_top o_horizontal_separator text-uppercase fw-bolder small mb-3" colspan="2">analytic</div>
+                                        <field name="account_id"/>
+                                    </group>
+                                </div>
+                            </group>
+                            <group>
+                                <group name="visibility" string="Visibility">
+                                    <field name="privacy_visibility" widget="radio"/>
+                                    <div colspan="2" 
+                                        class="d-flex align-items-start mt-2" 
+                                        invisible="privacy_visibility not in ['followers', 'invited_users']">
+                                        <label for="allowed_internal_user_ids" 
+                                            class="o_form_label text-900 text-nowrap w-25 mb-0 fw-bold" 
+                                            string="Team Members"/>
+                                        <field name="allowed_internal_user_ids"
+                                            widget="many2many_avatar_user"
+                                            placeholder="Select who can access"
+                                            options="{'no_create': True}"
+                                            nolabel="1"
+                                            class="w-75"/>
+                                    </div>
+                                    <button name="%(project.project_share_wizard_action)d"
+                                            type="action"
+                                            string="Invite Portal Users"
+                                            class="btn btn-link p-0 mt-2"
+                                            colspan="2"
+                                            icon="east"
+                                            invisible="privacy_visibility not in ['portal', 'invited_users']"/>
+                                    <div colspan="2" class="text-muted mt-2" invisible="access_instruction_message == ''">
+                                        <i class="oi pe-2" data-icon="lightbulb" title="Info"/>
+                                        <field class="d-inline" name="access_instruction_message" nolabel="1"/>
+                                    </div>
+                                </group>
+                                <group name="group_tasks_managment" string="Tasks Management" class="row o_settings_container my-0">
+                                    <setting class="col-lg-12" id="recurring_tasks_setting" help="Auto-generate tasks for regular activities">
+                                        <field name="allow_recurring_tasks"/>
+                                    </setting>
+                                    <setting class="col-lg-12" id="task_dependencies_setting" help="Determine the order in which to perform tasks">
+                                        <field name="allow_task_dependencies"/>
+                                    </setting>
+                                    <setting class="col-lg-12" id="project_milestone_setting" help="Track major progress points that must be reached to achieve success">
+                                        <field name="allow_milestones"/>
+                                    </setting>
+                                </group>
+                            </group>
+                            <group>
+                                <group name="group_time_managment" string="Time Management" class="row o_settings_container my-0" invisible="1"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Search View -->
+    <record id="view_project_furnishing_project_search" model="ir.ui.view">
+        <field name="name">project.project.furnishing.search</field>
+        <field name="model">project.project</field>
+        <field name="priority">20</field>
+        <field name="arch" type="xml">
+            <search string="Furnishing Projects">
+                <field name="name" string="Project Name"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="property_type_id"/>
+                <separator/>
+                <filter string="To Do" name="to_do" domain="[('state', 'in', ('draft', 'to_do'))]"/>
+                <filter string="Survey" name="survey" domain="[('state', '=', 'survey')]"/>
+                <filter string="Design" name="design" domain="[('state', '=', 'design')]"/>
+                <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
+                <filter string="Installation" name="installation" domain="[('state', '=', 'installation')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
+                <filter string="Cancelled" name="cancelled" domain="[('state', '=', 'cancelled')]"/>
+                <separator/>
+                <filter string="My Projects" name="my_projects" domain="[('user_id', '=', uid)]"/>
+                <separator/>
+                <filter string="High Priority" name="high_priority" domain="[('priority', 'in', ('2', '3'))]"/>
+                <filter string="Urgent" name="urgent_priority" domain="[('priority', '=', '3')]"/>
+                <separator/>
+                <filter string="With Warranty" name="with_warranty" domain="[('has_warranty', '=', True)]"/>
+                <filter string="Without Warranty" name="without_warranty" domain="[('has_warranty', '=', False)]"/>
+                <group>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Priority" name="group_priority" context="{'group_by': 'priority'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Property Type" name="group_property_type" context="{'group_by': 'property_type_id'}"/>
+                    <filter string="Project Manager" name="group_user" context="{'group_by': 'user_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Window Action -->
+    <record id="action_project_furnishing_projects" model="ir.actions.act_window">
+        <field name="name">Furnishing Projects</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_project_furnishing_project_search"/>
+        <field name="domain">['|', ('is_furnishing_project', '=', True), ('property_type_id', '!=', False)]</field>
+        <field name="context">{'default_is_furnishing_project': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Furnishing Project!
+            </p>
+            <p>
+                Track property types, site addresses, budgets, and warranty details for all fit-out and furnishing projects.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_project_furnishing_project_kanban_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="10"/>
+        <field name="view_mode">kanban</field>
+        <field name="view_id" ref="view_project_furnishing_project_kanban"/>
+        <field name="act_window_id" ref="action_project_furnishing_projects"/>
+    </record>
+
+    <record id="action_project_furnishing_project_list_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="20"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_project_furnishing_project_list"/>
+        <field name="act_window_id" ref="action_project_furnishing_projects"/>
+    </record>
+
+    <record id="action_project_furnishing_project_form_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="30"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_project_furnishing_project_form"/>
+        <field name="act_window_id" ref="action_project_furnishing_projects"/>
+    </record>
+
+    <!-- Window Action: Tasks for Furnishing Projects -->
+    <record id="action_project_furnishing_tasks" model="ir.actions.act_window">
+        <field name="name">Tasks</field>
+        <field name="res_model">project.task</field>
+        <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
+        <field name="search_view_id" ref="project.view_task_search_form"/>
+        <field name="domain">[('project_id', '!=', False), '|', ('project_id.is_furnishing_project', '=', True), ('project_id.property_type_id', '!=', False)]</field>
+        <field name="context">{'search_default_open_tasks': 1, 'default_is_furnishing_project': True}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first Furnishing Task!
+            </p>
+            <p>
+                Track operational design, joinery fabrication, site readiness, and assembly tasks for your furnishing projects.
+            </p>
+        </field>
+    </record>
+</odoo>
+
