@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- 1. PROJECT PROFITABILITY REPORT (PIVOT & GRAPH)              -->
+    <!-- ============================================================ -->
+
+    <!-- Profitability Pivot View -->
+    <record id="view_project_furnishing_profitability_pivot" model="ir.ui.view">
+        <field name="name">project.project.furnishing.profitability.pivot</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <pivot string="Project Profitability Analysis" sample="1">
+                <field name="partner_id" type="row"/>
+                <field name="name" type="row"/>
+                <field name="property_type_id" type="col"/>
+                <field name="total_quoted_amount" type="measure"/>
+                <field name="total_cost_amount" type="measure"/>
+                <field name="profit_margin" type="measure"/>
+                <field name="estimated_budget" type="measure"/>
+            </pivot>
+        </field>
+    </record>
+
+    <!-- Profitability Graph View -->
+    <record id="view_project_furnishing_profitability_graph" model="ir.ui.view">
+        <field name="name">project.project.furnishing.profitability.graph</field>
+        <field name="model">project.project</field>
+        <field name="arch" type="xml">
+            <graph string="Project Profitability" type="bar" sample="1">
+                <field name="name"/>
+                <field name="profit_margin" type="measure"/>
+            </graph>
+        </field>
+    </record>
+
+    <!-- Window Action: Project Profitability Report -->
+    <record id="action_project_furnishing_profitability_report" model="ir.actions.act_window">
+        <field name="name">Project Profitability</field>
+        <field name="res_model">project.project</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="search_view_id" ref="view_project_furnishing_project_search"/>
+        <field name="domain">['|', ('is_furnishing_project', '=', True), ('property_type_id', '!=', False)]</field>
+        <field name="context">{'search_default_group_state': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No project profitability data available!
+            </p>
+            <p>
+                Analyze estimated budgets, quoted revenues, actual costs, and profit margins across all furnishing projects.
+            </p>
+        </field>
+    </record>
+
+    <record id="action_project_furnishing_profitability_pivot_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="10"/>
+        <field name="view_mode">pivot</field>
+        <field name="view_id" ref="view_project_furnishing_profitability_pivot"/>
+        <field name="act_window_id" ref="action_project_furnishing_profitability_report"/>
+    </record>
+
+    <record id="action_project_furnishing_profitability_graph_view" model="ir.actions.act_window.view">
+        <field name="sequence" eval="20"/>
+        <field name="view_mode">graph</field>
+        <field name="view_id" ref="view_project_furnishing_profitability_graph"/>
+        <field name="act_window_id" ref="action_project_furnishing_profitability_report"/>
+    </record>
+
+    <!-- ============================================================ -->
+    <!-- 2. REVENUE BY CATEGORY REPORT (SALES ANALYSIS)               -->
+    <!-- ============================================================ -->
+
+    <!-- Window Action: Revenue by Category -->
+    <record id="action_project_furnishing_report_revenue_by_category" model="ir.actions.act_window">
+        <field name="name">Revenue by Category</field>
+        <field name="res_model">sale.report</field>
+        <field name="view_mode">pivot,graph</field>
+        <field name="search_view_id" ref="sale.view_order_product_search"/>
+        <field name="context">{'search_default_Sales': 1, 'search_default_Category': 1, 'search_default_filter_order_date': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                No sales data available for category analysis!
+            </p>
+            <p>
+                Analyze sales revenue and order volumes grouped by furnishing product categories (Curtains, Joinery, Fabrics, Wallcoverings, etc.).
+            </p>
+        </field>
+    </record>
+
+</odoo>

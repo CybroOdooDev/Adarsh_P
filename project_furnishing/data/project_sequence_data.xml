@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Sequence for Site Survey -->
+    <record id="seq_project_site_survey" model="ir.sequence">
+        <field name="name">Site Survey</field>
+        <field name="code">project.site.survey</field>
+        <field name="prefix">SURV/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Installation -->
+    <record id="seq_project_installation" model="ir.sequence">
+        <field name="name">Project Installation</field>
+        <field name="code">project.installation</field>
+        <field name="prefix">INST/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Sequence for Service & Warranty Request -->
+    <record id="seq_project_service_request" model="ir.sequence">
+        <field name="name">Service Request</field>
+        <field name="code">project.service.request</field>
+        <field name="prefix">SR/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

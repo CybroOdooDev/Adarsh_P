@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Property Type List View -->
+    <record id="view_project_property_type_list" model="ir.ui.view">
+        <field name="name">project.property.type.list</field>
+        <field name="model">project.property.type</field>
+        <field name="arch" type="xml">
+            <list string="Property Types" editable="bottom">
+                <field name="sequence" widget="handle"/>
+                <field name="name"/>
+                <field name="code"/>
+                <field name="project_count" string="Projects"/>
+                <field name="description"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Property Type Form View -->
+    <record id="view_project_property_type_form" model="ir.ui.view">
+        <field name="name">project.property.type.form</field>
+        <field name="model">project.property.type</field>
+        <field name="arch" type="xml">
+            <form string="Property Type">
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_projects" type="object" class="oe_stat_button" icon="apartment"
+                                invisible="project_count == 0">
+                            <field name="project_count" widget="statinfo" string="Projects"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <label for="name" string="Property Type Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Luxury Villa, Yacht, Penthouse"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="code" placeholder="e.g. VILLA"/>
+                            <field name="sequence"/>
+                        </group>
+                    </group>
+                    <group string="Fit-Out Guidelines &amp; Scope">
+                        <field name="description" placeholder="Specify special fit-out considerations, access limitations, or guidelines for this property type..."/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Property Type Search View -->
+    <record id="view_project_property_type_search" model="ir.ui.view">
+        <field name="name">project.property.type.search</field>
+        <field name="model">project.property.type</field>
+        <field name="arch" type="xml">
+            <search string="Property Types">
+                <field name="name" string="Property Type" filter_domain="['|', ('name', 'ilike', self), ('code', 'ilike', self)]"/>
+                <field name="code"/>
+                <separator/>
+                <filter string="Archived" name="inactive" domain="[('active', '=', False)]"/>
+            </search>
+        </field>
+    </record>
+
+    <!-- Property Type Action -->
+    <record id="action_project_property_types" model="ir.actions.act_window">
+        <field name="name">Property Types</field>
+        <field name="res_model">project.property.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new property type
+            </p>
+            <p>
+                Define property types (e.g. Luxury Villa, Commercial Office, Hotel, Penthouse) to categorize your projects.
+            </p>
+        </field>
+    </record>
+
+</odoo>

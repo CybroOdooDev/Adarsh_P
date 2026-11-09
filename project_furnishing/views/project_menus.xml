@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ============================================================ -->
+    <!-- INDEPENDENT APP: FURNISHING PROJECTS ROOT & MENUS            -->
+    <!-- ============================================================ -->
+
+    <!-- Top-level Root App Menu -->
+    <menuitem id="menu_project_furnishing_root"
+              name="Furnishing Projects"
+              web_icon="project_furnishing,static/description/icon.png"
+              sequence="65"/>
+
+    <!-- ==================== 1. PROJECTS ==================== -->
+    <menuitem id="menu_project_furnishing_projects_menu"
+              name="Projects"
+              parent="menu_project_furnishing_root"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_projects_act"
+              name="Projects"
+              parent="menu_project_furnishing_projects_menu"
+              action="action_project_furnishing_projects"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_tasks"
+              name="Tasks"
+              parent="menu_project_furnishing_projects_menu"
+              action="action_project_furnishing_tasks"
+              sequence="15"/>
+
+    <menuitem id="menu_project_furnishing_site_surveys"
+              name="Site Surveys"
+              parent="menu_project_furnishing_projects_menu"
+              action="action_project_site_survey"
+              sequence="20"/>
+
+    <menuitem id="menu_project_furnishing_installations"
+              name="Installations"
+              parent="menu_project_furnishing_projects_menu"
+              action="action_project_installation"
+              sequence="30"/>
+
+    <menuitem id="menu_project_furnishing_service_requests"
+              name="Service Requests"
+              parent="menu_project_furnishing_projects_menu"
+              action="action_project_service_request"
+              sequence="40"/>
+
+    <!-- ==================== 2. SALES ==================== -->
+    <menuitem id="menu_project_furnishing_sales_menu"
+              name="Sales"
+              parent="menu_project_furnishing_root"
+              sequence="20"/>
+
+    <menuitem id="menu_project_furnishing_sale_orders"
+              name="Sale Orders"
+              parent="menu_project_furnishing_sales_menu"
+              action="sale.action_orders"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_customers"
+              name="Customers"
+              parent="menu_project_furnishing_sales_menu"
+              action="account.res_partner_action_customer"
+              sequence="20"/>
+
+    <!-- ==================== 3. PURCHASES ==================== -->
+    <menuitem id="menu_project_furnishing_purchases_menu"
+              name="Purchases"
+              parent="menu_project_furnishing_root"
+              sequence="30"/>
+
+    <menuitem id="menu_project_furnishing_purchase_orders"
+              name="Purchase Orders"
+              parent="menu_project_furnishing_purchases_menu"
+              action="purchase.purchase_form_action"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_vendors"
+              name="Vendors"
+              parent="menu_project_furnishing_purchases_menu"
+              action="account.res_partner_action_supplier"
+              sequence="20"/>
+
+    <!-- ==================== 4. PRODUCTS ==================== -->
+    <menuitem id="menu_project_furnishing_products_menu"
+              name="Products"
+              parent="menu_project_furnishing_root"
+              sequence="35"/>
+
+    <menuitem id="menu_project_furnishing_products"
+              name="Products"
+              parent="menu_project_furnishing_products_menu"
+              action="sale.product_template_action"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_pricelists"
+              name="Pricelists"
+              parent="menu_project_furnishing_products_menu"
+              action="product.product_pricelist_action2"
+              groups="product.group_product_pricelist"
+              sequence="20"/>
+
+    <!-- ==================== 5. PRODUCTION ==================== -->
+    <menuitem id="menu_project_furnishing_production"
+              name="Production"
+              parent="menu_project_furnishing_root"
+              groups="project_furnishing.group_furnishing_manufacturing"
+              sequence="38"/>
+
+    <menuitem id="menu_project_furnishing_mrp_bom"
+              name="BOM"
+              parent="menu_project_furnishing_production"
+              action="mrp.mrp_bom_form_action"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_mrp_production"
+              name="Manufacturing Orders"
+              parent="menu_project_furnishing_production"
+              action="mrp.mrp_production_action"
+              sequence="20"/>
+
+    <!-- ==================== 6. REPORTS ==================== -->
+    <menuitem id="menu_project_furnishing_reports_menu"
+              name="Reports"
+              parent="menu_project_furnishing_root"
+              sequence="40"/>
+
+    <menuitem id="menu_project_furnishing_report_profitability"
+              name="Project Profitability"
+              parent="menu_project_furnishing_reports_menu"
+              action="action_project_furnishing_profitability_report"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_report_revenue_by_category"
+              name="Revenue by Category"
+              parent="menu_project_furnishing_reports_menu"
+              action="action_project_furnishing_report_revenue_by_category"
+              sequence="20"/>
+
+    <!-- ==================== 7. CONFIGURATION ==================== -->
+    <menuitem id="menu_project_furnishing_config"
+              name="Configuration"
+              parent="menu_project_furnishing_root"
+              sequence="90"/>
+
+    <menuitem id="menu_project_furnishing_config_settings"
+              name="Settings"
+              parent="menu_project_furnishing_config"
+              action="action_project_furnishing_config_settings"
+              sequence="1"/>
+
+    <menuitem id="menu_project_furnishing_config_property_types"
+              name="Property Types"
+              parent="menu_project_furnishing_config"
+              action="action_project_property_types"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_config_measurement_types"
+              name="Measurement Types"
+              parent="menu_project_furnishing_config"
+              action="action_project_measurement_type"
+              sequence="20"/>
+
+    <menuitem id="menu_project_furnishing_config_installation_teams"
+              name="Installation Teams"
+              parent="menu_project_furnishing_config"
+              action="action_project_installation_team"
+              sequence="30"/>
+</odoo>

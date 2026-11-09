@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Installation List View -->
+    <record id="view_project_installation_list" model="ir.ui.view">
+        <field name="name">project.installation.list</field>
+        <field name="model">project.installation</field>
+        <field name="arch" type="xml">
+            <list string="Installations" sample="1">
+                <field name="name"/>
+                <field name="project_id"/>
+                <field name="partner_id"/>
+                <field name="team_id"/>
+                <field name="installer_id" widget="many2one_avatar_user"/>
+                <field name="start_date"/>
+                <field name="completion_date"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-primary="state == 'in_progress'"
+                       decoration-warning="state == 'snagging'"
+                       decoration-success="state == 'completed'"
+                       decoration-muted="state == 'cancelled'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Installation Form View -->
+    <record id="view_project_installation_form" model="ir.ui.view">
+        <field name="name">project.installation.form</field>
+        <field name="model">project.installation</field>
+        <field name="arch" type="xml">
+            <form string="Installation">
+                <header>
+                    <button name="action_start" string="Start Installation" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_snagging" string="Snagging" type="object"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_complete" string="Complete Installation" type="object" class="oe_highlight"
+                            invisible="state not in ('in_progress', 'snagging')"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('completed', 'cancelled')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancelled'"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,snagging,completed"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Installation Reference"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Project &amp; Customer">
+                            <field name="project_id" options="{'no_create_edit': False}"/>
+                            <field name="partner_id"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Team &amp; Schedule">
+                            <field name="team_id" options="{'no_create_edit': False}"/>
+                            <field name="installer_id" widget="many2one_avatar_user"/>
+                            <field name="start_date"/>
+                            <field name="completion_date"/>
+                        </group>
+                    </group>
+                    <group string="Site Address">
+                        <field name="address" nolabel="1" placeholder="Auto-filled from project, editable here..."/>
+                    </group>
+                    <notebook>
+                        <page string="Snag List" name="snag_list">
+                            <field name="snag_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name" placeholder="e.g. Paint scratch on door, Loose cabinet handle..."/>
+                                    <field name="description" placeholder="Description of the defect or snag..."/>
+                                    <field name="is_fixed" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Installation Scope &amp; Notes" name="notes">
+                            <field name="notes" placeholder="Enter installation instructions, fixing details, snag prevention guidelines..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Installation Search View -->
+    <record id="view_project_installation_search" model="ir.ui.view">
+        <field name="name">project.installation.search</field>
+        <field name="model">project.installation</field>
+        <field name="arch" type="xml">
+            <search string="Search Installations">
+                <field name="name" string="Reference"/>
+                <field name="project_id"/>
+                <field name="partner_id" string="Customer"/>
+                <field name="team_id"/>
+                <field name="installer_id"/>
+                <separator/>
+                <filter string="Draft" name="draft" domain="[('state', '=', 'draft')]"/>
+                <filter string="In Progress" name="in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Snagging" name="snagging" domain="[('state', '=', 'snagging')]"/>
+                <filter string="Completed" name="completed" domain="[('state', '=', 'completed')]"/>
+                <group>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Installation Team" name="group_team" context="{'group_by': 'team_id'}"/>
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Customer" name="group_customer" context="{'group_by': 'partner_id'}"/>
+                    <filter string="Lead Installer" name="group_installer" context="{'group_by': 'installer_id'}"/>
+                    <filter string="Start Date" name="group_start_date" context="{'group_by': 'start_date'}"/>
+                    <filter string="Company" name="group_company" context="{'group_by': 'company_id'}" groups="base.group_multi_company"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Installation Action -->
+    <record id="action_project_installation" model="ir.actions.act_window">
+        <field name="name">Installations</field>
+        <field name="res_model">project.installation</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_project_installation_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Schedule your first Furnishing Installation!
+            </p>
+            <p>
+                Track on-site assembly, joinery placement, and final fit-out handover.
+            </p>
+        </field>
+    </record>
+
+</odoo>

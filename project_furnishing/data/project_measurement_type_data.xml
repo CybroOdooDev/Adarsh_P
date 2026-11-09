@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <record id="measurement_type_room_area" model="project.measurement.type">
+        <field name="name">Room / Floor Area</field>
+        <field name="code">ROOM</field>
+        <field name="sequence">10</field>
+        <field name="description">Floor surface area and room perimeters.</field>
+    </record>
+
+    <record id="measurement_type_wall" model="project.measurement.type">
+        <field name="name">Wall / Partition</field>
+        <field name="code">WALL</field>
+        <field name="sequence">20</field>
+        <field name="description">Wall elevations, acoustic paneling, and wall cladding.</field>
+    </record>
+
+    <record id="measurement_type_window" model="project.measurement.type">
+        <field name="name">Window / Curtain Track</field>
+        <field name="code">WINDOW</field>
+        <field name="sequence">30</field>
+        <field name="description">Window frames, drapery tracks, roller blinds, and sheer tracks.</field>
+    </record>
+
+    <record id="measurement_type_ceiling" model="project.measurement.type">
+        <field name="name">Ceiling / Bulkhead</field>
+        <field name="code">CEILING</field>
+        <field name="sequence">40</field>
+        <field name="description">False ceiling height, cove lighting niches, and drop levels.</field>
+    </record>
+
+    <record id="measurement_type_door" model="project.measurement.type">
+        <field name="name">Door / Opening</field>
+        <field name="code">DOOR</field>
+        <field name="sequence">50</field>
+        <field name="description">Door architraves, clearance widths, and entry openings.</field>
+    </record>
+
+    <record id="measurement_type_joinery" model="project.measurement.type">
+        <field name="name">Joinery / Cabinetry</field>
+        <field name="code">JOINERY</field>
+        <field name="sequence">60</field>
+        <field name="description">Built-in wardrobes, vanity units, and kitchen cabinetry.</field>
+    </record>
+
+    <record id="measurement_type_furniture" model="project.measurement.type">
+        <field name="name">Custom Furniture</field>
+        <field name="code">FURNITURE</field>
+        <field name="sequence">70</field>
+        <field name="description">Bespoke sofa dimensions, bed heads, consoles, and dining tables.</field>
+    </record>
+
+</odoo>
