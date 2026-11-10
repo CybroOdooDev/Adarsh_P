@@ -15,7 +15,7 @@ class ResConfigSettings(models.TransientModel):
         help="Set multiple prices per product, customer discounts, and pricelist rules."
     )
     group_furnishing_manufacturing = fields.Boolean(
-        string="Manufacturing",
+        string="Manufacturing & Production",
         implied_group="project_furnishing.group_furnishing_manufacturing",
-        help="Show Production menu with Bills of Materials (BOM) and Manufacturing Orders in Furnishing Projects."
+        help="Enable the Production menu (Manufacturing Orders, BOM, Quality Checks) in Furnishing Projects."
     )

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Furnishing Quality Check Type List View -->
+    <record id="view_furnishing_quality_check_type_list" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.type.list</field>
+        <field name="model">furnishing.quality.check.type</field>
+        <field name="arch" type="xml">
+            <list string="Quality Checkpoints">
+                <field name="sequence" widget="handle"/>
+                <field name="name" string="Check / Test Name"/>
+                <field name="category" widget="badge"/>
+                <field name="stage"/>
+                <field name="standard_instructions" optional="show"/>
+                <field name="active" widget="boolean_toggle"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Furnishing Quality Check Type Form View -->
+    <record id="view_furnishing_quality_check_type_form" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.type.form</field>
+        <field name="model">furnishing.quality.check.type</field>
+        <field name="arch" type="xml">
+            <form string="Quality Checkpoint">
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name" string="Checkpoint / Test Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Flat Floor Wobble Test"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group name="left">
+                            <field name="category"/>
+                            <field name="stage"/>
+                            <field name="sequence"/>
+                        </group>
+                        <group name="right">
+                            <field name="active" widget="boolean_toggle"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Standard Norms &amp; Guidance" name="norms">
+                            <field name="standard_instructions" placeholder="Enter acceptable architectural tolerances, test method, or inspector criteria..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Furnishing Quality Check Type Search View -->
+    <record id="view_furnishing_quality_check_type_search" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.type.search</field>
+        <field name="model">furnishing.quality.check.type</field>
+        <field name="arch" type="xml">
+            <search string="Search Checkpoints">
+                <field name="name" string="Checkpoint"/>
+                <field name="category"/>
+                <field name="stage"/>
+                <separator/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Category" name="group_category" context="{'group_by': 'category'}"/>
+                    <filter string="Applicable Stage" name="group_stage" context="{'group_by': 'stage'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Window for Quality Check Types -->
+    <record id="action_furnishing_quality_check_type" model="ir.actions.act_window">
+        <field name="name">Quality Check Types</field>
+        <field name="res_model">furnishing.quality.check.type</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_furnishing_quality_check_type_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Define your factory's quality checkpoints and test criteria
+            </p>
+            <p>
+                Configure tests for dimensions, surface polish, wobble stability, hardware movement, glass/stone inlays, and packaging.
+            </p>
+        </field>
+    </record>
+
+</odoo>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 class ProjectSiteSurvey(models.Model):
@@ -29,7 +29,8 @@ class ProjectSiteSurvey(models.Model):
         string='Project',
         required=True,
         ondelete='cascade',
-        tracking=True
+        tracking=True,
+        domain="[('is_furnishing_project', '=', True), ('state', 'not in', ('completed', 'cancelled'))]"
     )
     partner_id = fields.Many2one(
         'res.partner',
@@ -101,32 +102,57 @@ class ProjectSiteSurvey(models.Model):
         for rec in self:
             rec.measurement_count = len(rec.measurement_ids)
 
+    @api.constrains('project_id')
+    def _check_project_id(self):
+        for rec in self:
+            if rec.project_id.is_furnishing_project and rec.project_id.state in ('completed', 'cancelled'):
+                raise ValidationError(
+                    _("Cannot create or link site surveys to project '%(project)s' because the project is %(state)s.") % {
+                        'project': rec.project_id.name,
+                        'state': dict(rec.project_id._fields['state'].selection).get(rec.project_id.state, rec.project_id.state),
+                    }
+                )
+
     # State Navigation Buttons
     def action_schedule(self):
         for rec in self:
+            if rec.state not in ('draft', 'scheduled'):
+                raise UserError(_("Only draft surveys can be scheduled."))
             if not rec.scheduled_date:
                 raise ValidationError(_("Please specify a Scheduled Date before scheduling the visit."))
             rec.state = 'scheduled'
 
     def action_start(self):
         for rec in self:
+            if rec.state not in ('draft', 'scheduled'):
+                raise UserError(_("Cannot start survey '%s' because it is already %s.") % (rec.name, rec.state))
             rec.state = 'in_progress'
 
     def action_complete(self):
         for rec in self:
+            if rec.state not in ('draft', 'scheduled', 'in_progress'):
+                raise UserError(_("Cannot complete survey '%s' because it is %s.") % (rec.name, rec.state))
             if not rec.measurement_ids:
                 raise ValidationError(_("Cannot complete survey '%s' without measurements. Please add at least one measurement line before completing.", rec.name))
             rec.state = 'completed'
-            # Automatically advance linked project state to 'design'
-            if rec.project_id and rec.project_id.state in ('draft', 'to_do', 'survey'):
-                rec.project_id.state = 'design'
+            # Advance linked project state to 'design' only if all active surveys for this project are completed
+            if rec.project_id and rec.project_id.state in ('to_do', 'survey'):
+                pending_surveys = rec.project_id.survey_ids.filtered(
+                    lambda s: s.id != rec.id and s.state not in ('completed', 'cancelled')
+                )
+                if not pending_surveys:
+                    rec.project_id.state = 'design'
 
     def action_cancel(self):
         for rec in self:
+            if rec.state == 'completed':
+                raise UserError(_("Completed surveys cannot be cancelled."))
             rec.state = 'cancelled'
 
     def action_reset_draft(self):
         for rec in self:
+            if rec.state not in ('cancelled', 'completed'):
+                raise UserError(_("Only cancelled or completed surveys can be reset to Draft."))
             rec.state = 'draft'
 
 

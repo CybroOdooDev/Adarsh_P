@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Sequence for Furnishing Quality Checks -->
+    <record id="seq_furnishing_quality_check" model="ir.sequence">
+        <field name="name">Furnishing Quality Check</field>
+        <field name="code">furnishing.quality.check</field>
+        <field name="prefix">QC/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+</odoo>

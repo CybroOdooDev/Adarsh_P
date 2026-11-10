@@ -3,26 +3,23 @@
     'name': 'Project Furnishing & Fit-Out Extension',
     'version': '20.0.1.0.0',
     'category': 'Services/Project',
-    'summary': 'Extends standard Project with Property Types, Customer Address, Budget & Warranty Management',
+    'summary': 'Extends standard Project with Property Types, Customer Address, Budget, Warranty, Products, Manufacturing & Dynamic Quality Checks',
     'description': """
 Project Furnishing & Fit-Out Extension
 ======================================
-Inherits Odoo's standard Project model (project.project) to support interior fit-out operations:
-- Customer Site Address auto-populated from customer details
-- Property Type Many2one with customizable presets (Villa, Penthouse, Commercial, Hospitality, Retail)
-- Scheduled Date and Completion Date tracking
-- Budget & Financials Tab (Estimated Budget, Total Quoted Revenue, Total Actual Cost, Profit Margin)
-- Warranty & DLP Tab (Warranty toggle, start/expiry dates, retention money, retention release date, terms)
-- Property Types Configuration menu under Project > Configuration
+Comprehensive enterprise system for interior furnishing, joinery, fit-out contracting, custom manufacturing, dynamic QC test types, and project delivery.
     """,
     'author': 'Surfaces Furnishing LLC',
     'license': 'LGPL-3',
     'depends': [
         'base',
         'mail',
+        'account',
         'project',
         'sale_management',
+        'sale_project',
         'purchase',
+        'project_purchase',
         'mrp',
     ],
     'data': [
@@ -32,6 +29,8 @@ Inherits Odoo's standard Project model (project.project) to support interior fit
         'data/project_property_type_data.xml',
         'data/project_measurement_type_data.xml',
         'data/project_installation_team_data.xml',
+        'data/quality_check_sequence.xml',
+        'data/quality_check_type_data.xml',
         'views/project_property_type_views.xml',
         'views/project_measurement_type_views.xml',
         'views/project_installation_team_views.xml',
@@ -40,6 +39,9 @@ Inherits Odoo's standard Project model (project.project) to support interior fit
         'views/project_service_request_views.xml',
         'views/project_project_views.xml',
         'views/project_report_views.xml',
+        'views/furnishing_quality_check_type_views.xml',
+        'views/furnishing_quality_check_views.xml',
+        'views/mrp_production_views.xml',
         'views/res_config_settings_views.xml',
         'views/project_menus.xml',
     ],
