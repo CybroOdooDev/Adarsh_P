@@ -19,6 +19,7 @@
                 <field name="priority"/>
                 <field name="has_warranty"/>
                 <field name="task_count"/>
+                <field name="sale_order_count"/>
                 <field name="survey_count"/>
                 <field name="installation_count"/>
                 <field name="service_request_count"/>
@@ -28,6 +29,8 @@
                 <field name="scheduled_date"/>
                 <field name="completion_date"/>
                 <field name="site_address"/>
+                <field name="property_type_id"/>
+                <field name="purchase_orders_count"/>
                 <templates>
                     <t t-name="menu" groups="base.group_user">
                         <div class="container">
@@ -73,9 +76,7 @@
                                     <field name="name"/>
                                 </strong>
                                 <div class="d-flex flex-wrap gap-1 ms-2">
-                                    <span class="badge text-bg-light border" t-if="record.property_type_id.value">
-                                        <field name="property_type_id"/>
-                                    </span>
+                                    <field name="property_type_id" widget="badge" invisible="not property_type_id"/>
                                     <span class="badge text-bg-secondary" t-if="record.state.raw_value == 'to_do'">To Do</span>
                                     <span class="badge text-bg-warning" t-if="record.state.raw_value == 'survey'">Survey</span>
                                     <span class="badge text-bg-primary" t-if="record.state.raw_value == 'design'">Design</span>
@@ -130,6 +131,18 @@
                                    name="action_view_tasks" type="object" title="View Tasks">
                                     <span class="oi oi-fw me-1 text-primary" data-icon="check"/>
                                     <span class="fw-bold text-dark me-1"><field name="task_count"/></span>Tasks
+                                </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_sale_orders" type="object" t-if="record.sale_order_count.raw_value &gt; 0"
+                                   groups="sales_team.group_sale_salesman" title="View Sales Orders">
+                                    <span class="oi oi-fw me-1 text-success" data-icon="shopping_cart"/>
+                                    <span class="fw-bold text-dark me-1"><field name="sale_order_count"/></span>Sales
+                                </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_open_project_purchase_orders" type="object" t-if="record.purchase_orders_count.raw_value &gt; 0"
+                                   groups="purchase.group_purchase_user" title="View Purchase Orders">
+                                    <span class="oi oi-fw me-1 text-warning" data-icon="credit_card"/>
+                                    <span class="fw-bold text-dark me-1"><field name="purchase_orders_count"/></span>Purchases
                                 </a>
                                 <a class="d-inline-flex align-items-center text-decoration-none text-muted"
                                    name="action_view_site_surveys" type="object" t-if="record.survey_count.raw_value &gt; 0" title="View Site Surveys">
@@ -187,7 +200,7 @@
                 <field name="profit_margin" widget="monetary"/>
                 <field name="has_warranty" widget="boolean_toggle"/>
                 <field name="state" widget="badge"
-                       decoration-info="state in ('draft', 'to_do')"
+                       decoration-info="state == 'to_do'"
                        decoration-warning="state in ('survey', 'design')"
                        decoration-primary="state in ('approved', 'installation')"
                        decoration-success="state == 'completed'"
@@ -206,10 +219,14 @@
         <field name="arch" type="xml">
             <form string="Furnishing Project">
                 <header>
+                    <button name="action_create_quotation" string="Create Quotation" type="object" class="btn-secondary"
+                            invisible="state in ('to_do', 'cancelled')" groups="sales_team.group_sale_salesman"/>
                     <button name="action_create_task" string="Create Task" type="object" class="btn-secondary"
-                            invisible="state == 'cancelled'"/>
+                            invisible="state in ('completed', 'cancelled')"/>
                     <button name="action_create_survey" string="Create Survey" type="object" class="oe_highlight"
-                            invisible="state not in ('draft', 'to_do', 'survey')"/>
+                            invisible="state not in ('to_do', 'survey')"/>
+                    <button name="action_proceed_to_design" string="Proceed to Design" type="object" class="oe_highlight"
+                            invisible="state != 'survey'"/>
                     <button name="action_approve" string="Approve" type="object" class="oe_highlight"
                             invisible="state != 'design'"/>
                     <button name="action_create_installation" string="Create Installation" type="object" class="oe_highlight"
@@ -218,8 +235,8 @@
                             invisible="state != 'installation'"/>
                     <button name="action_cancel" string="Cancel Project" type="object"
                             invisible="state in ('completed', 'cancelled')"/>
-                    <button name="action_reset_draft" string="Reset to To Do" type="object"
-                            invisible="state != 'cancelled'"/>
+                    <button name="action_reset_to_do" string="Reset to To Do" type="object"
+                            invisible="state not in ('cancelled', 'completed')"/>
                     <field name="state" widget="statusbar" statusbar_visible="to_do,survey,design,approved,installation,completed"/>
                 </header>
                 <sheet>
@@ -227,6 +244,14 @@
                         <button class="oe_stat_button" type="object" name="action_view_tasks" icon="check"
                                 invisible="task_count == 0">
                             <field string="Tasks" name="task_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_view_sale_orders" icon="shopping_cart"
+                                invisible="sale_order_count == 0" groups="sales_team.group_sale_salesman">
+                            <field string="Sales Orders" name="sale_order_count" widget="statinfo"/>
+                        </button>
+                        <button class="oe_stat_button" type="object" name="action_open_project_purchase_orders" icon="credit_card"
+                                invisible="purchase_orders_count == 0" groups="purchase.group_purchase_user">
+                            <field string="Purchase Orders" name="purchase_orders_count" widget="statinfo"/>
                         </button>
                         <button class="oe_stat_button" type="object" name="action_view_site_surveys" icon="design_services"
                                 invisible="survey_count == 0">
@@ -269,10 +294,10 @@
                             <group>
                                 <group string="Budget &amp; Revenue">
                                     <field name="estimated_budget" widget="monetary"/>
-                                    <field name="total_quoted_amount" widget="monetary"/>
+                                    <field name="total_quoted_amount" widget="monetary" readonly="1"/>
                                 </group>
                                 <group string="Cost &amp; Profit">
-                                    <field name="total_cost_amount" widget="monetary"/>
+                                    <field name="total_cost_amount" widget="monetary" readonly="1"/>
                                     <field name="profit_margin" widget="monetary"/>
                                 </group>
                             </group>
@@ -281,8 +306,8 @@
                             <group>
                                 <group string="Warranty &amp; DLP Status">
                                     <field name="has_warranty" widget="boolean_toggle"/>
-                                    <field name="warranty_start_date" invisible="not has_warranty"/>
-                                    <field name="warranty_end_date" invisible="not has_warranty"/>
+                                    <field name="warranty_start_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
+                                    <field name="warranty_end_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
                                 </group>
                                 <group string="Retention Money" invisible="not has_warranty">
                                     <field name="retention_amount" widget="monetary"/>
@@ -386,7 +411,7 @@
                 <field name="partner_id" string="Customer"/>
                 <field name="property_type_id"/>
                 <separator/>
-                <filter string="To Do" name="to_do" domain="[('state', 'in', ('draft', 'to_do'))]"/>
+                <filter string="To Do" name="to_do" domain="[('state', '=', 'to_do')]"/>
                 <filter string="Survey" name="survey" domain="[('state', '=', 'survey')]"/>
                 <filter string="Design" name="design" domain="[('state', '=', 'design')]"/>
                 <filter string="Approved" name="approved" domain="[('state', '=', 'approved')]"/>
@@ -418,7 +443,7 @@
         <field name="res_model">project.project</field>
         <field name="view_mode">kanban,list,form</field>
         <field name="search_view_id" ref="view_project_furnishing_project_search"/>
-        <field name="domain">['|', ('is_furnishing_project', '=', True), ('property_type_id', '!=', False)]</field>
+        <field name="domain">[('is_furnishing_project', '=', True)]</field>
         <field name="context">{'default_is_furnishing_project': True}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -457,8 +482,8 @@
         <field name="res_model">project.task</field>
         <field name="view_mode">kanban,list,form,calendar,pivot,graph,activity</field>
         <field name="search_view_id" ref="project.view_task_search_form"/>
-        <field name="domain">[('project_id', '!=', False), '|', ('project_id.is_furnishing_project', '=', True), ('project_id.property_type_id', '!=', False)]</field>
-        <field name="context">{'search_default_open_tasks': 1, 'default_is_furnishing_project': True}</field>
+        <field name="domain">[('project_id', '!=', False), ('project_id.is_furnishing_project', '=', True)]</field>
+        <field name="context">{'search_default_open_tasks': 1}</field>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
                 Create your first Furnishing Task!

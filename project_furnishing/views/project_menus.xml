@@ -53,6 +53,12 @@
               parent="menu_project_furnishing_root"
               sequence="20"/>
 
+    <menuitem id="menu_project_furnishing_quotations"
+              name="Quotations"
+              parent="menu_project_furnishing_sales_menu"
+              action="sale.action_quotations_with_onboarding"
+              sequence="5"/>
+
     <menuitem id="menu_project_furnishing_sale_orders"
               name="Sale Orders"
               parent="menu_project_furnishing_sales_menu"
@@ -83,6 +89,30 @@
               action="account.res_partner_action_supplier"
               sequence="20"/>
 
+    <!-- ==================== FINANCE ==================== -->
+    <menuitem id="menu_project_furnishing_finance_menu"
+              name="Finance"
+              parent="menu_project_furnishing_root"
+              sequence="34"/>
+
+    <menuitem id="menu_project_furnishing_invoices"
+              name="Invoices"
+              parent="menu_project_furnishing_finance_menu"
+              action="account.action_move_out_invoice"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_bills"
+              name="Bills"
+              parent="menu_project_furnishing_finance_menu"
+              action="account.action_move_in_invoice"
+              sequence="20"/>
+
+    <menuitem id="menu_project_furnishing_payments"
+              name="Payments"
+              parent="menu_project_furnishing_finance_menu"
+              action="account.action_account_all_payments"
+              sequence="30"/>
+
     <!-- ==================== 4. PRODUCTS ==================== -->
     <menuitem id="menu_project_furnishing_products_menu"
               name="Products"
@@ -102,26 +132,32 @@
               groups="product.group_product_pricelist"
               sequence="20"/>
 
-    <!-- ==================== 5. PRODUCTION ==================== -->
+    <!-- ==================== PRODUCTION (MANUFACTURING) ==================== -->
     <menuitem id="menu_project_furnishing_production"
               name="Production"
               parent="menu_project_furnishing_root"
               groups="project_furnishing.group_furnishing_manufacturing"
               sequence="38"/>
 
-    <menuitem id="menu_project_furnishing_mrp_bom"
-              name="BOM"
-              parent="menu_project_furnishing_production"
-              action="mrp.mrp_bom_form_action"
-              sequence="10"/>
-
     <menuitem id="menu_project_furnishing_mrp_production"
               name="Manufacturing Orders"
               parent="menu_project_furnishing_production"
               action="mrp.mrp_production_action"
+              sequence="10"/>
+
+    <menuitem id="menu_project_furnishing_mrp_bom"
+              name="BOM"
+              parent="menu_project_furnishing_production"
+              action="mrp.mrp_bom_form_action"
               sequence="20"/>
 
-    <!-- ==================== 6. REPORTS ==================== -->
+    <menuitem id="menu_project_furnishing_quality_checks"
+              name="Quality Checks"
+              parent="menu_project_furnishing_production"
+              action="action_furnishing_quality_check"
+              sequence="30"/>
+
+    <!-- ==================== 5. REPORTS ==================== -->
     <menuitem id="menu_project_furnishing_reports_menu"
               name="Reports"
               parent="menu_project_furnishing_root"
@@ -139,7 +175,7 @@
               action="action_project_furnishing_report_revenue_by_category"
               sequence="20"/>
 
-    <!-- ==================== 7. CONFIGURATION ==================== -->
+    <!-- ==================== 6. CONFIGURATION ==================== -->
     <menuitem id="menu_project_furnishing_config"
               name="Configuration"
               parent="menu_project_furnishing_root"
@@ -162,6 +198,13 @@
               parent="menu_project_furnishing_config"
               action="action_project_measurement_type"
               sequence="20"/>
+
+    <menuitem id="menu_project_furnishing_config_quality_check_types"
+              name="Quality Check Types"
+              parent="menu_project_furnishing_config"
+              action="action_furnishing_quality_check_type"
+              groups="project.group_project_manager"
+              sequence="25"/>
 
     <menuitem id="menu_project_furnishing_config_installation_teams"
               name="Installation Teams"

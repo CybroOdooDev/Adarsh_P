@@ -27,10 +27,10 @@
                         </setting>
                     </block>
                     <block title="Manufacturing &amp; Production" name="furnishing_production_block">
-                        <setting id="furnishing_manufacturing_setting" help="Show Production menu with Bills of Materials (BOM) and Manufacturing Orders in Furnishing Projects">
+                        <setting id="furnishing_manufacturing_setting" help="Show the Production menu with Manufacturing Orders, Bills of Materials (BOM) and Quality Checks in Furnishing Projects">
                             <field name="group_furnishing_manufacturing"/>
                             <div class="text-muted small">
-                                Enable Production, BOM and Manufacturing Orders
+                                Enable Production menu (Manufacturing Orders, BOM, Quality Checks) in Furnishing Projects
                             </div>
                         </setting>
                     </block>

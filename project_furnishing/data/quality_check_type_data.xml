@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- 1. Dimensional Accuracy -->
+    <record id="qc_type_dimensions" model="furnishing.quality.check.type">
+        <field name="name">Dimensional Accuracy &amp; Diagonal Squareness</field>
+        <field name="category">dimensions</field>
+        <field name="stage">all</field>
+        <field name="sequence">10</field>
+        <field name="standard_instructions">Verify overall Height, Width, Depth against approved shop drawings within +/- 1mm tolerance. Measure opposing diagonals to confirm carcass is perfectly square.</field>
+    </record>
+
+    <!-- 2. Surface Finish & Polish -->
+    <record id="qc_type_surface_finish" model="furnishing.quality.check.type">
+        <field name="name">Surface Finish, Polish &amp; Veneer Uniformity</field>
+        <field name="category">surface</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">20</field>
+        <field name="standard_instructions">Inspect all visible show-surfaces under 1000 lux lighting. Free from orange peel, runs, overspray, veneer bubbling, or stain blotching. Check gloss/sheen consistency.</field>
+    </record>
+
+    <!-- 3. Edge Banding & Seams -->
+    <record id="qc_type_edge_banding" model="furnishing.quality.check.type">
+        <field name="name">Edge Banding Seams &amp; Bevel Trimming</field>
+        <field name="category">surface</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">30</field>
+        <field name="standard_instructions">Edge tape/banding must be firmly bonded with zero peeling, chipping, or excess glue line. Corner radiuses must be cleanly trimmed and smooth to touch.</field>
+    </record>
+
+    <!-- 4. Level & Wobble Test -->
+    <record id="qc_type_stability_wobble" model="furnishing.quality.check.type">
+        <field name="name">Flat Floor Level &amp; Wobble Stability Test</field>
+        <field name="category">joinery</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">40</field>
+        <field name="standard_instructions">Place unit on a certified flat calibration floor. Apply corner-to-corner rocking pressure. Zero wobble permitted. Verify adjustable leveling glides turn smoothly.</field>
+    </record>
+
+    <!-- 5. Door & Drawer Reveals -->
+    <record id="qc_type_door_drawer_reveals" model="furnishing.quality.check.type">
+        <field name="name">Door &amp; Drawer Reveal Consistency (2-3mm Margins)</field>
+        <field name="category">hardware</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">50</field>
+        <field name="standard_instructions">Verify uniform 2mm to 3mm shadow gaps around all door fronts and drawer perimeter. Zero rubbing against framework. Drawer stops and catches fully functional.</field>
+    </record>
+
+    <!-- 6. Hardware & Soft-Close Action -->
+    <record id="qc_type_hardware_movement" model="furnishing.quality.check.type">
+        <field name="name">Hardware Operation &amp; Soft-Close Dampers</field>
+        <field name="category">hardware</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">60</field>
+        <field name="standard_instructions">Test door hinges and drawer runners through full travel cycles. Soft-close damping must engage smoothly without slamming or sticking. Handles tight and aligned.</field>
+    </record>
+
+    <!-- 7. Mixed Materials (Glass, Mirror, Stone, Metal) -->
+    <record id="qc_type_mixed_materials" model="furnishing.quality.check.type">
+        <field name="name">Glass, Mirror, Stone &amp; Metal Trim Inlays</field>
+        <field name="category">materials</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">70</field>
+        <field name="standard_instructions">Glass and mirrors scratch-free with polished safety edges. Marble/quartz tops chip-free with sealed joints. Brass/metal inlays flush and firmly seated.</field>
+    </record>
+
+    <!-- 8. Timber Moisture Content -->
+    <record id="qc_type_moisture" model="furnishing.quality.check.type">
+        <field name="name">Timber &amp; Core Moisture Content (8% - 12%)</field>
+        <field name="category">safety</field>
+        <field name="stage">all</field>
+        <field name="sequence">80</field>
+        <field name="standard_instructions">Spot-check solid timber and MDF/plywood cores with calibrated pin moisture meter. Must read between 8% and 12% to prevent on-site warping or joint split.</field>
+    </record>
+
+    <!-- 9. Fire Safety (FR) Compliance -->
+    <record id="qc_type_fire_safety" model="furnishing.quality.check.type">
+        <field name="name">Fire Retardant (FR) Treatment &amp; Certification</field>
+        <field name="category">safety</field>
+        <field name="stage">all</field>
+        <field name="sequence">90</field>
+        <field name="standard_instructions">Verify FR chemical application certificate, FR core substrate stamp, or fire-rated lacquer compliance where required by project contract specifications.</field>
+    </record>
+
+    <!-- 10. Packaging & Room Tagging -->
+    <record id="qc_type_packaging_protection" model="furnishing.quality.check.type">
+        <field name="name">Protective Packaging, Corner Guards &amp; Room Tagging</field>
+        <field name="category">packaging</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">100</field>
+        <field name="standard_instructions">Fit heavy-duty foam corner guards, bubble wrap, and stretch film. Verify Floor, Room, and Piece Mark label is clearly visible. Loose assembly hardware pouch securely taped.</field>
+    </record>
+
+</odoo>

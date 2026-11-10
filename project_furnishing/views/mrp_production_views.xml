@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Inherit MRP Production Form to add Quality Checks Action Button and Stat Button -->
+    <record id="mrp_production_view_form_inherit_furnishing_qc" model="ir.ui.view">
+        <field name="name">mrp.production.view.form.inherit.furnishing.qc</field>
+        <field name="model">mrp.production</field>
+        <field name="inherit_id" ref="mrp.mrp_production_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button name="action_create_quality_check"
+                        string="Create Quality Check"
+                        type="object"
+                        class="btn-secondary"
+                        invisible="state != 'done'"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" name="action_view_quality_checks" type="object" icon="check_circle"
+                        invisible="quality_check_count == 0">
+                    <div class="o_field_widget o_stat_info">
+                        <span class="o_stat_value">
+                            <field name="quality_check_count"/>
+                        </span>
+                        <span class="o_stat_text">Quality Checks</span>
+                    </div>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>

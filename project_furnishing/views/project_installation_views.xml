@@ -68,6 +68,18 @@
                         <field name="address" nolabel="1" placeholder="Auto-filled from project, editable here..."/>
                     </group>
                     <notebook>
+                        <page string="Installation Items" name="lines">
+                            <button name="action_load_survey_lines" string="Load Survey Items" type="object" class="btn-outline-primary mb-2" invisible="state in ('completed', 'cancelled')"/>
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="name" placeholder="e.g. Master Bedroom Wardrobe"/>
+                                    <field name="description" placeholder="Description / details..."/>
+                                    <field name="type_id" options="{'no_create_edit': False}"/>
+                                    <field name="is_completed" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
                         <page string="Snag List" name="snag_list">
                             <field name="snag_ids">
                                 <list editable="bottom">

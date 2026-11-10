@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Furnishing Quality Check List View -->
+    <record id="view_furnishing_quality_check_list" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.list</field>
+        <field name="model">furnishing.quality.check</field>
+        <field name="arch" type="xml">
+            <list string="Quality Checks" sample="1">
+                <field name="name" class="fw-bold"/>
+                <field name="check_date"/>
+                <field name="project_id"/>
+                <field name="production_id"/>
+                <field name="product_id"/>
+                <field name="product_qty" string="Qty"/>
+                <field name="uom_id" string="UoM" optional="show"/>
+                <field name="stage" widget="badge"
+                       decoration-info="stage == 'raw_material'"
+                       decoration-primary="stage == 'in_process'"
+                       decoration-warning="stage == 'finishing'"
+                       decoration-muted="stage == 'assembly'"
+                       decoration-success="stage == 'pre_dispatch'"/>
+                <field name="inspector_id" widget="many2one_avatar_user"/>
+                <field name="failed_lines_count" string="Failed Tests" decoration-danger="failed_lines_count &gt; 0" optional="show"/>
+                <field name="defect_severity" widget="badge" optional="show"
+                       decoration-warning="defect_severity == 'minor'"
+                       decoration-danger="defect_severity in ('major', 'critical')"/>
+                <field name="dispatch_ready" widget="badge" decoration-success="dispatch_ready" optional="show"/>
+                <field name="state" widget="badge"
+                       decoration-muted="state == 'draft'"
+                       decoration-info="state == 'in_progress'"
+                       decoration-success="state == 'passed'"
+                       decoration-warning="state == 'conditional'"
+                       decoration-danger="state == 'failed'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Furnishing Quality Check Kanban View -->
+    <record id="view_furnishing_quality_check_kanban" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.kanban</field>
+        <field name="model">furnishing.quality.check</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="state" sample="1">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="state"/>
+                <field name="stage"/>
+                <field name="product_id"/>
+                <field name="production_id"/>
+                <field name="inspector_id"/>
+                <field name="defect_severity"/>
+                <field name="dispatch_ready"/>
+                <field name="failed_lines_count"/>
+                <templates>
+                    <t t-name="card">
+                        <main class="d-flex flex-column gap-1">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <strong class="fs-6 text-truncate" t-att-title="record.name.value">
+                                    <field name="name"/>
+                                </strong>
+                                <span class="badge text-bg-success" t-if="record.dispatch_ready.raw_value">Site-Ready</span>
+                                <span class="badge text-bg-danger" t-elif="record.defect_severity.raw_value == 'critical'">Critical Defect</span>
+                                <span class="badge text-bg-warning" t-elif="record.defect_severity.raw_value == 'major'">Major Defect</span>
+                            </div>
+                            <div class="text-truncate fw-bold text-dark" t-if="record.product_id.value">
+                                <field name="product_id"/>
+                            </div>
+                            <div class="text-muted small" t-if="record.production_id.value">
+                                MO: <field name="production_id"/>
+                            </div>
+                            <div class="text-muted small">
+                                Stage: <field name="stage"/>
+                            </div>
+                        </main>
+                        <footer class="mt-auto pt-2 border-top d-flex justify-content-between align-items-center">
+                            <div class="small text-muted">
+                                <field name="check_date"/>
+                            </div>
+                            <div class="ms-auto">
+                                <field name="inspector_id" widget="many2one_avatar_user"/>
+                            </div>
+                        </footer>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- Furnishing Quality Check Form View -->
+    <record id="view_furnishing_quality_check_form" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.form</field>
+        <field name="model">furnishing.quality.check</field>
+        <field name="arch" type="xml">
+            <form string="Quality Check">
+                <header>
+                    <button name="action_start" string="Start Inspection" type="object" class="oe_highlight"
+                            invisible="state != 'draft'"/>
+                    <button name="action_pass" string="Pass &amp; Release" type="object" class="btn-success"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_conditional" string="Conditional Pass" type="object" class="btn-warning"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_fail" string="Fail / Reject" type="object" class="btn-danger"
+                            invisible="state != 'in_progress'"/>
+                    <button name="action_load_default_checks" string="Load Standard Checkpoints" type="object" class="btn-outline-primary"
+                            invisible="state not in ('draft', 'in_progress')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object" class="btn-secondary"
+                            invisible="state in ('draft', 'in_progress')"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,passed,failed"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Site-Ready" bg_color="text-bg-success" invisible="not dispatch_ready"/>
+                    <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger" invisible="state != 'failed'"/>
+                    <div class="oe_title">
+                        <label for="name" string="QC Reference"/>
+                        <h1>
+                            <field name="name"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Manufacturing &amp; Product">
+                            <field name="production_id" placeholder="Select Manufacturing Order..."/>
+                            <field name="project_id"/>
+                            <field name="product_id"/>
+                            <label for="product_qty" string="Inspected Quantity"/>
+                            <div class="d-flex align-items-baseline gap-2">
+                                <field name="product_qty" class="oe_inline"/>
+                                <field name="uom_id" class="oe_inline text-muted"/>
+                            </div>
+                            <field name="stage"/>
+                        </group>
+                        <group string="Inspection Details">
+                            <field name="check_date"/>
+                            <field name="inspector_id" widget="many2one_avatar_user"/>
+                            <field name="supervisor_id" widget="many2one_avatar_user"/>
+                            <field name="dispatch_ready" invisible="1"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <!-- Tab 1: Checklist & Dynamic Checkpoints -->
+                        <page string="Inspection Checklist" name="checklist">
+                            <field name="check_line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="check_type_id" options="{'no_create_edit': False}"/>
+                                    <field name="category" widget="badge"/>
+                                    <field name="instructions" optional="show"/>
+                                    <field name="result" widget="badge"
+                                           decoration-info="result == 'pending'"
+                                           decoration-success="result == 'pass'"
+                                           decoration-danger="result == 'fail'"
+                                           decoration-muted="result == 'na'"/>
+                                    <field name="notes" placeholder="Measured value / notes..."/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <!-- Tab 2: Defect Details & Corrective Actions -->
+                        <page string="Defect &amp; Rectification" name="defect_tracking"
+                              invisible="defect_type == 'none' and state == 'passed' and failed_lines_count == 0">
+                            <group>
+                                <group string="Defect Classification">
+                                    <field name="defect_type"/>
+                                    <field name="defect_severity" invisible="defect_type == 'none'"/>
+                                    <field name="recheck_required"/>
+                                </group>
+                                <group string="Action &amp; Target">
+                                    <field name="rectification_deadline" invisible="defect_type == 'none'"/>
+                                    <field name="failed_lines_count" invisible="1"/>
+                                </group>
+                            </group>
+                            <group string="Corrective Action Required" invisible="defect_type == 'none'">
+                                <field name="corrective_action" nolabel="1" placeholder="Specify instructions for carpenters, painters, or assemblers to rectify non-conformance..."/>
+                            </group>
+                        </page>
+
+                        <!-- Tab 3: Inspection Photos -->
+                        <page string="Visual Evidence &amp; Photos" name="photos">
+                            <group>
+                                <group string="Finished Piece Inspection Photo">
+                                    <field name="inspection_image" widget="image" class="oe_avatar" style="width: 260px; height: 260px;" nolabel="1"/>
+                                </group>
+                                <group string="Defect Close-Up Photo">
+                                    <field name="defect_image" widget="image" class="oe_avatar" style="width: 260px; height: 260px;" nolabel="1"/>
+                                </group>
+                            </group>
+                        </page>
+
+                        <!-- Tab 4: Technical Notes & Observations -->
+                        <page string="Technical Notes" name="notes">
+                            <field name="notes" placeholder="Technical observations, moisture reading records, tolerance logs, and inspector remarks..."/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Furnishing Quality Check Search View -->
+    <record id="view_furnishing_quality_check_search" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.search</field>
+        <field name="model">furnishing.quality.check</field>
+        <field name="arch" type="xml">
+            <search string="Search Quality Checks">
+                <field name="name" string="QC Reference"/>
+                <field name="production_id"/>
+                <field name="project_id"/>
+                <field name="product_id"/>
+                <field name="inspector_id"/>
+                <separator/>
+                <filter string="Under Inspection" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
+                <filter string="Passed" name="filter_passed" domain="[('state', '=', 'passed')]"/>
+                <filter string="Site-Ready Certified" name="filter_dispatch_ready" domain="[('dispatch_ready', '=', True)]"/>
+                <filter string="Conditional Pass" name="filter_conditional" domain="[('state', '=', 'conditional')]"/>
+                <filter string="Failed / Rejected" name="filter_failed" domain="[('state', '=', 'failed')]"/>
+                <separator/>
+                <filter string="Has Failed Checkpoints" name="filter_has_failed_tests" domain="[('check_line_ids.result', '=', 'fail')]"/>
+                <filter string="Critical Defects" name="filter_critical" domain="[('defect_severity', '=', 'critical')]"/>
+                <filter string="Major Defects" name="filter_major" domain="[('defect_severity', '=', 'major')]"/>
+                <separator/>
+                <filter string="Re-Inspection Needed" name="filter_recheck" domain="[('recheck_required', '=', True)]"/>
+                <group>
+                    <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
+                    <filter string="Inspection Stage" name="group_stage" context="{'group_by': 'stage'}"/>
+                    <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
+                    <filter string="Manufacturing Order" name="group_production" context="{'group_by': 'production_id'}"/>
+                    <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>
+                    <filter string="Inspector" name="group_inspector" context="{'group_by': 'inspector_id'}"/>
+                    <filter string="Inspection Date" name="group_date" context="{'group_by': 'check_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Window for Furnishing Quality Checks -->
+    <record id="action_furnishing_quality_check" model="ir.actions.act_window">
+        <field name="name">Quality Checks</field>
+        <field name="res_model">furnishing.quality.check</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="search_view_id" ref="view_furnishing_quality_check_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Record your first Furnishing Quality Check!
+            </p>
+            <p>
+                Perform joinery inspections, verify dynamic checklists, inspect surface coatings, attach visual proof, and sign off site delivery clearance.
+            </p>
+        </field>
+    </record>
+
+</odoo>
