@@ -20,6 +20,7 @@
                        decoration-warning="stage == 'finishing'"
                        decoration-muted="stage == 'assembly'"
                        decoration-success="stage == 'pre_dispatch'"/>
+                <field name="template_id" optional="show"/>
                 <field name="inspector_id" widget="many2one_avatar_user"/>
                 <field name="failed_lines_count" string="Failed Tests" decoration-danger="failed_lines_count &gt; 0" optional="show"/>
                 <field name="defect_severity" widget="badge" optional="show"
@@ -30,7 +31,6 @@
                        decoration-muted="state == 'draft'"
                        decoration-info="state == 'in_progress'"
                        decoration-success="state == 'passed'"
-                       decoration-warning="state == 'conditional'"
                        decoration-danger="state == 'failed'"/>
             </list>
         </field>
@@ -98,19 +98,26 @@
                             invisible="state != 'draft'"/>
                     <button name="action_pass" string="Pass &amp; Release" type="object" class="btn-success"
                             invisible="state != 'in_progress'"/>
-                    <button name="action_conditional" string="Conditional Pass" type="object" class="btn-warning"
-                            invisible="state != 'in_progress'"/>
+                    <button name="action_start" string="Re-Inspect" type="object" class="btn-outline-secondary"
+                            invisible="state != 'failed'"/>
                     <button name="action_fail" string="Fail / Reject" type="object" class="btn-danger"
                             invisible="state != 'in_progress'"/>
-                    <button name="action_load_default_checks" string="Load Standard Checkpoints" type="object" class="btn-outline-primary"
-                            invisible="state not in ('draft', 'in_progress')"/>
                     <button name="action_reset_draft" string="Reset to Draft" type="object" class="btn-secondary"
                             invisible="state in ('draft', 'in_progress')"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,in_progress,passed,failed"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_stock_picking" type="object" class="oe_stat_button" icon="fa-truck"
+                                invisible="not stock_picking_id">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Stock Transfer</span>
+                            </div>
+                        </button>
+                    </div>
                     <widget name="web_ribbon" title="Site-Ready" bg_color="text-bg-success" invisible="not dispatch_ready"/>
                     <widget name="web_ribbon" title="Rejected" bg_color="text-bg-danger" invisible="state != 'failed'"/>
+                    <field name="stock_picking_id" invisible="1"/>
                     <div class="oe_title">
                         <label for="name" string="QC Reference"/>
                         <h1>
@@ -128,11 +135,13 @@
                                 <field name="uom_id" class="oe_inline text-muted"/>
                             </div>
                             <field name="stage"/>
+                            <field name="template_id" placeholder="Choose a QC Checklist Template..." readonly="state != 'draft'"/>
                         </group>
                         <group string="Inspection Details">
                             <field name="check_date"/>
                             <field name="inspector_id" widget="many2one_avatar_user"/>
                             <field name="supervisor_id" widget="many2one_avatar_user"/>
+                            <field name="installation_ids" widget="many2many_tags" placeholder="Link to installation(s)..."/>
                             <field name="dispatch_ready" invisible="1"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
@@ -142,17 +151,19 @@
                         <!-- Tab 1: Checklist & Dynamic Checkpoints -->
                         <page string="Inspection Checklist" name="checklist">
                             <field name="check_line_ids">
-                                <list editable="bottom">
-                                    <field name="sequence" widget="handle"/>
-                                    <field name="check_type_id" options="{'no_create_edit': False}"/>
+                                <list editable="bottom" create="state == 'draft'" delete="state == 'draft'">
+                                    <field name="sequence" widget="handle" readonly="parent.state != 'draft'"/>
+                                    <field name="check_type_id" readonly="parent.state != 'draft'" options="{'no_create_edit': True, 'no_open': True}"/>
                                     <field name="category" widget="badge"/>
                                     <field name="instructions" optional="show"/>
-                                    <field name="result" widget="badge"
+                                    <field name="result"
                                            decoration-info="result == 'pending'"
                                            decoration-success="result == 'pass'"
                                            decoration-danger="result == 'fail'"
                                            decoration-muted="result == 'na'"/>
                                     <field name="notes" placeholder="Measured value / notes..."/>
+                                    <button name="action_set_pass" string="Pass" type="object" icon="check" class="btn-link text-success" title="Mark as Passed" invisible="result == 'pass'"/>
+                                    <button name="action_set_fail" string="Fail" type="object" icon="close" class="btn-link text-danger" title="Mark as Failed" invisible="result == 'fail'"/>
                                 </list>
                             </field>
                         </page>
@@ -209,12 +220,12 @@
                 <field name="production_id"/>
                 <field name="project_id"/>
                 <field name="product_id"/>
+                <field name="template_id"/>
                 <field name="inspector_id"/>
                 <separator/>
                 <filter string="Under Inspection" name="filter_in_progress" domain="[('state', '=', 'in_progress')]"/>
                 <filter string="Passed" name="filter_passed" domain="[('state', '=', 'passed')]"/>
                 <filter string="Site-Ready Certified" name="filter_dispatch_ready" domain="[('dispatch_ready', '=', True)]"/>
-                <filter string="Conditional Pass" name="filter_conditional" domain="[('state', '=', 'conditional')]"/>
                 <filter string="Failed / Rejected" name="filter_failed" domain="[('state', '=', 'failed')]"/>
                 <separator/>
                 <filter string="Has Failed Checkpoints" name="filter_has_failed_tests" domain="[('check_line_ids.result', '=', 'fail')]"/>
@@ -225,6 +236,7 @@
                 <group>
                     <filter string="Status" name="group_state" context="{'group_by': 'state'}"/>
                     <filter string="Inspection Stage" name="group_stage" context="{'group_by': 'stage'}"/>
+                    <filter string="Template" name="group_template" context="{'group_by': 'template_id'}"/>
                     <filter string="Project" name="group_project" context="{'group_by': 'project_id'}"/>
                     <filter string="Manufacturing Order" name="group_production" context="{'group_by': 'production_id'}"/>
                     <filter string="Product" name="group_product" context="{'group_by': 'product_id'}"/>

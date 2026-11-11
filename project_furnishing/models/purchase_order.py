@@ -5,10 +5,9 @@ from odoo import models, fields
 class PurchaseOrder(models.Model):
     _inherit = 'purchase.order'
 
-    project_id = fields.Many2one(
-        'project.project',
-        string='Project',
-        domain=[('is_template', '=', False)],
-        tracking=True,
+    is_furnishing_project = fields.Boolean(
+        string='Furnishing Project',
+        related='project_id.is_furnishing_project',
+        store=True,
         index=True
     )

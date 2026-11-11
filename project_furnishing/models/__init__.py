@@ -8,7 +8,12 @@ from . import project_service_request
 from . import project_project
 from . import res_config_settings
 from . import furnishing_quality_check_type
+from . import furnishing_quality_check_template
 from . import furnishing_quality_check
 from . import mrp_production
 from . import project_task
 from . import purchase_order
+from . import sale_order
+from . import account_move
+from . import res_company
+from . import stock_picking

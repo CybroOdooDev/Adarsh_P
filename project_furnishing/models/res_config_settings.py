@@ -19,3 +19,15 @@ class ResConfigSettings(models.TransientModel):
         implied_group="project_furnishing.group_furnishing_manufacturing",
         help="Enable the Production menu (Manufacturing Orders, BOM, Quality Checks) in Furnishing Projects."
     )
+    furnishing_default_warranty_months = fields.Integer(
+        related='company_id.furnishing_default_warranty_months',
+        readonly=False,
+        string='Default Warranty Duration (Months)',
+        help='Default Defects Liability Period (DLP) / warranty duration in months for new furnishing projects.'
+    )
+    furnishing_qc_location_id = fields.Many2one(
+        related='company_id.furnishing_qc_location_id',
+        readonly=False,
+        string='Quality Inspection Location',
+        help='Finished furniture will land in this quarantine location upon MO completion, and auto-transfer to main stock when QC passes.'
+    )

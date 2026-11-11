@@ -12,6 +12,7 @@
                 <field name="partner_id"/>
                 <field name="team_id"/>
                 <field name="installer_id" widget="many2one_avatar_user"/>
+                <field name="member_ids" widget="many2many_tags" optional="show"/>
                 <field name="start_date"/>
                 <field name="completion_date"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
@@ -60,6 +61,7 @@
                         <group string="Team &amp; Schedule">
                             <field name="team_id" options="{'no_create_edit': False}"/>
                             <field name="installer_id" widget="many2one_avatar_user"/>
+                            <field name="member_ids" widget="many2many_avatar_user" placeholder="Select crew members..."/>
                             <field name="start_date"/>
                             <field name="completion_date"/>
                         </group>
@@ -73,9 +75,17 @@
                             <field name="line_ids">
                                 <list editable="bottom">
                                     <field name="sequence" widget="handle"/>
+                                    <field name="measurement_id" column_invisible="1"/>
+                                    <field name="room"/>
                                     <field name="name" placeholder="e.g. Master Bedroom Wardrobe"/>
-                                    <field name="description" placeholder="Description / details..."/>
+                                    <field name="description" placeholder="Description / details..." optional="hide"/>
                                     <field name="type_id" options="{'no_create_edit': False}"/>
+                                    <field name="length" optional="show"/>
+                                    <field name="width" optional="show"/>
+                                    <field name="height" optional="show"/>
+                                    <field name="pieces" optional="show"/>
+                                    <field name="quantity"/>
+                                    <field name="quantity_unit"/>
                                     <field name="is_completed" widget="boolean_toggle"/>
                                 </list>
                             </field>
@@ -87,6 +97,23 @@
                                     <field name="name" placeholder="e.g. Paint scratch on door, Loose cabinet handle..."/>
                                     <field name="description" placeholder="Description of the defect or snag..."/>
                                     <field name="is_fixed" widget="boolean_toggle"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Pieces for Installation (QC)" name="quality_checks">
+                            <button name="action_load_project_qc_checks" string="Load All Project Pieces" type="object"
+                                    class="btn-outline-primary mb-2" invisible="state in ('completed', 'cancelled')"/>
+                            <field name="quality_check_ids" domain="[('project_id', '=', project_id)]">
+                                <list string="Pieces for Installation">
+                                    <field name="name"/>
+                                    <field name="product_id"/>
+                                    <field name="product_qty" string="Qty"/>
+                                    <field name="stage"/>
+                                    <field name="state" widget="badge"
+                                           decoration-info="state == 'in_progress'"
+                                           decoration-success="state == 'passed'"
+                                           decoration-danger="state == 'failed'"/>
+                                    <field name="dispatch_ready" widget="badge" decoration-success="dispatch_ready"/>
                                 </list>
                             </field>
                         </page>

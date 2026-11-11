@@ -23,3 +23,7 @@ access_furnishing_quality_check_type_user,furnishing.quality.check.type.user,fur
 access_furnishing_quality_check_type_manager,furnishing.quality.check.type.manager,furnishing.quality.check.type,project.group_project_manager,crud,
 access_furnishing_quality_check_line_user,furnishing.quality.check.line.user,furnishing.quality.check.line,base.group_user,crud,
 access_furnishing_quality_check_line_manager,furnishing.quality.check.line.manager,furnishing.quality.check.line,project.group_project_manager,crud,
+access_furnishing_quality_check_template_user,furnishing.quality.check.template.user,furnishing.quality.check.template,base.group_user,r,
+access_furnishing_quality_check_template_manager,furnishing.quality.check.template.manager,furnishing.quality.check.template,project.group_project_manager,crud,
+access_furnishing_quality_check_template_line_user,furnishing.quality.check.template.line.user,furnishing.quality.check.template.line,base.group_user,r,
+access_furnishing_quality_check_template_line_manager,furnishing.quality.check.template.line.manager,furnishing.quality.check.template.line,project.group_project_manager,crud,

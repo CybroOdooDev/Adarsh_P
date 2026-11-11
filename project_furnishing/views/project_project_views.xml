@@ -31,6 +31,7 @@
                 <field name="site_address"/>
                 <field name="property_type_id"/>
                 <field name="purchase_orders_count"/>
+                <field name="quality_check_count"/>
                 <templates>
                     <t t-name="menu" groups="base.group_user">
                         <div class="container">
@@ -159,6 +160,11 @@
                                     <span class="oi oi-fw me-1 text-danger" data-icon="support_agent"/>
                                     <span class="fw-bold text-dark me-1"><field name="service_request_count"/></span>Services
                                 </a>
+                                <a class="d-inline-flex align-items-center text-decoration-none text-muted"
+                                   name="action_view_quality_checks" type="object" t-if="record.quality_check_count.raw_value &gt; 0" title="View Quality Checks">
+                                    <span class="oi oi-fw me-1 text-success" data-icon="check"/>
+                                    <span class="fw-bold text-dark me-1"><field name="quality_check_count"/></span>QC
+                                </a>
                             </div>
                         </main>
 
@@ -211,192 +217,127 @@
         </field>
     </record>
 
-    <!-- Form View -->
+    <!-- Form View Extension -->
     <record id="view_project_furnishing_project_form" model="ir.ui.view">
         <field name="name">project.project.furnishing.form</field>
         <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
         <field name="priority">20</field>
         <field name="arch" type="xml">
-            <form string="Furnishing Project">
-                <header>
-                    <button name="action_create_quotation" string="Create Quotation" type="object" class="btn-secondary"
-                            invisible="state in ('to_do', 'cancelled')" groups="sales_team.group_sale_salesman"/>
-                    <button name="action_create_task" string="Create Task" type="object" class="btn-secondary"
-                            invisible="state in ('completed', 'cancelled')"/>
-                    <button name="action_create_survey" string="Create Survey" type="object" class="oe_highlight"
-                            invisible="state not in ('to_do', 'survey')"/>
-                    <button name="action_proceed_to_design" string="Proceed to Design" type="object" class="oe_highlight"
-                            invisible="state != 'survey'"/>
-                    <button name="action_approve" string="Approve" type="object" class="oe_highlight"
-                            invisible="state != 'design'"/>
-                    <button name="action_create_installation" string="Create Installation" type="object" class="oe_highlight"
-                            invisible="state not in ('approved', 'installation')"/>
-                    <button name="action_complete" string="Complete Project" type="object" class="oe_highlight"
-                            invisible="state != 'installation'"/>
-                    <button name="action_cancel" string="Cancel Project" type="object"
-                            invisible="state in ('completed', 'cancelled')"/>
-                    <button name="action_reset_to_do" string="Reset to To Do" type="object"
-                            invisible="state not in ('cancelled', 'completed')"/>
-                    <field name="state" widget="statusbar" statusbar_visible="to_do,survey,design,approved,installation,completed"/>
-                </header>
-                <sheet>
-                    <div class="oe_button_box" name="button_box">
-                        <button class="oe_stat_button" type="object" name="action_view_tasks" icon="check"
-                                invisible="task_count == 0">
-                            <field string="Tasks" name="task_count" widget="statinfo"/>
-                        </button>
-                        <button class="oe_stat_button" type="object" name="action_view_sale_orders" icon="shopping_cart"
-                                invisible="sale_order_count == 0" groups="sales_team.group_sale_salesman">
-                            <field string="Sales Orders" name="sale_order_count" widget="statinfo"/>
-                        </button>
-                        <button class="oe_stat_button" type="object" name="action_open_project_purchase_orders" icon="credit_card"
-                                invisible="purchase_orders_count == 0" groups="purchase.group_purchase_user">
-                            <field string="Purchase Orders" name="purchase_orders_count" widget="statinfo"/>
-                        </button>
-                        <button class="oe_stat_button" type="object" name="action_view_site_surveys" icon="design_services"
-                                invisible="survey_count == 0">
-                            <field string="Site Surveys" name="survey_count" widget="statinfo"/>
-                        </button>
-                        <button class="oe_stat_button" type="object" name="action_view_installations" icon="build"
-                                invisible="installation_count == 0">
-                            <field string="Installations" name="installation_count" widget="statinfo"/>
-                        </button>
-                        <button class="oe_stat_button" type="object" name="action_view_service_requests" icon="support_agent"
-                                invisible="service_request_count == 0">
-                            <field string="Service Requests" name="service_request_count" widget="statinfo"/>
-                        </button>
-                    </div>
-                    <div class="oe_title">
-                        <label for="name" string="Project Name"/>
-                        <h1>
-                            <field name="name" placeholder="e.g. Luxury Villa Interior &amp; Fit-Out"/>
-                        </h1>
-                    </div>
+            <xpath expr="//field[@name='stage_id']" position="attributes">
+                <attribute name="invisible">is_furnishing_project</attribute>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <field name="is_furnishing_project" invisible="1"/>
+                <button name="action_create_quotation" string="Create Quotation" type="object" class="btn-secondary"
+                        invisible="not is_furnishing_project or state in ('to_do', 'completed', 'cancelled')" groups="sales_team.group_sale_salesman"/>
+                <button name="action_create_task" string="Create Task" type="object" class="btn-secondary"
+                        invisible="not is_furnishing_project or state in ('completed', 'cancelled')"/>
+                <button name="action_create_survey" string="Create Survey" type="object" class="oe_highlight"
+                        invisible="not is_furnishing_project or state not in ('to_do', 'survey')"/>
+                <button name="action_proceed_to_design" string="Proceed to Design" type="object" class="oe_highlight"
+                        invisible="not is_furnishing_project or state != 'survey'"/>
+                <button name="action_approve" string="Approve" type="object" class="oe_highlight"
+                        invisible="not is_furnishing_project or state != 'design'"/>
+                <button name="action_create_installation" string="Create Installation" type="object" class="oe_highlight"
+                        invisible="not is_furnishing_project or state not in ('approved', 'installation')"/>
+                <button name="action_complete" string="Complete Project" type="object" class="oe_highlight"
+                        invisible="not is_furnishing_project or state != 'installation'"/>
+                <button name="action_print_handover_certificate" string="Handover Certificate" type="object"
+                        invisible="not is_furnishing_project or state != 'completed'"/>
+                <button name="action_cancel" string="Cancel Project" type="object"
+                        invisible="not is_furnishing_project or state in ('completed', 'cancelled')"/>
+                <field name="state" widget="statusbar" statusbar_visible="to_do,survey,design,approved,installation,completed"
+                       invisible="not is_furnishing_project"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button class="oe_stat_button" type="object" name="action_view_sale_orders" icon="shopping_cart"
+                        invisible="not is_furnishing_project or sale_order_count == 0" groups="sales_team.group_sale_salesman">
+                    <field string="Sales Orders" name="sale_order_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_open_project_purchase_orders" icon="credit_card"
+                        invisible="not is_furnishing_project or purchase_orders_count == 0" groups="purchase.group_purchase_user">
+                    <field string="Purchase Orders" name="purchase_orders_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_site_surveys" icon="design_services"
+                        invisible="not is_furnishing_project or survey_count == 0">
+                    <field string="Site Surveys" name="survey_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_installations" icon="build"
+                        invisible="not is_furnishing_project or installation_count == 0">
+                    <field string="Installations" name="installation_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_service_requests" icon="support_agent"
+                        invisible="not is_furnishing_project or service_request_count == 0">
+                    <field string="Service Requests" name="service_request_count" widget="statinfo"/>
+                </button>
+                <button class="oe_stat_button" type="object" name="action_view_quality_checks" icon="check"
+                        invisible="not is_furnishing_project or quality_check_count == 0">
+                    <field string="Quality Checks" name="quality_check_count" widget="statinfo"/>
+                </button>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="context">{'res_partner_search_mode': 'customer', 'show_address': not is_furnishing_project}</attribute>
+            </xpath>
+            <xpath expr="//field[@name='partner_id']/parent::div" position="after">
+                <field name="site_address" placeholder="Site / Delivery Address (auto-populated from customer)..."
+                       invisible="not is_furnishing_project"/>
+                <field name="property_type_id" options="{'no_create_edit': False}"
+                       invisible="not is_furnishing_project"/>
+            </xpath>
+            <xpath expr="//field[@name='date_start']" position="after">
+                <field name="priority" widget="priority" invisible="not is_furnishing_project"/>
+                <field name="scheduled_date" invisible="not is_furnishing_project"/>
+                <field name="completion_date" invisible="not is_furnishing_project"/>
+            </xpath>
+            <xpath expr="//page[@name='settings']" position="before">
+                <page string="Budget &amp; Financials" name="budget_tab" invisible="not is_furnishing_project">
                     <group>
-                        <group string="Customer &amp; Site Details">
-                            <field name="partner_id" string="Customer" required="1"/>
-                            <field name="site_address" placeholder="Site / Delivery Address (auto-populated from customer)..."/>
-                            <field name="property_type_id" options="{'no_create_edit': False}"/>
+                        <group string="Budget &amp; Revenue">
+                            <field name="estimated_budget" widget="monetary"/>
+                            <field name="total_quoted_amount" widget="monetary" readonly="1"/>
                         </group>
-                        <group string="Schedule &amp; Planning">
-                            <field name="priority" widget="priority"/>
-                            <field name="scheduled_date"/>
-                            <field name="completion_date"/>
-                            <field name="user_id" string="Project Manager" widget="many2one_avatar_user"/>
-                            <field name="currency_id" invisible="1"/>
-                            <field name="active" invisible="1"/>
-                            <field name="is_furnishing_project" invisible="1"/>
-                            <field name="is_template" invisible="1"/>
+                        <group string="Cost &amp; Profit">
+                            <field name="total_cost_amount" widget="monetary" readonly="1"/>
+                            <field name="profit_margin" widget="monetary"/>
                         </group>
                     </group>
-                    <notebook>
-                        <page string="Budget &amp; Financials" name="budget_tab">
-                            <group>
-                                <group string="Budget &amp; Revenue">
-                                    <field name="estimated_budget" widget="monetary"/>
-                                    <field name="total_quoted_amount" widget="monetary" readonly="1"/>
-                                </group>
-                                <group string="Cost &amp; Profit">
-                                    <field name="total_cost_amount" widget="monetary" readonly="1"/>
-                                    <field name="profit_margin" widget="monetary"/>
-                                </group>
-                            </group>
-                        </page>
-                        <page string="Warranty &amp; Retention (DLP)" name="warranty_tab">
-                            <group>
-                                <group string="Warranty &amp; DLP Status">
-                                    <field name="has_warranty" widget="boolean_toggle"/>
-                                    <field name="warranty_start_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
-                                    <field name="warranty_end_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
-                                </group>
-                                <group string="Retention Money" invisible="not has_warranty">
-                                    <field name="retention_amount" widget="monetary"/>
-                                    <field name="retention_release_date"/>
-                                </group>
-                            </group>
-                            <group string="Warranty Coverage &amp; Terms" invisible="not has_warranty">
-                                <field name="warranty_notes" nolabel="1" placeholder="Specify warranty terms, DLP period terms, and coverage details..."/>
-                            </group>
-                        </page>
-                        <page name="settings" string="Settings">
-                            <group>
-                                <group>
-                                    <field name="alias_id" invisible="1"/>
-                                    <field name="label_tasks" string="Name of Tasks" placeholder="e.g. Tasks"/>
-                                    <label for="alias_name" string="Project's Email" invisible="is_template"/>
-                                    <field name="alias_email" widget="email" readonly="1" nolabel="1" groups="!project.group_project_manager" invisible="is_template"/>
-                                    <div class="row" groups="project.group_project_manager" invisible="is_template">
-                                        <div class="d-flex col-10 gap-1">
-                                            <field name="alias_name" placeholder="alias" class="o_field_highlight"/>@
-                                            <field name="alias_domain_id" class="o_field_highlight" placeholder="e.g. mycompany.com"
-                                                options="{'no_create': True, 'no_open': True}"/>
-                                        </div>
-                                        <div class="col-2 p-0" invisible="not alias_email">
-                                            <field name="alias_email" widget="CopyClipboardButton"
-                                                class="copy_alias_email" options="{'btn_class': 'link'}" string=""/>
-                                        </div>
-                                    </div>
-                                    <field name="alias_contact" class="oe_inline" string="Accept Emails From"
-                                           invisible="not alias_email"/>
-                                    <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}" placeholder="Visible to all"/>
-                                </group>
-                                <div class="o_col">
-                                    <group name="other_section">
-                                    </group>
-                                    <group name="analytic" groups="analytic.group_analytic_accounting">
-                                        <div class="o_flexible_margin_top o_horizontal_separator text-uppercase fw-bolder small mb-3" colspan="2">analytic</div>
-                                        <field name="account_id"/>
-                                    </group>
-                                </div>
-                            </group>
-                            <group>
-                                <group name="visibility" string="Visibility">
-                                    <field name="privacy_visibility" widget="radio"/>
-                                    <div colspan="2" 
-                                        class="d-flex align-items-start mt-2" 
-                                        invisible="privacy_visibility not in ['followers', 'invited_users']">
-                                        <label for="allowed_internal_user_ids" 
-                                            class="o_form_label text-900 text-nowrap w-25 mb-0 fw-bold" 
-                                            string="Team Members"/>
-                                        <field name="allowed_internal_user_ids"
-                                            widget="many2many_avatar_user"
-                                            placeholder="Select who can access"
-                                            options="{'no_create': True}"
-                                            nolabel="1"
-                                            class="w-75"/>
-                                    </div>
-                                    <button name="%(project.project_share_wizard_action)d"
-                                            type="action"
-                                            string="Invite Portal Users"
-                                            class="btn btn-link p-0 mt-2"
-                                            colspan="2"
-                                            icon="east"
-                                            invisible="privacy_visibility not in ['portal', 'invited_users']"/>
-                                    <div colspan="2" class="text-muted mt-2" invisible="access_instruction_message == ''">
-                                        <i class="oi pe-2" data-icon="lightbulb" title="Info"/>
-                                        <field class="d-inline" name="access_instruction_message" nolabel="1"/>
-                                    </div>
-                                </group>
-                                <group name="group_tasks_managment" string="Tasks Management" class="row o_settings_container my-0">
-                                    <setting class="col-lg-12" id="recurring_tasks_setting" help="Auto-generate tasks for regular activities">
-                                        <field name="allow_recurring_tasks"/>
-                                    </setting>
-                                    <setting class="col-lg-12" id="task_dependencies_setting" help="Determine the order in which to perform tasks">
-                                        <field name="allow_task_dependencies"/>
-                                    </setting>
-                                    <setting class="col-lg-12" id="project_milestone_setting" help="Track major progress points that must be reached to achieve success">
-                                        <field name="allow_milestones"/>
-                                    </setting>
-                                </group>
-                            </group>
-                            <group>
-                                <group name="group_time_managment" string="Time Management" class="row o_settings_container my-0" invisible="1"/>
-                            </group>
-                        </page>
-                    </notebook>
-                </sheet>
-                <chatter/>
-            </form>
+                </page>
+                <page string="Warranty &amp; Retention (DLP)" name="warranty_tab" invisible="not is_furnishing_project">
+                    <group>
+                        <group string="Warranty &amp; DLP Status">
+                            <field name="has_warranty" widget="boolean_toggle"/>
+                            <field name="warranty_months" invisible="not has_warranty"/>
+                            <field name="warranty_start_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
+                            <field name="warranty_end_date" invisible="not has_warranty" required="has_warranty and state == 'completed'"/>
+                        </group>
+                        <group string="Retention Money" invisible="not has_warranty">
+                            <field name="retention_amount" widget="monetary"/>
+                            <field name="retention_release_date"/>
+                        </group>
+                    </group>
+                    <group string="Warranty Coverage &amp; Terms" invisible="not has_warranty">
+                        <field name="warranty_notes" nolabel="1" placeholder="Specify warranty terms, DLP period terms, and coverage details..."/>
+                    </group>
+                </page>
+                <page string="Handover" name="handover_tab" invisible="not is_furnishing_project or state not in ('installation', 'completed')">
+                    <group>
+                        <group string="Client Acceptance">
+                            <field name="handover_date" readonly="state == 'completed'"/>
+                            <field name="handover_accepted_by" readonly="state == 'completed'"/>
+                            <field name="handover_signature" widget="signature" readonly="state == 'completed'"/>
+                        </group>
+                        <group string="Readiness">
+                            <field name="surveyed_item_count"/>
+                            <field name="installed_item_count"/>
+                            <field name="handover_blockers_text" nolabel="1" colspan="2"
+                                   invisible="not handover_blockers_text" class="text-danger"/>
+                        </group>
+                    </group>
+                    <field name="handover_notes" readonly="state == 'completed'"
+                           placeholder="Client comments, minor snags accepted, spare materials handed over..."/>
+                </page>
+            </xpath>
         </field>
     </record>
 
@@ -472,7 +413,7 @@
     <record id="action_project_furnishing_project_form_view" model="ir.actions.act_window.view">
         <field name="sequence" eval="30"/>
         <field name="view_mode">form</field>
-        <field name="view_id" ref="view_project_furnishing_project_form"/>
+        <field name="view_id" ref="project.edit_project"/>
         <field name="act_window_id" ref="action_project_furnishing_projects"/>
     </record>
 

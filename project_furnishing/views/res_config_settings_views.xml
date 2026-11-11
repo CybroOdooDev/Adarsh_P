@@ -33,6 +33,27 @@
                                 Enable Production menu (Manufacturing Orders, BOM, Quality Checks) in Furnishing Projects
                             </div>
                         </setting>
+                        <setting id="furnishing_qc_location_setting" help="Quarantine holding location for finished goods pending Quality Check">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="furnishing_qc_location_id" string="Quality Inspection Location" class="col-lg-5 o_light_label"/>
+                                    <field name="furnishing_qc_location_id" class="col-lg-5"/>
+                                </div>
+                                <div class="text-muted small mt-1">
+                                    Finished pieces land here on MO completion and are automatically transferred to main stock when QC passes.
+                                </div>
+                            </div>
+                        </setting>
+                    </block>
+                    <block title="Warranty &amp; Defects Liability Period (DLP)" name="furnishing_warranty_block">
+                        <setting id="furnishing_warranty_setting" help="Set company-wide default warranty duration for completed furnishing projects">
+                            <div class="content-group">
+                                <div class="row mt16">
+                                    <label for="furnishing_default_warranty_months" string="Default Warranty Duration (Months)" class="col-lg-5 o_light_label"/>
+                                    <field name="furnishing_default_warranty_months" class="col-lg-3"/>
+                                </div>
+                            </div>
+                        </setting>
                     </block>
                 </app>
             </xpath>
