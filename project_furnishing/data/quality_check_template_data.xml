@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- 1. Standard Pre-Dispatch QC Template -->
+    <record id="qc_template_pre_dispatch_standard" model="furnishing.quality.check.template">
+        <field name="name">Standard Pre-Dispatch Factory Sign-Off</field>
+        <field name="stage">pre_dispatch</field>
+        <field name="sequence">10</field>
+        <field name="description">Standard comprehensive inspection checklist for completed joinery and furniture units prior to dispatch to client site.</field>
+        <field name="line_ids" eval="[
+            (0, 0, {'sequence': 10, 'check_type_id': ref('qc_type_dimensions')}),
+            (0, 0, {'sequence': 20, 'check_type_id': ref('qc_type_surface_finish')}),
+            (0, 0, {'sequence': 30, 'check_type_id': ref('qc_type_edge_banding')}),
+            (0, 0, {'sequence': 40, 'check_type_id': ref('qc_type_stability_wobble')}),
+            (0, 0, {'sequence': 50, 'check_type_id': ref('qc_type_door_drawer_reveals')}),
+            (0, 0, {'sequence': 60, 'check_type_id': ref('qc_type_hardware_movement')}),
+            (0, 0, {'sequence': 70, 'check_type_id': ref('qc_type_mixed_materials')}),
+            (0, 0, {'sequence': 80, 'check_type_id': ref('qc_type_packaging_protection')}),
+        ]"/>
+    </record>
+
+    <!-- 2. In-Process Joinery & Carcass QC Template -->
+    <record id="qc_template_in_process_joinery" model="furnishing.quality.check.template">
+        <field name="name">In-Process Joinery, Carcass &amp; Framework QC</field>
+        <field name="stage">in_process</field>
+        <field name="sequence">20</field>
+        <field name="description">Checklist for carcass dry-fit, core moisture, and framework assembly before coating or final laminations.</field>
+        <field name="line_ids" eval="[
+            (0, 0, {'sequence': 10, 'check_type_id': ref('qc_type_dimensions')}),
+            (0, 0, {'sequence': 20, 'check_type_id': ref('qc_type_moisture')}),
+            (0, 0, {'sequence': 30, 'check_type_id': ref('qc_type_stability_wobble')}),
+            (0, 0, {'sequence': 40, 'check_type_id': ref('qc_type_door_drawer_reveals')}),
+        ]"/>
+    </record>
+
+</odoo>

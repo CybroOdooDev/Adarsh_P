@@ -51,78 +51,91 @@
     <menuitem id="menu_project_furnishing_sales_menu"
               name="Sales"
               parent="menu_project_furnishing_root"
+              groups="sales_team.group_sale_salesman"
               sequence="20"/>
 
     <menuitem id="menu_project_furnishing_quotations"
               name="Quotations"
               parent="menu_project_furnishing_sales_menu"
-              action="sale.action_quotations_with_onboarding"
+              action="action_project_furnishing_quotations"
+              groups="sales_team.group_sale_salesman"
               sequence="5"/>
 
     <menuitem id="menu_project_furnishing_sale_orders"
               name="Sale Orders"
               parent="menu_project_furnishing_sales_menu"
-              action="sale.action_orders"
+              action="action_project_furnishing_sale_orders"
+              groups="sales_team.group_sale_salesman"
               sequence="10"/>
 
     <menuitem id="menu_project_furnishing_customers"
               name="Customers"
               parent="menu_project_furnishing_sales_menu"
               action="account.res_partner_action_customer"
+              groups="sales_team.group_sale_salesman"
               sequence="20"/>
 
     <!-- ==================== 3. PURCHASES ==================== -->
     <menuitem id="menu_project_furnishing_purchases_menu"
               name="Purchases"
               parent="menu_project_furnishing_root"
+              groups="purchase.group_purchase_user"
               sequence="30"/>
 
     <menuitem id="menu_project_furnishing_purchase_orders"
               name="Purchase Orders"
               parent="menu_project_furnishing_purchases_menu"
-              action="purchase.purchase_form_action"
+              action="action_project_furnishing_purchase_orders"
+              groups="purchase.group_purchase_user"
               sequence="10"/>
 
     <menuitem id="menu_project_furnishing_vendors"
               name="Vendors"
               parent="menu_project_furnishing_purchases_menu"
               action="account.res_partner_action_supplier"
+              groups="purchase.group_purchase_user"
               sequence="20"/>
 
     <!-- ==================== FINANCE ==================== -->
     <menuitem id="menu_project_furnishing_finance_menu"
               name="Finance"
               parent="menu_project_furnishing_root"
+              groups="account.group_account_invoice"
               sequence="34"/>
 
     <menuitem id="menu_project_furnishing_invoices"
               name="Invoices"
               parent="menu_project_furnishing_finance_menu"
-              action="account.action_move_out_invoice"
+              action="action_project_furnishing_invoices"
+              groups="account.group_account_invoice"
               sequence="10"/>
 
     <menuitem id="menu_project_furnishing_bills"
               name="Bills"
               parent="menu_project_furnishing_finance_menu"
-              action="account.action_move_in_invoice"
+              action="action_project_furnishing_bills"
+              groups="account.group_account_invoice"
               sequence="20"/>
 
     <menuitem id="menu_project_furnishing_payments"
               name="Payments"
               parent="menu_project_furnishing_finance_menu"
-              action="account.action_account_all_payments"
+              action="action_project_furnishing_payments"
+              groups="account.group_account_invoice"
               sequence="30"/>
 
     <!-- ==================== 4. PRODUCTS ==================== -->
     <menuitem id="menu_project_furnishing_products_menu"
               name="Products"
               parent="menu_project_furnishing_root"
+              groups="sales_team.group_sale_salesman,purchase.group_purchase_user"
               sequence="35"/>
 
     <menuitem id="menu_project_furnishing_products"
               name="Products"
               parent="menu_project_furnishing_products_menu"
               action="sale.product_template_action"
+              groups="sales_team.group_sale_salesman,purchase.group_purchase_user"
               sequence="10"/>
 
     <menuitem id="menu_project_furnishing_pricelists"
@@ -205,6 +218,13 @@
               action="action_furnishing_quality_check_type"
               groups="project.group_project_manager"
               sequence="25"/>
+
+    <menuitem id="menu_project_furnishing_config_quality_check_templates"
+              name="QC Checklist Templates"
+              parent="menu_project_furnishing_config"
+              action="action_furnishing_quality_check_template"
+              groups="project.group_project_manager"
+              sequence="26"/>
 
     <menuitem id="menu_project_furnishing_config_installation_teams"
               name="Installation Teams"

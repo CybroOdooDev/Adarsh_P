@@ -37,7 +37,7 @@ class ProjectPropertyType(models.Model):
             'views': [
                 (self.env.ref('project_furnishing.view_project_furnishing_project_kanban').id, 'kanban'),
                 (self.env.ref('project_furnishing.view_project_furnishing_project_list').id, 'list'),
-                (self.env.ref('project_furnishing.view_project_furnishing_project_form').id, 'form'),
+                (self.env.ref('project.edit_project').id, 'form'),
             ],
             'search_view_id': [self.env.ref('project_furnishing.view_project_furnishing_project_search').id, 'search'],
             'domain': [('property_type_id', '=', self.id)],

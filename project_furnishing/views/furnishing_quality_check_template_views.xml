@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- QC Checklist Template List View -->
+    <record id="view_furnishing_quality_check_template_list" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.template.list</field>
+        <field name="model">furnishing.quality.check.template</field>
+        <field name="arch" type="xml">
+            <list string="QC Checklist Templates">
+                <field name="sequence" widget="handle"/>
+                <field name="name" class="fw-bold"/>
+                <field name="stage" widget="badge"
+                       decoration-info="stage == 'raw_material'"
+                       decoration-primary="stage == 'in_process'"
+                       decoration-warning="stage == 'finishing'"
+                       decoration-muted="stage == 'assembly'"
+                       decoration-success="stage == 'pre_dispatch'"/>
+                <field name="checkpoint_count" string="Checkpoints"/>
+                <field name="company_id" groups="base.group_multi_company"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- QC Checklist Template Form View -->
+    <record id="view_furnishing_quality_check_template_form" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.template.form</field>
+        <field name="model">furnishing.quality.check.template</field>
+        <field name="arch" type="xml">
+            <form string="QC Checklist Template">
+                <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger" invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Template Name"/>
+                        <h1>
+                            <field name="name" placeholder="e.g. Standard Joinery Pre-Dispatch QC..."/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="stage"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group>
+                            <field name="active" invisible="1"/>
+                            <field name="description" placeholder="Guidelines or notes for when to use this template..."/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Checklist Checkpoints" name="checkpoints">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="check_type_id" options="{'no_create_edit': False}"/>
+                                    <field name="category" widget="badge"/>
+                                    <field name="instructions"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- QC Checklist Template Search View -->
+    <record id="view_furnishing_quality_check_template_search" model="ir.ui.view">
+        <field name="name">furnishing.quality.check.template.search</field>
+        <field name="model">furnishing.quality.check.template</field>
+        <field name="arch" type="xml">
+            <search string="Search Templates">
+                <field name="name" string="Template Name"/>
+                <field name="stage"/>
+                <separator/>
+                <filter string="Archived" name="filter_archived" domain="[('active', '=', False)]"/>
+                <group>
+                    <filter string="Stage" name="group_stage" context="{'group_by': 'stage'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- Action Window for QC Checklist Templates -->
+    <record id="action_furnishing_quality_check_template" model="ir.actions.act_window">
+        <field name="name">QC Checklist Templates</field>
+        <field name="res_model">furnishing.quality.check.template</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_furnishing_quality_check_template_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first QC Checklist Template
+            </p>
+            <p>
+                Pre-define standardized checklists of inspection checkpoints for various furniture categories, materials, and production stages.
+            </p>
+        </field>
+    </record>
+
+</odoo>

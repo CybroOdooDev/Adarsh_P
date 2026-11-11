@@ -134,6 +134,13 @@ class ProjectSiteSurvey(models.Model):
                 raise UserError(_("Cannot complete survey '%s' because it is %s.") % (rec.name, rec.state))
             if not rec.measurement_ids:
                 raise ValidationError(_("Cannot complete survey '%s' without measurements. Please add at least one measurement line before completing.", rec.name))
+            empty = rec.measurement_ids.filtered(lambda m: not m.not_required and m.quantity <= 0)
+            if empty:
+                raise ValidationError(_(
+                    "Cannot complete survey '%(survey)s' because these items have no quantity (check their dimensions and count): %(items)s",
+                    survey=rec.name,
+                    items=", ".join(empty.mapped('name')),
+                ))
             rec.state = 'completed'
             # Advance linked project state to 'design' only if all active surveys for this project are completed
             if rec.project_id and rec.project_id.state in ('to_do', 'survey'):
@@ -168,6 +175,7 @@ class ProjectSiteMeasurement(models.Model):
         ondelete='cascade'
     )
     sequence = fields.Integer(string='Sequence', default=10)
+    room = fields.Char(string='Room / Area', index=True, help='e.g. Living Room, Master Bedroom, Reception.')
     name = fields.Char(string='Name', required=True)
     description = fields.Text(string='Description')
     type_id = fields.Many2one(
@@ -175,7 +183,52 @@ class ProjectSiteMeasurement(models.Model):
         string='Type',
         required=True
     )
-    length = fields.Float(string='Length', digits=(16, 2))
-    width = fields.Float(string='Width', digits=(16, 2))
-    height = fields.Float(string='Height', digits=(16, 2))
+    measure_by = fields.Selection(related='type_id.measure_by', string='Measured By', readonly=True)
+    length = fields.Float(string='Length (m)', digits=(16, 2))
+    width = fields.Float(string='Width (m)', digits=(16, 2))
+    height = fields.Float(string='Height (m)', digits=(16, 2))
     count = fields.Integer(string='Count', default=1)
+    quantity = fields.Float(
+        string='Quantity',
+        compute='_compute_quantity',
+        store=True,
+        digits=(16, 2),
+        help='Calculated from the dimensions according to the measurement type, multiplied by the count.'
+    )
+    quantity_unit = fields.Char(related='type_id.quantity_unit', string='Unit', readonly=True)
+    not_required = fields.Boolean(
+        string='Not Required',
+        copy=False,
+        help='Item will not be installed (client cancelled, descoped, etc.).'
+    )
+    not_required_reason = fields.Char(string='Reason', copy=False)
+
+    @api.constrains('not_required', 'not_required_reason')
+    def _check_not_required_reason(self):
+        for rec in self:
+            if rec.not_required and not rec.not_required_reason:
+                raise ValidationError(_("Please give a reason for excluding '%s'.") % rec.name)
+
+    @api.depends('type_id.measure_by', 'length', 'width', 'height', 'count')
+    def _compute_quantity(self):
+        for rec in self:
+            by = rec.type_id.measure_by
+            n = rec.count or 0
+            if by == 'area_lw':
+                qty = rec.length * rec.width * n
+            elif by == 'area_lh':
+                qty = rec.length * rec.height * n
+            elif by == 'linear':
+                qty = rec.length * n
+            elif by == 'count':
+                qty = n
+            else:
+                qty = 0.0
+            rec.quantity = round(qty, 2)
+
+    @api.constrains('length', 'width', 'height', 'count')
+    def _check_non_negative(self):
+        for rec in self:
+            if rec.length < 0 or rec.width < 0 or rec.height < 0 or rec.count < 0:
+                raise ValidationError(_("Measurement '%s': dimensions and count cannot be negative.") % rec.name)
+

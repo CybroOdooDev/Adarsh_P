@@ -63,7 +63,6 @@ class FurnishingQualityCheck(models.Model):
         ('draft', 'Draft'),
         ('in_progress', 'Under Inspection'),
         ('passed', 'Passed'),
-        ('conditional', 'Conditional Pass (Minor Rectification)'),
         ('failed', 'Failed (Rejected)'),
     ], string='Inspection Status', default='draft', required=True, tracking=True, copy=False)
 
@@ -92,10 +91,33 @@ class FurnishingQualityCheck(models.Model):
         default=lambda self: self.env.company,
         required=True
     )
+    installation_ids = fields.Many2many(
+        'project.installation',
+        'project_installation_quality_check_rel',
+        'quality_check_id',
+        'installation_id',
+        string='Scheduled Installations',
+        domain="[('project_id', '=', project_id)]",
+        help='Installation batch or site delivery for which this finished piece is dispatched.'
+    )
+    stock_picking_id = fields.Many2one(
+        'stock.picking',
+        string='Stock Transfer',
+        readonly=True,
+        copy=False,
+        help='Internal transfer moving certified goods from Quality Inspection to Main Stock upon passing QC.'
+    )
 
     # -------------------------------------------------------------------------
-    # DYNAMIC CHECKLIST LINES & TEST TYPES
+    # DYNAMIC CHECKLIST LINES & TEMPLATE
     # -------------------------------------------------------------------------
+    template_id = fields.Many2one(
+        'furnishing.quality.check.template',
+        string='Checklist Template',
+        tracking=True,
+        domain="['|', ('stage', '=', 'all'), ('stage', '=', stage)]",
+        help='Select a QC checklist template to populate standard checkpoints.'
+    )
     check_line_ids = fields.One2many(
         'furnishing.quality.check.line',
         'check_id',
@@ -217,30 +239,49 @@ class FurnishingQualityCheck(models.Model):
             if not vals.get('name') or vals['name'] == _('New'):
                 vals['name'] = self.env['ir.sequence'].next_by_code('furnishing.quality.check') or _('New')
 
-            # Auto-populate active test types for this stage if no lines were manually given
-            if 'check_line_ids' not in vals or not vals.get('check_line_ids'):
-                stage = vals.get('stage', 'pre_dispatch')
-                types = self.env['furnishing.quality.check.type'].search([
-                    '|', ('stage', '=', 'all'), ('stage', '=', stage)
-                ], order='sequence, id')
-                if not types:
-                    types = self.env['furnishing.quality.check.type'].search([], order='sequence, id')
-                if types:
+            # Populate checklist lines from template if template_id is given and no lines provided
+            if vals.get('template_id') and not vals.get('check_line_ids'):
+                template = self.env['furnishing.quality.check.template'].browse(vals['template_id'])
+                if template:
                     vals['check_line_ids'] = [
                         (0, 0, {
-                            'check_type_id': t.id,
-                            'sequence': t.sequence,
+                            'check_type_id': t_line.check_type_id.id,
+                            'sequence': t_line.sequence,
                             'result': 'pending',
-                        }) for t in types
+                        }) for t_line in template.line_ids
                     ]
         return super().create(vals_list)
+
+    def write(self, vals):
+        if 'template_id' in vals:
+            for check in self:
+                if check.state != 'draft' and vals['template_id'] != check.template_id.id:
+                    raise UserError(_(
+                        "The checklist template cannot be changed once inspection has started for Quality Check '%(name)s'.",
+                        name=check.name,
+                    ))
+        return super().write(vals)
+
+    @api.onchange('template_id')
+    def _onchange_template_id(self):
+        if self.template_id:
+            if self.template_id.stage and self.template_id.stage != 'all':
+                self.stage = self.template_id.stage
+            lines = [(5, 0, 0)]
+            for t_line in self.template_id.line_ids:
+                lines.append((0, 0, {
+                    'check_type_id': t_line.check_type_id.id,
+                    'sequence': t_line.sequence,
+                    'result': 'pending',
+                }))
+            self.check_line_ids = lines
 
     @api.onchange('production_id')
     def _onchange_production_id(self):
         if self.production_id:
             self.product_id = self.production_id.product_id
             self.product_qty = self.production_id.product_qty
-            if hasattr(self.production_id, 'project_id') and self.production_id.project_id:
+            if self.production_id.project_id:
                 self.project_id = self.production_id.project_id
 
     @api.constrains('production_id')
@@ -252,25 +293,14 @@ class FurnishingQualityCheck(models.Model):
                     mo_name=check.production_id.name,
                 ))
 
-    def action_load_default_checks(self):
-        """Populate active check types into checklist lines without removing existing lines."""
-        self.ensure_one()
-        types = self.env['furnishing.quality.check.type'].search([
-            '|', ('stage', '=', 'all'), ('stage', '=', self.stage)
-        ], order='sequence, id')
-        if not types:
-            types = self.env['furnishing.quality.check.type'].search([], order='sequence, id')
-        existing_type_ids = set(self.check_line_ids.mapped('check_type_id.id'))
-        new_lines = []
-        for t in types:
-            if t.id not in existing_type_ids:
-                new_lines.append((0, 0, {
-                    'check_type_id': t.id,
-                    'sequence': t.sequence,
-                    'result': 'pending',
-                }))
-        if new_lines:
-            self.write({'check_line_ids': new_lines})
+    @api.constrains('state', 'check_line_ids')
+    def _check_inspection_checkpoints(self):
+        for check in self:
+            if check.state != 'draft' and not check.check_line_ids:
+                raise ValidationError(_(
+                    "Quality Check '%(name)s' requires at least one checkpoint line to start or conduct an inspection.",
+                    name=check.name,
+                ))
 
     # -------------------------------------------------------------------------
     # WORKFLOW ACTIONS
@@ -279,6 +309,12 @@ class FurnishingQualityCheck(models.Model):
         for record in self:
             if record.state not in ('draft', 'failed'):
                 raise UserError(_("Quality Check '%s' can only be moved to Under Inspection from Draft or Failed state.") % record.name)
+            if not record.check_line_ids:
+                raise UserError(_(
+                    "Quality Check '%(name)s' requires at least one checkpoint line to start inspection. "
+                    "Please select a checklist template or add checkpoint lines before starting.",
+                    name=record.name,
+                ))
         self.write({'state': 'in_progress'})
 
     def action_pass(self):
@@ -295,28 +331,129 @@ class FurnishingQualityCheck(models.Model):
             if record.failed_lines_count > 0:
                 raise UserError(_(
                     "Cannot pass Quality Check '%(name)s' because %(count)d checkpoint(s) are marked as 'Fail'. "
-                    "Please rectify the failed items or use 'Conditional Pass' / 'Fail / Reject'.",
+                    "Please mark the rectified checkpoints as 'Pass' before releasing.",
                     name=record.name,
                     count=record.failed_lines_count
                 ))
+            record._action_transfer_to_stock()
             record.write({
                 'state': 'passed',
                 'defect_type': 'none',
             })
             record.message_post(body=_("Quality Check <b>PASSED</b>: Certified Site-Ready for Delivery & Installation."))
 
-    def action_conditional(self):
-        for record in self:
-            if record.state != 'in_progress':
-                raise UserError(_("Quality Check '%s' must be Under Inspection before it can be conditionally passed.") % record.name)
-            if record.pending_lines_count > 0:
+    def _action_transfer_to_stock(self):
+        self.ensure_one()
+        if not self.product_id or not getattr(self.product_id, 'is_storable', False):
+            return False
+        company = self.company_id or self.env.company
+        warehouse = False
+        if self.production_id and self.production_id.picking_type_id:
+            warehouse = self.production_id.picking_type_id.warehouse_id
+        if not warehouse:
+            warehouse = self.env['stock.warehouse'].sudo().search([('company_id', '=', company.id)], limit=1)
+        if not warehouse:
+            return False
+
+        source_loc = False
+        if self.production_id and self.production_id.location_dest_id:
+            source_loc = self.production_id.location_dest_id
+        else:
+            source_loc = company.furnishing_qc_location_id or company._get_furnishing_qc_location()
+
+        target_loc = warehouse.lot_stock_id
+        if not source_loc or not target_loc or source_loc == target_loc:
+            return False
+
+        qty_needed = self.product_qty or 1.0
+        qty_available = self.env['stock.quant'].sudo()._get_available_quantity(self.product_id, source_loc)
+        if qty_available < qty_needed:
+            raise UserError(_(
+                "Cannot transfer '%(product)s' to main stock. "
+                "Insufficient quantity in %(src)s (Required: %(needed)g, Available: %(avail)g). "
+                "Please verify the item has been produced and deposited into Quality Inspection before passing QC."
+            ) % {
+                'product': self.product_id.display_name,
+                'src': source_loc.display_name,
+                'needed': qty_needed,
+                'avail': qty_available,
+            })
+
+        picking_type = warehouse.int_type_id
+        if not picking_type:
+            raise UserError(_("No Internal Transfer operation type found for warehouse '%s'.") % warehouse.name)
+
+        with self.env.cr.savepoint():
+            picking = self.env['stock.picking'].sudo().create({
+                'picking_type_id': picking_type.id,
+                'location_id': source_loc.id,
+                'location_dest_id': target_loc.id,
+                'origin': _("QC Release: %s") % self.name,
+                'company_id': company.id,
+                'project_id': self.project_id.id if self.project_id else False,
+            })
+            move = self.env['stock.move'].sudo().create({
+                'description_picking': _("QC Release: %s") % self.product_id.display_name,
+                'product_id': self.product_id.id,
+                'product_uom_qty': qty_needed,
+                'uom_id': self.product_id.uom_id.id,
+                'location_id': source_loc.id,
+                'location_dest_id': target_loc.id,
+                'picking_id': picking.id,
+                'company_id': company.id,
+            })
+            picking.action_confirm()
+            picking.action_assign()
+            lot_id = False
+            if self.production_id:
+                if hasattr(self.production_id, 'lot_producing_ids') and self.production_id.lot_producing_ids:
+                    lot_id = self.production_id.lot_producing_ids[0]
+                elif hasattr(self.production_id, 'lot_producing_id') and self.production_id.lot_producing_id:
+                    lot_id = self.production_id.lot_producing_id
+            for ml in picking.move_line_ids:
+                ml.quantity = ml.quantity_product_uom or qty_needed
+                if lot_id and not ml.lot_id:
+                    ml.lot_id = lot_id.id
+            if not picking.move_line_ids:
+                self.env['stock.move.line'].sudo().create({
+                    'move_id': move.id,
+                    'picking_id': picking.id,
+                    'product_id': self.product_id.id,
+                    'product_uom_id': self.product_id.uom_id.id,
+                    'quantity': qty_needed,
+                    'location_id': source_loc.id,
+                    'location_dest_id': target_loc.id,
+                    'lot_id': lot_id.id if lot_id else False,
+                })
+            res = picking.button_validate()
+            if picking.state != 'done':
                 raise UserError(_(
-                    "Cannot conditionally pass Quality Check '%(name)s' because %(count)d checkpoint(s) are still pending evaluation.",
-                    name=record.name,
-                    count=record.pending_lines_count
+                    "Automatic stock transfer %(picking)s could not be completed immediately (State: %(state)s). "
+                    "Please complete the stock transfer manually.",
+                    picking=picking.name,
+                    state=picking.state,
                 ))
-            record.write({'state': 'conditional'})
-            record.message_post(body=_("Quality Check <b>CONDITIONALLY APPROVED</b>: Minor rectification required: %s") % (record.corrective_action or ''))
+
+            self.stock_picking_id = picking.id
+            self.message_post(body=_(
+                "Stock Transfer <b>%(picking)s</b> completed: %(qty)g %(uom)s moved from %(src)s to %(dst)s.",
+                picking=picking.name,
+                qty=qty_needed,
+                uom=self.product_id.uom_id.name,
+                src=source_loc.display_name,
+                dst=target_loc.display_name,
+            ))
+            return picking
+
+    def action_view_stock_picking(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Stock Transfer'),
+            'res_model': 'stock.picking',
+            'res_id': self.stock_picking_id.id,
+            'view_mode': 'form',
+        }
 
     def action_fail(self):
         for record in self:
@@ -377,3 +514,43 @@ class FurnishingQualityCheckLine(models.Model):
         string='Remarks / Measured Value',
         help='e.g., Measured: +0.5mm, or Satin gloss level 30% verified'
     )
+
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            check_id = vals.get('check_id')
+            if check_id:
+                check = self.env['furnishing.quality.check'].browse(check_id)
+                if check.state != 'draft':
+                    raise UserError(_(
+                        "Checkpoints cannot be added once inspection has started for Quality Check '%(name)s'.",
+                        name=check.name,
+                    ))
+        return super().create(vals_list)
+
+    def write(self, vals):
+        if 'check_type_id' in vals:
+            for line in self:
+                if line.check_id.state != 'draft' and vals['check_type_id'] != line.check_type_id.id:
+                    raise UserError(_(
+                        "Checkpoints cannot be changed once inspection has started for Quality Check '%(name)s'.",
+                        name=line.check_id.name,
+                    ))
+        return super().write(vals)
+
+    def unlink(self):
+        for line in self:
+            if line.check_id.state != 'draft':
+                raise UserError(_(
+                    "Checkpoints cannot be removed once inspection has started for Quality Check '%(name)s'.",
+                    name=line.check_id.name,
+                ))
+        return super().unlink()
+
+    def action_set_pass(self):
+        for line in self:
+            line.result = 'pass'
+
+    def action_set_fail(self):
+        for line in self:
+            line.result = 'fail'

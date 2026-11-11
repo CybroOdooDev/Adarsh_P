@@ -54,12 +54,12 @@ class ProjectProject(models.Model):
         currency_field='currency_id'
     )
     total_quoted_amount = fields.Monetary(
-        string='Total Quoted Revenue',
+        string='Total Confirmed Revenue',
         compute='_compute_total_quoted_amount',
         store=True,
         readonly=True,
         currency_field='currency_id',
-        help='Total untaxed revenue computed from linked non-cancelled Sales Orders and Quotations.'
+        help='Total untaxed revenue computed from confirmed Sales Orders.'
     )
     total_cost_amount = fields.Monetary(
         string='Total Actual Cost',
@@ -67,7 +67,7 @@ class ProjectProject(models.Model):
         store=True,
         readonly=True,
         currency_field='currency_id',
-        help='Total untaxed cost computed from linked non-cancelled Purchase Orders.'
+        help='Total untaxed cost computed from confirmed Purchase Orders.'
     )
     profit_margin = fields.Monetary(
         string='Profit Margin',
@@ -91,7 +91,33 @@ class ProjectProject(models.Model):
         help='Amount held by customer during Defects Liability Period (DLP).'
     )
     retention_release_date = fields.Date(string='Retention Due Date')
+    def _default_warranty_months(self):
+        return self.env.company.furnishing_default_warranty_months or 12
+
     warranty_notes = fields.Text(string='Warranty & Guarantee Terms')
+    warranty_months = fields.Integer(
+        string='Warranty (months)',
+        default=_default_warranty_months,
+        help='Defects Liability Period (DLP) / warranty duration in months.'
+    )
+
+    @api.onchange('warranty_start_date', 'warranty_months')
+    def _onchange_warranty_dates(self):
+        if self.warranty_start_date:
+            months = self.warranty_months or self.env.company.furnishing_default_warranty_months or 12
+            self.warranty_end_date = self.warranty_start_date + relativedelta(months=months)
+            if self.retention_amount and not self.retention_release_date:
+                self.retention_release_date = self.warranty_end_date
+
+    # Handover & Client Acceptance
+    handover_date = fields.Date(string='Handover Date', copy=False, tracking=True)
+    handover_accepted_by = fields.Char(string='Accepted By', copy=False, tracking=True)
+    handover_signature = fields.Binary(string='Client Signature', copy=False, attachment=True)
+    handover_notes = fields.Text(string='Handover Notes', copy=False)
+
+    surveyed_item_count = fields.Integer(compute='_compute_handover_counts')
+    installed_item_count = fields.Integer(compute='_compute_handover_counts')
+    handover_blockers_text = fields.Text(compute='_compute_handover_counts')
 
     # Site Surveys
     survey_ids = fields.One2many(
@@ -126,15 +152,34 @@ class ProjectProject(models.Model):
         compute='_compute_service_request_count'
     )
 
+    # Quality Checks
+    quality_check_ids = fields.One2many(
+        'furnishing.quality.check',
+        'project_id',
+        string='Quality Checks'
+    )
+    quality_check_count = fields.Integer(
+        string='Quality Checks Count',
+        compute='_compute_quality_check_count'
+    )
+
+    @api.depends('quality_check_ids')
+    def _compute_quality_check_count(self):
+        for project in self:
+            project.quality_check_count = len(project.quality_check_ids)
+
+    def action_view_quality_checks(self):
+        self.ensure_one()
+        action = self.env['ir.actions.act_window']._for_xml_id('project_furnishing.action_furnishing_quality_check')
+        action['domain'] = [('project_id', '=', self.id)]
+        action['context'] = {'default_project_id': self.id}
+        return action
+
     # Sales Orders & Quotations
     sale_order_ids = fields.One2many(
         'sale.order',
         'project_id',
         string='Sales Orders'
-    )
-    sale_order_count = fields.Integer(
-        string='Sales Order Count',
-        compute='_compute_sale_order_count'
     )
 
     # Purchase Orders
@@ -142,6 +187,13 @@ class ProjectProject(models.Model):
         'purchase.order',
         'project_id',
         string='Purchase Orders'
+    )
+
+    # Manufacturing Orders
+    production_ids = fields.One2many(
+        'mrp.production',
+        'project_id',
+        string='Manufacturing Orders'
     )
 
     @api.depends('partner_id')
@@ -162,9 +214,10 @@ class ProjectProject(models.Model):
     )
     def _compute_total_quoted_amount(self):
         for project in self:
-            orders = project.sale_order_ids.filtered(lambda s: s.state != 'cancel')
-            if project.sale_order_id and project.sale_order_id.state != 'cancel' and project.sale_order_id not in orders:
-                orders |= project.sale_order_id
+            project_sudo = project.sudo()
+            orders = project_sudo.sale_order_ids.filtered(lambda s: s.state == 'sale')
+            if project_sudo.sale_order_id and project_sudo.sale_order_id.state == 'sale' and project_sudo.sale_order_id not in orders:
+                orders |= project_sudo.sale_order_id
             total = 0.0
             for order in orders:
                 if order.currency_id and project.currency_id and order.currency_id != project.currency_id:
@@ -182,10 +235,12 @@ class ProjectProject(models.Model):
         'purchase_order_ids.amount_untaxed',
         'purchase_order_ids.state',
         'purchase_order_ids.currency_id',
+        'account_id',
     )
     def _compute_total_cost_amount(self):
         for project in self:
-            orders = project.purchase_order_ids.filtered(lambda p: p.state != 'cancel')
+            project_sudo = project.sudo()
+            orders = project_sudo.purchase_order_ids.filtered(lambda p: p.state in ('purchase', 'done'))
             total = 0.0
             for order in orders:
                 if order.currency_id and project.currency_id and order.currency_id != project.currency_id:
@@ -200,9 +255,9 @@ class ProjectProject(models.Model):
 
             if project.account_id:
                 direct_po_ids = orders.ids
-                analytic_lines = self.env['purchase.order.line'].search([
+                analytic_lines = self.env['purchase.order.line'].sudo().search([
                     ('analytic_distribution', 'in', project.account_id.ids),
-                    ('order_id.state', '!=', 'cancel'),
+                    ('order_id.state', 'in', ('purchase', 'done')),
                     ('order_id', 'not in', direct_po_ids),
                 ])
                 for line in analytic_lines:
@@ -254,28 +309,29 @@ class ProjectProject(models.Model):
         for project in self:
             project.service_request_count = data_map.get(project.id, 0)
 
+    @api.depends('sale_order_id', 'task_ids.sale_order_id', 'sale_order_ids', 'sale_order_ids.amount_total')
     def _compute_sale_order_count(self):
-        so_data = self.env['sale.order']._read_group(
-            domain=[('project_id', 'in', self.ids)],
-            groupby=['project_id'],
-            aggregates=['__count']
-        )
-        data_map = {p.id: count for p, count in so_data}
-        for project in self:
-            count = data_map.get(project.id, 0)
-            if project.sale_order_id and project.sale_order_id.project_id.id != project.id:
-                count += 1
-            project.sale_order_count = count
-
-    def _compute_purchase_orders_count(self):
-        for project in self:
-            po_ids = set(self.env['purchase.order'].search([('project_id', '=', project.id)]).ids)
-            if project.account_id:
-                line_po_ids = self.env['purchase.order.line'].search([
-                    ('analytic_distribution', 'in', project.account_id.ids)
-                ]).order_id.ids
-                po_ids.update(line_po_ids)
-            project.purchase_orders_count = len(po_ids)
+        super()._compute_sale_order_count()
+        furnishing_projects = self.filtered('is_furnishing_project')
+        if furnishing_projects:
+            so_data = self.env['sale.order'].sudo()._read_group(
+                domain=[('project_id', 'in', furnishing_projects.ids)],
+                groupby=['project_id'],
+                aggregates=['id:recordset', 'amount_total:sum']
+            )
+            data_map = {p.id: (orders, total) for p, orders, total in so_data}
+            for project in furnishing_projects:
+                direct_orders, direct_total = data_map.get(project.id, (self.env['sale.order'], 0.0))
+                if direct_orders:
+                    all_orders = direct_orders
+                    if project.sudo().sale_order_id:
+                        all_orders |= project.sudo().sale_order_id
+                    project.sale_order_count = max(project.sale_order_count or 0, len(all_orders))
+                    if hasattr(project, 'sale_order_amount_total'):
+                        project.sale_order_amount_total = max(
+                            project.sale_order_amount_total or 0.0,
+                            sum(all_orders.mapped('amount_total'))
+                        )
 
     # Workflow Actions
     def action_create_task(self):
@@ -301,7 +357,7 @@ class ProjectProject(models.Model):
 
     def action_create_quotation(self):
         self.ensure_one()
-        if self.state in ('to_do', 'cancelled'):
+        if self.state in ('to_do', 'completed', 'cancelled'):
             raise UserError(
                 _("Cannot create a quotation while the project is in '%(state)s' state.") % {
                     'state': dict(self._fields['state'].selection).get(self.state, self.state),
@@ -400,15 +456,6 @@ class ProjectProject(models.Model):
                     'state': dict(self._fields['state'].selection).get(self.state, self.state),
                 }
             )
-        open_installations = self.installation_ids.filtered(lambda i: i.state not in ('completed', 'cancelled'))
-        if open_installations:
-            raise UserError(
-                _("Cannot create a new installation for project '%(project)s' because an active installation '%(installation)s' is already in progress.\n\n"
-                  "Please complete or cancel the existing installation first.") % {
-                    'project': self.name,
-                    'installation': open_installations[0].name,
-                }
-            )
         installation = self.env['project.installation'].create({
             'project_id': self.id,
             'address': self.site_address,
@@ -425,6 +472,90 @@ class ProjectProject(models.Model):
             'target': 'current',
         }
 
+    def _get_handover_blockers(self):
+        self.ensure_one()
+        blockers = []
+        installs = self.installation_ids.filtered(lambda i: i.state != 'cancelled')
+        if not installs:
+            blockers.append(_("No installation has been created."))
+        pending = installs.filtered(lambda i: i.state != 'completed')
+        if pending:
+            blockers.append(_("Installations not completed: %s") % ", ".join(pending.mapped('name')))
+
+        items = self.survey_ids.filtered(lambda s: s.state == 'completed') \
+            .measurement_ids.filtered(lambda m: not m.not_required)
+        done = installs.line_ids.filtered(lambda l: l.is_completed).measurement_id
+        missing = items - done
+        if missing:
+            blockers.append(_("Surveyed items not installed: %s") % (
+                ", ".join(missing.mapped('name')[:5])
+                + (_(" and %s more") % (len(missing) - 5) if len(missing) > 5 else "")
+            ))
+
+        open_snags = installs.snag_ids.filtered(lambda s: not s.is_fixed)
+        if open_snags:
+            blockers.append(_("%s open snag(s) remain.") % len(open_snags))
+
+        # Active manufacturing orders must be completed
+        active_mos = self.production_ids.filtered(lambda mo: mo.state not in ('done', 'cancel'))
+        if active_mos:
+            mo_names = ", ".join(active_mos.mapped('name')[:5])
+            if len(active_mos) > 5:
+                mo_names += _(" and %s more") % (len(active_mos) - 5)
+            blockers.append(_("Manufacturing orders not completed: %s") % mo_names)
+
+        # Every completed manufacturing order must have at least one passed quality check
+        mos_without_passed_qc = self.production_ids.filtered(
+            lambda mo: mo.state == 'done' and not any(q.state == 'passed' and q.dispatch_ready for q in mo.quality_check_ids)
+        )
+        if mos_without_passed_qc:
+            mo_details = ", ".join(
+                f"{mo.name} ({mo.product_id.display_name})"
+                for mo in mos_without_passed_qc[:5]
+            )
+            if len(mos_without_passed_qc) > 5:
+                mo_details += _(" and %s more") % (len(mos_without_passed_qc) - 5)
+            blockers.append(
+                _("Completed Manufacturing Order(s) without a passed Quality Check (Site-Ready): %s") % mo_details
+            )
+
+        unready_qc = self.quality_check_ids.filtered(lambda q: not q.dispatch_ready)
+        if unready_qc:
+            qc_names = ", ".join(f"{q.name} ({q.product_id.display_name})" for q in unready_qc[:5])
+            if len(unready_qc) > 5:
+                qc_names += _(" and %s more") % (len(unready_qc) - 5)
+            blockers.append(_("Manufactured piece(s) not certified Site-Ready (QC pending/failed): %s") % qc_names)
+
+        if not self.handover_accepted_by or not self.handover_signature:
+            blockers.append(_("Client acceptance (name and signature) is missing."))
+        return blockers
+
+    @api.depends(
+        'survey_ids.state',
+        'survey_ids.measurement_ids.not_required',
+        'installation_ids.state',
+        'installation_ids.line_ids.is_completed',
+        'installation_ids.snag_ids.is_fixed',
+        'handover_accepted_by',
+        'handover_signature',
+        'quality_check_ids.dispatch_ready',
+        'quality_check_ids.name',
+        'quality_check_ids.state',
+        'production_ids.state',
+        'production_ids.quality_check_ids.state',
+        'production_ids.quality_check_ids.dispatch_ready',
+    )
+    def _compute_handover_counts(self):
+        for p in self:
+            items = p.survey_ids.filtered(lambda s: s.state == 'completed') \
+                .measurement_ids.filtered(lambda m: not m.not_required)
+            installs = p.installation_ids.filtered(lambda i: i.state != 'cancelled')
+            done = installs.line_ids.filtered(lambda l: l.is_completed).measurement_id
+            p.surveyed_item_count = len(items)
+            p.installed_item_count = len(items & done)
+            p.handover_blockers_text = "\n".join("• " + b for b in p._get_handover_blockers()) \
+                if p.state in ('installation', 'completed') and p.id else False
+
     def action_complete(self):
         for project in self:
             if project.state != 'installation':
@@ -434,16 +565,12 @@ class ProjectProject(models.Model):
                         'state': dict(self._fields['state'].selection).get(project.state, project.state),
                     }
                 )
-            completed_installations = project.installation_ids.filtered(lambda inst: inst.state == 'completed')
-            if not completed_installations:
-                raise UserError(_("Cannot complete the project because there are no completed installations. Please complete at least one installation first."))
-            pending_installations = project.installation_ids.filtered(lambda inst: inst.state not in ('completed', 'cancelled'))
-            if pending_installations:
+            blockers = project._get_handover_blockers()
+            if blockers:
                 raise UserError(
-                    _("Cannot complete project '%(project)s' because all active installations must be completed first.\n\n"
-                      "Pending installation(s): %(installations)s") % {
-                        'project': project.name,
-                        'installations': ", ".join(pending_installations.mapped('name')),
+                    _("Cannot hand over '%(p)s':\n%(b)s") % {
+                        'p': project.name,
+                        'b': "\n".join("• " + b for b in blockers),
                     }
                 )
             def is_task_finished(task):
@@ -464,20 +591,20 @@ class ProjectProject(models.Model):
                         'tasks': ", ".join(unclosed_tasks.mapped('name')),
                     }
                 )
-            if not project.completion_date:
-                project.completion_date = fields.Date.context_today(project)
+            project.handover_date = project.handover_date or fields.Date.context_today(project)
+            project.completion_date = project.handover_date
             if project.has_warranty:
-                if not project.warranty_start_date:
-                    project.warranty_start_date = project.completion_date
-                if not project.warranty_end_date:
-                    project.warranty_end_date = project.warranty_start_date + relativedelta(years=1)
-                if project.warranty_end_date < project.warranty_start_date:
-                    raise UserError(
-                        _("Cannot complete project '%(project)s' because Warranty Expiry Date cannot be earlier than Warranty Start Date.") % {
-                            'project': project.name,
-                        }
-                    )
+                project.warranty_start_date = project.handover_date
+                months = project.warranty_months or (project.company_id and project.company_id.furnishing_default_warranty_months) or 12
+                project.warranty_end_date = project.warranty_start_date + relativedelta(months=months)
+            if project.retention_amount and not project.retention_release_date:
+                project.retention_release_date = project.warranty_end_date
             project.state = 'completed'
+            project.message_post(body=_("Handed over to %s on %s.") % (project.handover_accepted_by, project.handover_date))
+
+    def action_print_handover_certificate(self):
+        self.ensure_one()
+        return self.env.ref('project_furnishing.action_report_handover_certificate').report_action(self)
 
     @api.constrains('has_warranty', 'state', 'warranty_start_date', 'warranty_end_date')
     def _check_warranty_dates(self):
@@ -514,16 +641,16 @@ class ProjectProject(models.Model):
                 open_services.write({'state': 'cancelled'})
             project.state = 'cancelled'
 
-    def action_reset_to_do(self):
-        for project in self:
-            if project.state not in ('cancelled', 'completed'):
-                raise UserError(
-                    _("Only cancelled or completed projects can be reset to To Do. Project '%(project)s' is currently %(state)s.") % {
-                        'project': project.name,
-                        'state': dict(self._fields['state'].selection).get(project.state, project.state),
-                    }
-                )
-            project.state = 'to_do'
+    def write(self, vals):
+        if 'state' in vals:
+            for project in self:
+                if project.state == 'completed' and vals['state'] != 'completed':
+                    raise UserError(
+                        _("Completed project '%(project)s' cannot be reopened or have its state changed.") % {
+                            'project': project.name,
+                        }
+                    )
+        return super().write(vals)
 
     def action_view_site_surveys(self):
         self.ensure_one()

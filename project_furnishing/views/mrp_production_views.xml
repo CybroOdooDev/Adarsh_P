@@ -12,7 +12,7 @@
                         string="Create Quality Check"
                         type="object"
                         class="btn-secondary"
-                        invisible="state != 'done'"/>
+                        invisible="state == 'cancel'"/>
             </xpath>
             <xpath expr="//div[@name='button_box']" position="inside">
                 <button class="oe_stat_button" name="action_view_quality_checks" type="object" icon="check_circle"
@@ -24,6 +24,9 @@
                         <span class="o_stat_text">Quality Checks</span>
                     </div>
                 </button>
+            </xpath>
+            <xpath expr="//group[@name='group_extra_info']" position="inside">
+                <field name="project_id" placeholder="Select Furnishing Project..."/>
             </xpath>
         </field>
     </record>

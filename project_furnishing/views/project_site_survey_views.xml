@@ -71,15 +71,21 @@
                         <!-- Tab Named "Measurements" -->
                         <page string="Measurements" name="measurements">
                             <field name="measurement_ids">
-                                <list editable="bottom">
+                                <list editable="bottom" decoration-muted="not_required">
                                     <field name="sequence" widget="handle"/>
-                                    <field name="name" placeholder="e.g. Master Bedroom Wall 1"/>
-                                    <field name="description" placeholder="Description / details..."/>
+                                    <field name="measure_by" column_invisible="1"/>
+                                    <field name="room" placeholder="e.g. Master Bedroom"/>
+                                    <field name="name" placeholder="e.g. Wall 1, Window 2, Wardrobe"/>
+                                    <field name="description" placeholder="Description / details..." optional="hide"/>
                                     <field name="type_id" options="{'no_create_edit': False}"/>
-                                    <field name="length"/>
-                                    <field name="width"/>
-                                    <field name="height"/>
+                                    <field name="length" readonly="measure_by == 'count'"/>
+                                    <field name="width" readonly="measure_by != 'area_lw'"/>
+                                    <field name="height" readonly="measure_by != 'area_lh'"/>
                                     <field name="count"/>
+                                    <field name="quantity" readonly="1" force_save="1"/>
+                                    <field name="quantity_unit"/>
+                                    <field name="not_required"/>
+                                    <field name="not_required_reason" invisible="not not_required" required="not_required" placeholder="Reason for exclusion..."/>
                                 </list>
                             </field>
                         </page>
