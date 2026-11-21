@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pharma_transport_contract_view_list" model="ir.ui.view">
+        <field name="name">pharma.transport.contract.list</field>
+        <field name="model">pharma.transport.contract</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state in ('expired', 'terminated')">
+                <field name="name"/>
+                <field name="transporter_id"/>
+                <field name="partner_reference" optional="hide"/>
+                <field name="date_start"/>
+                <field name="date_end"/>
+                <field name="days_to_expiry" string="Days Left" optional="show"
+                       invisible="state != 'active'"
+                       decoration-warning="days_to_expiry &lt;= reminder_days"
+                       decoration-danger="days_to_expiry &lt; 0"/>
+                <field name="reminder_days" column_invisible="1"/>
+                <field name="service_ambient" optional="show"/>
+                <field name="service_cold_chain" optional="show"/>
+                <field name="service_high_security" optional="show"/>
+                <field name="responsible_id" optional="hide" widget="many2one_avatar_user"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-success="state == 'active'"
+                       decoration-warning="state == 'expired'"
+                       decoration-danger="state == 'terminated'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="pharma_transport_contract_view_form" model="ir.ui.view">
+        <field name="name">pharma.transport.contract.form</field>
+        <field name="model">pharma.transport.contract</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_activate" string="Activate" type="object"
+                            class="oe_highlight" invisible="state != 'draft'"
+                            groups="stock.group_stock_manager"/>
+                    <button name="action_terminate" string="Terminate" type="object"
+                            invisible="state != 'active'" groups="stock.group_stock_manager"/>
+                    <button name="action_reset_to_draft" string="Renew / Reset to Draft" type="object"
+                            invisible="state not in ('expired', 'terminated')"
+                            groups="stock.group_stock_manager"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"/>
+                </header>
+                <div class="alert alert-warning mb-0" role="alert"
+                     invisible="state != 'active' or days_to_expiry &gt; reminder_days">
+                    This contract expires in <field name="days_to_expiry" class="oe_inline"/> day(s).
+                    Renew it before shipments with this transporter are blocked.
+                </div>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_shipments" type="object"
+                                class="oe_stat_button" icon="local_shipping"
+                                invisible="not shipment_count">
+                            <field name="shipment_count" string="Shipments" widget="statinfo"/>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="transporter_id" readonly="state != 'draft'"
+                                   context="{'default_is_company': True}"/>
+                            <field name="partner_reference" readonly="state != 'draft'"/>
+                            <field name="responsible_id" widget="many2one_avatar_user"/>
+                            <field name="company_id" groups="base.group_multi_company"
+                                   readonly="state != 'draft'"/>
+                        </group>
+                        <group>
+                            <field name="date_start" readonly="state != 'draft'"/>
+                            <field name="date_end" readonly="state != 'draft'"/>
+                            <field name="reminder_days"/>
+                        </group>
+                        <group string="Services Covered">
+                            <field name="service_ambient" readonly="state != 'draft'"/>
+                            <field name="service_cold_chain" readonly="state != 'draft'"/>
+                            <field name="service_high_security" readonly="state != 'draft'"/>
+                            <field name="coverage" readonly="state != 'draft'"
+                                   placeholder="e.g. Kerala, Tamil Nadu and Karnataka"/>
+                        </group>
+                        <group string="Signed Contract">
+                            <field name="document_ids" widget="many2many_binary"
+                                   readonly="state != 'draft'" nolabel="1" colspan="2"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Quality Agreement" name="quality">
+                            <p class="text-muted">
+                                Every point must be covered by the signed agreement before the
+                                contract can be activated.
+                            </p>
+                            <div class="d-flex flex-column gap-2 mt-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_temperature_control" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_temperature_control" class="o_form_label mb-0 fw-normal"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_trained_drivers" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_trained_drivers" class="o_form_label mb-0 fw-normal"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_vehicle_cleaning" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_vehicle_cleaning" class="o_form_label mb-0 fw-normal"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_no_subcontracting" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_no_subcontracting" class="o_form_label mb-0 fw-normal"/>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_incident_reporting" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_incident_reporting" class="o_form_label mb-0 fw-normal"/>
+                                    <span invisible="not qa_incident_reporting" class="text-muted">within</span>
+                                    <field name="incident_reporting_hours" nolabel="1" class="oe_inline" style="width: 4rem;"
+                                           readonly="state != 'draft'" invisible="not qa_incident_reporting"/>
+                                    <span invisible="not qa_incident_reporting" class="text-muted">hours</span>
+                                </div>
+                                <div class="d-flex align-items-center gap-2">
+                                    <field name="qa_right_to_audit" nolabel="1" readonly="state != 'draft'"/>
+                                    <label for="qa_right_to_audit" class="o_form_label mb-0 fw-normal"/>
+                                </div>
+                            </div>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                            <group invisible="not termination_reason">
+                                <field name="termination_reason"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="pharma_transport_contract_view_search" model="ir.ui.view">
+        <field name="name">pharma.transport.contract.search</field>
+        <field name="model">pharma.transport.contract</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="transporter_id"/>
+                <field name="partner_reference"/>
+                <filter name="active_contracts" string="Active" domain="[('state', '=', 'active')]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="ended" string="Expired / Terminated"
+                        domain="[('state', 'in', ('expired', 'terminated'))]"/>
+                <separator/>
+                <filter name="cold_chain" string="Cold Chain" domain="[('service_cold_chain', '=', True)]"/>
+                <filter name="high_security" string="High Security" domain="[('service_high_security', '=', True)]"/>
+                <separator/>
+                <filter name="date_end" string="Valid Until" date="date_end"/>
+                <group>
+                    <filter name="group_transporter" string="Transporter" context="{'group_by': 'transporter_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="pharma_transport_contract_action" model="ir.actions.act_window">
+        <field name="name">Transport Contracts</field>
+        <field name="res_model">pharma.transport.contract</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="pharma_transport_contract_view_search"/>
+        <field name="context">{'search_default_active_contracts': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">Record your first transport contract</p>
+            <p>A transporter can only be used on a shipment while it has an active contract
+               that covers the consignment.</p>
+        </field>
+    </record>
+
+    <!-- Termination wizard -->
+    <record id="pharma_transport_contract_terminate_view_form" model="ir.ui.view">
+        <field name="name">pharma.transport.contract.terminate.form</field>
+        <field name="model">pharma.transport.contract.terminate</field>
+        <field name="arch" type="xml">
+            <form>
+                <field name="contract_ids" invisible="1"/>
+                <group>
+                    <field name="reason" placeholder="Why the contract is ended early"/>
+                </group>
+                <footer>
+                    <button name="action_confirm" string="Terminate" type="object" class="btn-danger"/>
+                    <button string="Cancel" class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+</odoo>

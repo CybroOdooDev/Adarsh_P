@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_packing_list_document">
+        <t t-call="web.external_layout">
+            <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang or o.env.lang)"/>
+            <div class="page">
+                <h2 class="mt-3">Packing List <span t-field="o.name"/></h2>
+
+                <div class="row mt-3 mb-3">
+                    <div class="col-4">
+                        <strong>Deliver To</strong>
+                        <div t-field="o.picking_id.partner_id"
+                             t-options='{"widget": "contact", "fields": ["address", "name", "phone"], "no_marker": True}'/>
+                    </div>
+                    <div class="col-4">
+                        <table class="table table-sm table-borderless mb-0 o_ignore_layout_styling">
+                            <tr><td class="text-nowrap pe-2"><strong>Delivery Order</strong></td><td><span t-field="o.picking_id.name"/></td></tr>
+                            <tr t-if="o.origin"><td class="text-nowrap pe-2"><strong>Source</strong></td><td><span t-field="o.origin"/></td></tr>
+                            <tr><td class="text-nowrap pe-2"><strong>Dispatch</strong></td><td><span t-field="o.dispatch_date"/></td></tr>
+                            <tr t-if="o.expected_delivery_date"><td class="text-nowrap pe-2"><strong>Expected</strong></td><td><span t-field="o.expected_delivery_date"/></td></tr>
+                        </table>
+                    </div>
+                    <div class="col-4">
+                        <table class="table table-sm table-borderless mb-0 o_ignore_layout_styling">
+                            <tr t-if="o.transporter_id"><td class="text-nowrap pe-2"><strong>Transporter</strong></td><td><span t-field="o.transporter_id.name"/></td></tr>
+                            <tr t-if="o.vehicle_number"><td class="text-nowrap pe-2"><strong>Vehicle</strong></td><td><span t-field="o.vehicle_number"/></td></tr>
+                            <tr t-if="o.driver_ids"><td class="text-nowrap pe-2"><strong>Drivers</strong></td><td t-out="', '.join(o.driver_ids.mapped('name'))"/></tr>
+                            <tr t-if="o.seal_number"><td class="text-nowrap pe-2"><strong>Seal No.</strong></td><td><span t-field="o.seal_number"/></td></tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div t-if="o.temperature_controlled" class="alert alert-info p-2">
+                    <strong>Temperature-controlled consignment:</strong>
+                    store and transport between <span t-field="o.temp_min"/> °C and
+                    <span t-field="o.temp_max"/> °C. Do not freeze.
+                </div>
+
+                <table class="table table-sm o_main_table mt-2">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Batch</th>
+                            <th>Mfg. Date</th>
+                            <th>Expiry</th>
+                            <th class="text-end">Quantity</th>
+                            <th>Unit</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <t t-foreach="o._packing_groups()" t-as="group">
+                            <t t-set="package" t-value="group[0]"/>
+                            <tr class="table-light">
+                                <td colspan="6">
+                                    <t t-if="package">
+                                        <strong>Package <span t-out="package.complete_name"/></strong>
+                                        <span t-if="package.package_type_id"> · <span t-out="package.package_type_id.name"/></span>
+                                        <span t-if="package.shipping_weight"> · <span t-out="package.shipping_weight"/> kg</span>
+                                    </t>
+                                    <strong t-else="">Not packed</strong>
+                                </td>
+                            </tr>
+                            <tr t-foreach="group[1]" t-as="line">
+                                <td><span t-field="line.product_id"/></td>
+                                <td><span t-field="line.lot_id.name"/></td>
+                                <td><span t-field="line.manufacture_date"/></td>
+                                <td><span t-field="line.expiration_date"/></td>
+                                <td class="text-end"><span t-field="line.quantity"/></td>
+                                <td><span t-field="line.uom_id.name"/></td>
+                            </tr>
+                        </t>
+                    </tbody>
+                </table>
+
+                <div class="row">
+                    <div class="col-6">
+                        <table class="table table-sm table-borderless o_ignore_layout_styling">
+                            <tr><td class="text-nowrap pe-2"><strong>Number of packages</strong></td><td t-out="o.package_count"/></tr>
+                            <tr t-if="o.total_weight"><td class="text-nowrap pe-2"><strong>Total shipping weight</strong></td><td><span t-field="o.total_weight"/> kg</td></tr>
+                            <tr><td class="text-nowrap pe-2"><strong>Product lines</strong></td><td t-out="len(o.line_ids)"/></tr>
+                        </table>
+                    </div>
+                    <div class="col-6 small">
+                        All batches on this list are QA-released.
+                        Check carton count, batch numbers and seal on receipt and
+                        record any shortage or damage on the delivery documents.
+                    </div>
+                </div>
+
+                <div class="row mt-5 text-center" style="page-break-inside: avoid;">
+                    <div class="col-4"><div class="border-top pt-1">Packed by</div></div>
+                    <div class="col-4"><div class="border-top pt-1">Checked by (QA / Dispatch)</div></div>
+                    <div class="col-4"><div class="border-top pt-1">Received by Driver</div></div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_packing_list">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="pharma_dispatch.report_packing_list_document"/>
+            </t>
+        </t>
+    </template>
+</odoo>

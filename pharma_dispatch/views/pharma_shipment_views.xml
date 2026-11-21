@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="pharma_shipment_view_list" model="ir.ui.view">
+        <field name="name">pharma.shipment.list</field>
+        <field name="model">pharma.shipment</field>
+        <field name="arch" type="xml">
+            <list create="0">
+                <field name="name"/>
+                <field name="picking_id"/>
+                <field name="partner_id"/>
+                <field name="transporter_id"/>
+                <field name="vehicle_number" optional="show"/>
+                <field name="driver_ids" widget="many2many_tags" optional="show"/>
+                <field name="checklist_state" optional="show"/>
+                <field name="dispatch_date"/>
+                <field name="expected_delivery_date"/>
+                <field name="package_count" optional="show"/>
+                <field name="excursion_decision" optional="show" widget="badge"
+                       decoration-danger="excursion_decision in ('pending', 'rejected')"
+                       decoration-success="excursion_decision == 'accepted'"/>
+                <field name="has_discrepancy" optional="hide"/>
+                <field name="company_id" groups="base.group_multi_company" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'draft'"
+                       decoration-warning="state == 'dispatched'"
+                       decoration-success="state == 'delivered'"
+                       decoration-muted="state == 'cancel'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="pharma_shipment_view_form" model="ir.ui.view">
+        <field name="name">pharma.shipment.form</field>
+        <field name="model">pharma.shipment</field>
+        <field name="arch" type="xml">
+            <form create="0">
+                <header>
+                    <button name="action_start_checklist" string="Start Checklist" type="object"
+                            class="oe_highlight"
+                            invisible="state != 'draft' or checklist_state in ('in_progress', 'passed')"/>
+                    <button name="action_dispatch" string="Dispatch" type="object"
+                            class="oe_highlight" invisible="state != 'draft' or checklist_state != 'passed'"/>
+                    <button name="action_mark_delivered" string="Mark as Delivered" type="object"
+                            class="oe_highlight" invisible="state != 'dispatched'"/>
+                    <button name="action_accept_excursion" string="Accept Excursion" type="object"
+                            groups="stock.group_stock_manager"
+                            invisible="excursion_decision != 'pending'"
+                            confirm="Release the goods despite the temperature excursion?"/>
+                    <button name="action_reject_excursion" string="Reject Excursion" type="object"
+                            groups="stock.group_stock_manager"
+                            invisible="excursion_decision != 'pending'"/>
+                    <button name="action_print_packing_list" string="Packing List" type="object"
+                            icon="print"/>
+                    <button name="action_print_delivery_challan" string="Delivery Challan" type="object"
+                            icon="print" invisible="state not in ('dispatched', 'delivered')"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state not in ('draft', 'dispatched')"/>
+                    <button name="action_reset_to_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancel'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,dispatched,delivered"/>
+                </header>
+                <div class="alert alert-danger mb-0" role="alert"
+                     invisible="excursion_decision != 'pending'">
+                    Temperature excursion recorded: QA must accept or reject the goods.
+                </div>
+                <div class="alert alert-warning mb-0" role="alert"
+                     invisible="not eway_bill_expected or eway_bill_number or state in ('delivered', 'cancel')">
+                    Consignment value is above Rs 50,000: an e-way bill is normally required
+                    before the vehicle leaves. Enter its number under Transport Documents.
+                </div>
+                <div class="alert alert-danger mb-0" role="alert"
+                     invisible="not crew_issues or state != 'draft'">
+                    <strong>Crew not qualified for this consignment:</strong>
+                    <field name="crew_issues" class="d-block"/>
+                </div>
+                <div class="alert alert-warning mb-0" role="alert" invisible="not has_discrepancy">
+                    Delivered with a shortage, damage or a broken seal.
+                </div>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_checklists" type="object"
+                                class="oe_stat_button" icon="checklist"
+                                invisible="not checklist_count">
+                            <field name="checklist_count" string="Checklists" widget="statinfo"/>
+                        </button>
+                        <button name="action_open_picking" type="object"
+                                class="oe_stat_button" icon="local_shipping">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Delivery Order</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name"/></h1>
+                        <div invisible="not challan_number">
+                            Delivery Challan <field name="challan_number" class="oe_inline"/>
+                        </div>
+                    </div>
+                    <group>
+                        <group string="Delivery">
+                            <field name="picking_id"/>
+                            <field name="partner_id"/>
+                            <field name="origin"/>
+                            <field name="company_id" groups="base.group_multi_company"/>
+                        </group>
+                        <group string="Dates">
+                            <field name="dispatch_date" readonly="state != 'draft'"/>
+                            <field name="expected_delivery_date"
+                                   readonly="state in ('delivered', 'cancel')"/>
+                            <field name="delivered_date" invisible="not delivered_date"/>
+                        </group>
+                        <group string="Transport">
+                            <field name="transporter_id" readonly="state != 'draft'"
+                                   context="{'default_is_company': True}"/>
+                            <field name="driver_ids" widget="many2many_tags"
+                                   readonly="state != 'draft'"
+                                   context="{'default_parent_id': transporter_id, 'default_is_company': False, 'default_transport_role': 'driver'}"/>
+                            <field name="transport_contract_id" invisible="not transporter_id"
+                                   decoration-danger="not transport_contract_id"/>
+                            <div class="text-danger small" colspan="2"
+                                 invisible="not transporter_id or transport_contract_id or state != 'draft'">
+                                No active transport contract for this transporter on the dispatch date.
+                            </div>
+                            <field name="high_security" invisible="not high_security"/>
+                            <field name="vehicle_number" readonly="state != 'draft'"/>
+                            <field name="seal_number" readonly="state != 'draft'"/>
+                            <field name="checklist_template_id" required="state == 'draft'"
+                                   readonly="state != 'draft' or checklist_count"
+                                   options="{'no_create': True}"/>
+                            <field name="checklist_state" invisible="not checklist_state"
+                                   widget="badge"
+                                   decoration-info="checklist_state == 'in_progress'"
+                                   decoration-success="checklist_state == 'passed'"
+                                   decoration-warning="checklist_state == 'failed'"
+                                   decoration-danger="checklist_state == 'rejected'"/>
+                        </group>
+                        <group string="Transport Documents">
+                            <field name="transport_reason" readonly="state != 'draft'"/>
+                            <field name="transport_mode" readonly="state != 'draft'"/>
+                            <label for="lr_number"/>
+                            <div class="o_row">
+                                <field name="lr_number" readonly="state in ('delivered', 'cancel')"/>
+                                <span class="text-muted">dated</span>
+                                <field name="lr_date" readonly="state in ('delivered', 'cancel')"/>
+                            </div>
+                            <label for="eway_bill_number"/>
+                            <div class="o_row">
+                                <field name="eway_bill_number" readonly="state in ('delivered', 'cancel')"/>
+                                <span class="text-muted">dated</span>
+                                <field name="eway_bill_date" readonly="state in ('delivered', 'cancel')"/>
+                            </div>
+                            <field name="eway_bill_valid_until" invisible="not eway_bill_number"
+                                   readonly="state in ('delivered', 'cancel')"/>
+                        </group>
+                        <group string="Consignment">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="eway_bill_expected" invisible="1"/>
+                            <field name="amount_untaxed"/>
+                            <field name="amount_tax" invisible="transport_reason != 'supply'"/>
+                            <field name="amount_total"/>
+                            <field name="package_count"/>
+                            <field name="total_weight"/>
+                        </group>
+                        <group string="Temperature">
+                            <field name="temperature_controlled" readonly="state != 'draft'"/>
+                            <label for="temp_min" string="Allowed Range (°C)"
+                                   invisible="not temperature_controlled"/>
+                            <div class="o_row" invisible="not temperature_controlled">
+                                <field name="temp_min" readonly="state != 'draft'"/>
+                                <span>to</span>
+                                <field name="temp_max" readonly="state != 'draft'"/>
+                            </div>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Products" name="products">
+                            <field name="line_ids" readonly="state != 'dispatched'">
+                                <list editable="bottom" create="0" delete="0">
+                                    <field name="product_id" readonly="1"/>
+                                    <field name="lot_id" readonly="1"/>
+                                    <field name="lot_status" widget="badge" optional="show"
+                                           decoration-success="lot_status == 'released'"
+                                           decoration-danger="lot_status != 'released'"/>
+                                    <field name="manufacture_date" optional="hide"/>
+                                    <field name="expiration_date" readonly="1"/>
+                                    <field name="package_id" readonly="1"/>
+                                    <field name="package_type_id" optional="hide"/>
+                                    <field name="quantity" readonly="1"/>
+                                    <field name="received_qty"
+                                           column_invisible="parent.state not in ('dispatched', 'delivered')"/>
+                                    <field name="damaged_qty"
+                                           column_invisible="parent.state not in ('dispatched', 'delivered')"/>
+                                    <field name="shortage_qty"
+                                           column_invisible="parent.state not in ('dispatched', 'delivered')"
+                                           decoration-danger="shortage_qty &gt; 0"/>
+                                    <field name="uom_id" readonly="1" groups="uom.group_uom"/>
+                                    <field name="hsn_code" optional="hide"/>
+                                    <field name="price_unit" optional="hide"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="tax_ids" widget="many2many_tags" optional="hide"/>
+                                    <field name="value" optional="hide"/>
+                                    <field name="receipt_note" optional="show"
+                                           column_invisible="parent.state not in ('dispatched', 'delivered')"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Packages" name="packages">
+                            <field name="package_ids">
+                                <list>
+                                    <field name="complete_name" string="Package"/>
+                                    <field name="package_type_id"/>
+                                    <field name="parent_package_id" optional="show"/>
+                                    <field name="shipping_weight"/>
+                                    <field name="pack_date"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Temperature" name="temperature"
+                              invisible="not temperature_controlled">
+                            <group>
+                                <group>
+                                    <field name="recorded_min"/>
+                                    <field name="recorded_max"/>
+                                    <field name="excursion_count"/>
+                                </group>
+                                <group invisible="not excursion_decision">
+                                    <field name="excursion_decision"/>
+                                    <field name="excursion_reviewed_by" invisible="not excursion_reviewed_by"/>
+                                    <field name="excursion_review_note"
+                                           readonly="excursion_decision != 'pending'"/>
+                                </group>
+                            </group>
+                            <field name="temperature_ids" readonly="state in ('delivered', 'cancel')">
+                                <list editable="bottom" decoration-danger="is_excursion">
+                                    <field name="reading_time"/>
+                                    <field name="temperature"/>
+                                    <field name="source"/>
+                                    <field name="location" optional="show"/>
+                                    <field name="is_excursion"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Proof of Delivery" name="pod"
+                              invisible="state not in ('dispatched', 'delivered')">
+                            <group>
+                                <group>
+                                    <field name="received_by" readonly="state != 'dispatched'"
+                                           placeholder="Name and designation"/>
+                                    <field name="received_date" readonly="state != 'dispatched'"/>
+                                    <field name="seal_intact" readonly="state != 'dispatched'"/>
+                                    <field name="pod_attachment_ids" widget="many2many_binary"
+                                           readonly="state != 'dispatched'"/>
+                                </group>
+                                <group>
+                                    <field name="receiver_signature" widget="signature"
+                                           readonly="state != 'dispatched'"/>
+                                </group>
+                            </group>
+                            <field name="receipt_note" readonly="state != 'dispatched'"
+                                   placeholder="Condition of cartons and goods on arrival"/>
+                        </page>
+                        <page string="Notes" name="notes">
+                            <field name="note"/>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="pharma_shipment_view_search" model="ir.ui.view">
+        <field name="name">pharma.shipment.search</field>
+        <field name="model">pharma.shipment</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="picking_id"/>
+                <field name="partner_id"/>
+                <field name="transporter_id"/>
+                <field name="driver_ids"/>
+                <field name="line_ids" string="Product" filter_domain="[('line_ids.product_id', 'ilike', self)]"/>
+                <field name="line_ids" string="Batch" filter_domain="[('line_ids.lot_id', 'ilike', self)]"/>
+                <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+                <filter name="dispatched" string="In Transit" domain="[('state', '=', 'dispatched')]"/>
+                <filter name="delivered" string="Delivered" domain="[('state', '=', 'delivered')]"/>
+                <separator/>
+                <filter name="excursion_pending" string="Excursion to Review"
+                        domain="[('excursion_decision', '=', 'pending')]"/>
+                <filter name="discrepancy" string="Delivery Discrepancy"
+                        domain="[('has_discrepancy', '=', True)]"/>
+                <separator/>
+                <filter name="dispatch_date" string="Dispatch Date" date="dispatch_date"/>
+                <group>
+                    <filter name="group_transporter" string="Transporter" context="{'group_by': 'transporter_id'}"/>
+                    <filter name="group_state" string="Status" context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="pharma_shipment_action" model="ir.actions.act_window">
+        <field name="name">Shipments</field>
+        <field name="res_model">pharma.shipment</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="pharma_shipment_view_search"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">No shipments yet</p>
+            <p>Open a validated delivery order and click Dispatch to create its shipment.</p>
+        </field>
+    </record>
+</odoo>

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- One party block (consignor, consignee or ship-to). -->
+    <template id="challan_party_block">
+        <div class="o_dc_label" t-out="label"/>
+        <div class="fw-bold" t-out="party.name"/>
+        <div t-out="party" t-options='{"widget": "contact", "fields": ["address"], "no_marker": True}'/>
+        <table class="o_dc_kv mt-1 table-borderless o_ignore_layout_styling">
+            <tr t-if="party.vat">
+                <td>GSTIN</td><td class="fw-bold" t-out="party.vat"/>
+            </tr>
+            <tr t-if="party.state_id">
+                <td>State</td>
+                <td>
+                    <span t-out="party.state_id.name"/>
+                    <t t-set="code" t-value="party._pharma_gst_state_code()"/>
+                    <span t-if="code">(Code <span t-out="code"/>)</span>
+                </td>
+            </tr>
+            <tr t-if="party.pharma_dl_20b">
+                <td>D.L. 20B</td><td t-out="party.pharma_dl_20b"/>
+            </tr>
+            <tr t-if="party.pharma_dl_21b">
+                <td>D.L. 21B</td><td t-out="party.pharma_dl_21b"/>
+            </tr>
+        </table>
+    </template>
+
+    <template id="report_delivery_challan_document">
+        <t t-call="web.external_layout">
+            <t t-set="o" t-value="o.with_context(lang=o.partner_id.lang or o.env.lang)"/>
+            <t t-set="consignor" t-value="o.company_id.partner_id"/>
+            <t t-set="consignee" t-value="o.partner_id.commercial_partner_id"/>
+            <t t-set="ship_to" t-value="o.picking_id.partner_id"/>
+            <t t-set="currency" t-value="o.currency_id"/>
+            <t t-set="show_tax" t-value="o._challan_shows_tax()"/>
+            <t t-set="reason" t-value="dict(o._fields['transport_reason']._description_selection(o.env)).get(o.transport_reason)"/>
+            <t t-set="mode" t-value="dict(o._fields['transport_mode']._description_selection(o.env)).get(o.transport_mode)"/>
+            <t t-set="from_code" t-value="consignor._pharma_gst_state_code()"/>
+            <t t-set="to_code" t-value="(ship_to or consignee)._pharma_gst_state_code()"/>
+            <div class="page o_dc">
+                <style>
+                    .o_dc { font-size: 11px; }
+                    .o_dc .o_dc_title { font-size: 20px; letter-spacing: .08em; font-weight: 700; margin: 0; }
+                    .o_dc .o_dc_sub { color: #6c757d; font-size: 9.5px; }
+                    .o_dc .o_dc_copy { border: 1px solid #343a40; padding: 3px 10px; font-size: 9.5px;
+                                       font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+                    .o_dc .o_dc_label { font-size: 8.5px; text-transform: uppercase; letter-spacing: .07em;
+                                        color: #6c757d; margin-bottom: 2px; }
+                    .o_dc .o_dc_facts { width: 100%; border-collapse: collapse; margin: 10px 0; }
+                    .o_dc .o_dc_facts td { border: 1px solid #ced4da !important; padding: 5px 8px; width: 25%; vertical-align: top; }
+                    .o_dc .o_dc_facts .o_dc_value { font-size: 12px; font-weight: 700; }
+                    .o_dc .o_dc_cards { width: 100%; border-collapse: separate; border-spacing: 6px 0; margin-bottom: 10px; }
+                    .o_dc .o_dc_cards > tbody > tr > td { border-top: 2px solid #343a40 !important; background: #f8f9fa;
+                                                          padding: 6px 8px; vertical-align: top; width: 33.3%; }
+                    .o_dc .o_dc_kv td { padding: 0 8px 1px 0; vertical-align: top; }
+                    .o_dc .o_dc_kv td:first-child { color: #6c757d; white-space: nowrap; }
+                    .o_dc .o_dc_transport { width: 100%; border: 1px solid #ced4da !important; margin-bottom: 10px; }
+                    .o_dc .o_dc_transport td { padding: 3px 8px; vertical-align: top; }
+                    .o_dc .o_dc_transport td.o_dc_k { color: #6c757d; white-space: nowrap; width: 1%; }
+                    .o_dc .o_dc_goods { width: 100%; border-collapse: collapse; }
+                    .o_dc .o_dc_goods th { background: #343a40; color: #fff; font-weight: 600; font-size: 9.5px;
+                                           padding: 4px 5px; text-align: left; }
+                    .o_dc .o_dc_goods td { border-bottom: 1px solid #dee2e6 !important; padding: 4px 5px; vertical-align: top; }
+                    .o_dc .o_dc_goods .o_dc_num { text-align: right; white-space: nowrap; }
+                    .o_dc .o_dc_note { color: #6c757d; font-size: 9px; }
+                    .o_dc .o_dc_totals { width: 100%; }
+                    .o_dc .o_dc_totals td { padding: 2px 0; }
+                    .o_dc .o_dc_totals .o_dc_grand td { border-top: 2px solid #343a40 !important; font-weight: 700;
+                                                        font-size: 12.5px; padding-top: 4px; }
+                    .o_dc .o_dc_storage { border-left: 3px solid #0d6efd; background: #f1f6ff; padding: 4px 8px; margin-top: 6px; }
+                    .o_dc .o_dc_sign td { width: 33.3%; vertical-align: bottom; height: 70px; padding: 0 8px; }
+                    .o_dc .o_dc_sign .o_dc_line { border-top: 1px solid #343a40 !important; padding-top: 3px; }
+                    .o_dc .o_dc_draft { border: 1px dashed #dc3545; color: #dc3545; padding: 4px 8px; margin-top: 6px; }
+                </style>
+
+                <!-- Title -->
+                <div class="d-flex justify-content-between align-items-start mt-2">
+                    <div>
+                        <h1 class="o_dc_title">DELIVERY CHALLAN</h1>
+                        <div class="o_dc_sub">Issued under Rule 55 of the CGST Rules, 2017 · Not a tax invoice</div>
+                    </div>
+                    <div class="o_dc_copy" t-out="copy_label"/>
+                </div>
+                <div t-if="not o.challan_number" class="o_dc_draft">
+                    Draft: not valid for transport. The challan number is given when the shipment is dispatched.
+                </div>
+
+                <!-- Key facts -->
+                <table class="o_dc_facts table-borderless o_ignore_layout_styling">
+                    <tr>
+                        <td>
+                            <div class="o_dc_label">Challan No.</div>
+                            <div class="o_dc_value" t-out="o.challan_number or 'DRAFT'"/>
+                        </td>
+                        <td>
+                            <div class="o_dc_label">Challan Date</div>
+                            <div class="o_dc_value"><span t-field="o.dispatch_date" t-options='{"widget": "date"}'/></div>
+                        </td>
+                        <td>
+                            <div class="o_dc_label">Reason for Transport</div>
+                            <div class="o_dc_value" t-out="reason"/>
+                        </td>
+                        <td>
+                            <div class="o_dc_label">Reference</div>
+                            <div t-out="o.picking_id.name"/>
+                            <div t-if="o.origin" class="o_dc_note">Order <span t-out="o.origin"/></div>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Parties -->
+                <table class="o_dc_cards table-borderless o_ignore_layout_styling">
+                    <tr>
+                        <td>
+                            <t t-call="pharma_dispatch.challan_party_block" label="'Consignor'" party="consignor"/>
+                        </td>
+                        <td>
+                            <t t-call="pharma_dispatch.challan_party_block" label="'Consignee'" party="consignee"/>
+                        </td>
+                        <td>
+                            <t t-if="ship_to and ship_to != consignee">
+                                <t t-call="pharma_dispatch.challan_party_block" label="'Ship To'" party="ship_to"/>
+                            </t>
+                            <t t-else="">
+                                <div class="o_dc_label">Ship To</div>
+                                <div>Same as consignee</div>
+                            </t>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Transport -->
+                <table class="o_dc_transport table-borderless o_ignore_layout_styling">
+                    <tr>
+                        <td class="o_dc_k">Mode</td><td t-out="mode"/>
+                        <td class="o_dc_k">Vehicle No.</td><td class="fw-bold" t-out="o.vehicle_number or '—'"/>
+                        <td class="o_dc_k">Place of Supply</td>
+                        <td>
+                            <t t-set="pos_state" t-value="(ship_to or consignee).state_id"/>
+                            <span t-out="pos_state.name or '—'"/>
+                            <span t-if="to_code"> (<span t-out="to_code"/>)</span>
+                            <div t-if="from_code and to_code and from_code != to_code" class="o_dc_note">Inter-state movement</div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="o_dc_k">Transporter</td>
+                        <td>
+                            <span t-out="o.transporter_id.name or '—'"/>
+                            <div t-if="o.transporter_id.vat" class="o_dc_note">GSTIN / ID <span t-out="o.transporter_id.vat"/></div>
+                        </td>
+                        <td class="o_dc_k">LR / GR No.</td>
+                        <td>
+                            <span t-out="o.lr_number or '—'"/>
+                            <span t-if="o.lr_date" class="o_dc_note"> dt. <span t-field="o.lr_date"/></span>
+                        </td>
+                        <td class="o_dc_k">E-way Bill</td>
+                        <td>
+                            <span t-out="o.eway_bill_number or '—'"/>
+                            <span t-if="o.eway_bill_date" class="o_dc_note"> dt. <span t-field="o.eway_bill_date"/></span>
+                            <div t-if="o.eway_bill_valid_until" class="o_dc_note">Valid until <span t-field="o.eway_bill_valid_until"/></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="o_dc_k">Driver(s)</td>
+                        <td t-out="', '.join(o.driver_ids.mapped('name')) or '—'"/>
+                        <td class="o_dc_k">Seal No.</td><td t-out="o.seal_number or '—'"/>
+                        <td class="o_dc_k">Packages</td>
+                        <td>
+                            <span t-out="o.package_count"/>
+                            <span t-if="o.total_weight" class="o_dc_note"> · <span t-field="o.total_weight"/> kg</span>
+                        </td>
+                    </tr>
+                </table>
+
+                <!-- Goods -->
+                <table class="o_dc_goods table-borderless o_ignore_layout_styling">
+                    <thead>
+                        <tr>
+                            <th style="width: 3%;">#</th>
+                            <th>Description of Goods</th>
+                            <th>HSN</th>
+                            <th>Batch</th>
+                            <th>Mfg.</th>
+                            <th>Exp.</th>
+                            <th class="o_dc_num">Qty</th>
+                            <th class="o_dc_num">Rate</th>
+                            <th class="o_dc_num">Taxable Value</th>
+                            <th t-if="show_tax" class="o_dc_num">Tax</th>
+                            <th t-if="show_tax" class="o_dc_num">Tax Amt.</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="o.line_ids" t-as="line">
+                            <td t-out="line_index + 1"/>
+                            <td>
+                                <div class="fw-bold" t-out="line.product_id.display_name"/>
+                                <div t-if="line.product_id.product_tmpl_id.storage_conditions" class="o_dc_note"
+                                     t-out="line.product_id.product_tmpl_id.storage_conditions"/>
+                                <div t-if="line.package_id" class="o_dc_note">Pkg <span t-out="line.package_id.name"/></div>
+                            </td>
+                            <td t-out="line.hsn_code or ''"/>
+                            <td t-out="line.lot_id.name or ''"/>
+                            <td><span t-field="line.manufacture_date" t-options='{"format": "MM/yy"}'/></td>
+                            <td><span t-field="line.expiration_date" t-options='{"format": "MM/yy"}'/></td>
+                            <td class="o_dc_num"><span t-field="line.quantity"/> <span t-out="line.uom_id.name"/></td>
+                            <td class="o_dc_num"><span t-field="line.price_unit"/></td>
+                            <td class="o_dc_num"><span t-field="line.value"/></td>
+                            <td t-if="show_tax" class="o_dc_num" t-out="', '.join(line.tax_ids.mapped('name'))"/>
+                            <td t-if="show_tax" class="o_dc_num"><span t-field="line.tax_amount"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Totals -->
+                <div class="row mt-3" style="page-break-inside: avoid;">
+                    <div class="col-7">
+                        <div class="o_dc_label">Value in words</div>
+                        <div class="fw-bold" t-out="o._challan_amount_in_words()"/>
+                        <div t-if="o.temperature_controlled" class="o_dc_storage">
+                            <strong>Cold chain:</strong> keep between <span t-field="o.temp_min"/> °C and
+                            <span t-field="o.temp_max"/> °C throughout transit. Do not freeze.
+                        </div>
+                        <div class="o_dc_note mt-2">
+                            Batches listed are QA-released. Check batch numbers, carton count and seal on receipt
+                            and note any shortage or damage on this challan before signing.
+                            <t t-if="o.transport_reason != 'supply'">Movement is not a supply; no tax is charged.</t>
+                        </div>
+                    </div>
+                    <div class="col-5">
+                        <table class="o_dc_totals table-borderless o_ignore_layout_styling">
+                            <tr>
+                                <td>Taxable value</td>
+                                <td class="text-end"><span t-field="o.amount_untaxed"/></td>
+                            </tr>
+                            <t t-if="show_tax">
+                                <tr t-foreach="o._challan_tax_summary()" t-as="tax">
+                                    <td t-out="tax['name']"/>
+                                    <td class="text-end" t-out="tax['amount']"
+                                        t-options='{"widget": "monetary", "display_currency": currency}'/>
+                                </tr>
+                            </t>
+                            <tr class="o_dc_grand">
+                                <td>Consignment value</td>
+                                <td class="text-end"><span t-field="o.amount_total"/></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Signatures -->
+                <table class="o_dc_sign w-100 mt-4 table-borderless o_ignore_layout_styling" style="page-break-inside: avoid;">
+                    <tr>
+                        <td>
+                            <div class="o_dc_line">
+                                Received in good condition<br/>
+                                <span class="o_dc_note">Consignee: signature, name, date and stamp</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="o_dc_line">
+                                Goods and documents received for transport<br/>
+                                <span class="o_dc_note">Driver / transporter signature</span>
+                            </div>
+                        </td>
+                        <td class="text-end">
+                            <div class="mb-4">For <strong t-out="o.company_id.name"/></div>
+                            <div class="o_dc_line">Authorised Signatory</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </t>
+    </template>
+
+    <!-- Rule 55(2): the challan is prepared in triplicate. -->
+    <template id="report_delivery_challan">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-foreach="['Original for Consignee', 'Duplicate for Transporter', 'Triplicate for Consignor']" t-as="copy_label">
+                    <t t-call="pharma_dispatch.report_delivery_challan_document"/>
+                </t>
+            </t>
+        </t>
+    </template>
+</odoo>

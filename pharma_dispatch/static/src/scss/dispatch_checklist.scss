@@ -1,0 +1,9 @@
+// Checklist lines: outline the photo cell of checks that still need a photo.
+.o_pharma_checklist_lines {
+    td[name="photo"].text-danger,
+    td[name="photo"]:has(.text-danger) {
+        box-shadow: inset 0 0 0 1px rgba($danger, 0.55);
+        border-radius: 3px;
+        background-color: rgba($danger, 0.04);
+    }
+}

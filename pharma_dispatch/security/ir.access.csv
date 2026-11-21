@@ -1,0 +1,22 @@
+id,name,model_id,group_id/id,operation,domain
+access_pharma_shipment_user,pharma.shipment.user,pharma.shipment,stock.group_stock_user,cru,
+access_pharma_shipment_manager,pharma.shipment.manager,pharma.shipment,stock.group_stock_manager,crud,
+access_pharma_shipment_line_user,pharma.shipment.line.user,pharma.shipment.line,stock.group_stock_user,cru,
+access_pharma_shipment_line_manager,pharma.shipment.line.manager,pharma.shipment.line,stock.group_stock_manager,crud,
+access_pharma_shipment_temperature_user,pharma.shipment.temperature.user,pharma.shipment.temperature,stock.group_stock_user,cru,
+access_pharma_shipment_temperature_manager,pharma.shipment.temperature.manager,pharma.shipment.temperature,stock.group_stock_manager,crud,
+access_pharma_dispatch_checklist_template_user,pharma.dispatch.checklist.template.user,pharma.dispatch.checklist.template,stock.group_stock_user,r,
+access_pharma_dispatch_checklist_template_manager,pharma.dispatch.checklist.template.manager,pharma.dispatch.checklist.template,stock.group_stock_manager,crud,
+access_pharma_dispatch_checklist_template_line_user,pharma.dispatch.checklist.template.line.user,pharma.dispatch.checklist.template.line,stock.group_stock_user,r,
+access_pharma_dispatch_checklist_template_line_manager,pharma.dispatch.checklist.template.line.manager,pharma.dispatch.checklist.template.line,stock.group_stock_manager,crud,
+access_pharma_dispatch_checklist_user,pharma.dispatch.checklist.user,pharma.dispatch.checklist,stock.group_stock_user,cru,
+access_pharma_dispatch_checklist_manager,pharma.dispatch.checklist.manager,pharma.dispatch.checklist,stock.group_stock_manager,crud,
+access_pharma_dispatch_checklist_line_user,pharma.dispatch.checklist.line.user,pharma.dispatch.checklist.line,stock.group_stock_user,cru,
+access_pharma_dispatch_checklist_line_manager,pharma.dispatch.checklist.line.manager,pharma.dispatch.checklist.line,stock.group_stock_manager,crud,
+pharma_shipment_company_rule,pharma.shipment multi-company,pharma.shipment,,crud,"[('company_id', 'in', company_ids)]"
+pharma_dispatch_checklist_company_rule,pharma.dispatch.checklist multi-company,pharma.dispatch.checklist,,crud,"[('company_id', 'in', company_ids)]"
+pharma_dispatch_checklist_template_company_rule,pharma.dispatch.checklist.template multi-company,pharma.dispatch.checklist.template,,crud,"[('company_id', 'in', company_ids + [False])]"
+access_pharma_transport_contract_user,pharma.transport.contract.user,pharma.transport.contract,stock.group_stock_user,r,
+access_pharma_transport_contract_manager,pharma.transport.contract.manager,pharma.transport.contract,stock.group_stock_manager,crud,
+access_pharma_transport_contract_terminate_manager,pharma.transport.contract.terminate.manager,pharma.transport.contract.terminate,stock.group_stock_manager,crud,
+pharma_transport_contract_company_rule,pharma.transport.contract multi-company,pharma.transport.contract,,crud,"[('company_id', 'in', company_ids)]"

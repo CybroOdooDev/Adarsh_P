@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <record id="seq_pharma_shipment" model="ir.sequence">
+        <field name="name">Shipment</field>
+        <field name="code">pharma.shipment</field>
+        <field name="prefix">SHP/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+    <record id="seq_pharma_dispatch_checklist" model="ir.sequence">
+        <field name="name">Dispatch Checklist</field>
+        <field name="code">pharma.dispatch.checklist</field>
+        <field name="prefix">DCL/%(year)s/</field>
+        <field name="padding">5</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <!-- Numbered per Indian financial year (April-March); the DC/YY-YY/
+         prefix is added in code, see pharma.shipment._next_challan_number. -->
+    <record id="seq_pharma_delivery_challan_fy" model="ir.sequence">
+        <field name="name">Delivery Challan (per financial year)</field>
+        <field name="code">pharma.delivery.challan.fy</field>
+        <field name="padding">5</field>
+        <field name="use_date_range" eval="True"/>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="seq_pharma_transport_contract" model="ir.sequence">
+        <field name="name">Transport Contract</field>
+        <field name="code">pharma.transport.contract</field>
+        <field name="prefix">TC/%(year)s/</field>
+        <field name="padding">4</field>
+        <field name="company_id" eval="False"/>
+    </record>
+
+    <record id="ir_cron_transport_contract_validity" model="ir.cron" forcecreate="True">
+        <field name="name">Dispatch: transport contract and driver qualification reminders</field>
+        <field name="model_id" ref="model_pharma_transport_contract"/>
+        <field name="state">code</field>
+        <field name="code">model._cron_contract_validity()</field>
+        <field name="user_id" ref="base.user_root"/>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+    </record>
+
+    <record id="checklist_template_standard" model="pharma.dispatch.checklist.template">
+        <field name="name">Standard Pre-Loading Checklist</field>
+    </record>
+    <record id="checklist_tmpl_line_1" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">10</field>
+        <field name="section">vehicle</field>
+        <field name="name">Closed body with no holes, rust-through, cracks or gaps; roof and floor intact</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">all</field>
+        <field name="photo_required" eval="True"/>
+    </record>
+    <record id="checklist_tmpl_line_2" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">20</field>
+        <field name="section">vehicle</field>
+        <field name="name">Cargo area clean, dry and odour-free, with no residue from previous loads</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">all</field>
+        <field name="photo_required" eval="True"/>
+    </record>
+    <record id="checklist_tmpl_line_3" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">30</field>
+        <field name="section">vehicle</field>
+        <field name="name">No pests, droppings or nests</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_4" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">40</field>
+        <field name="section">vehicle</field>
+        <field name="name">No co-loaded goods that could contaminate (chemicals, food, pesticides, fuel)</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_5" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">50</field>
+        <field name="section">vehicle</field>
+        <field name="name">Locks work; seal fixture is fit to take a numbered seal</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_6" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">60</field>
+        <field name="section">vehicle</field>
+        <field name="name">Doors close fully; door gaskets intact; strip curtains present (reefer)</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">major</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_7" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">70</field>
+        <field name="section">vehicle</field>
+        <field name="name">Pallets or racks available so cartons don't sit on the floor; load bars or straps available</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">major</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_8" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">80</field>
+        <field name="section">vehicle</field>
+        <field name="name">Vehicle cleaning log for the last trip is signed</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">major</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_9" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">90</field>
+        <field name="section">vehicle</field>
+        <field name="name">GPS tracker is online</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">major</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_10" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">100</field>
+        <field name="section">vehicle</field>
+        <field name="name">Tyres, lights and wipers are serviceable; fuel is enough for the first leg</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">minor</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_11" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">110</field>
+        <field name="section">vehicle</field>
+        <field name="name">Fire extinguisher, first-aid kit and emergency contact sheet are on board</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">minor</field>
+        <field name="applies_to">all</field>
+    </record>
+    <record id="checklist_tmpl_line_12" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">120</field>
+        <field name="section">temperature</field>
+        <field name="name">Vehicle is qualified (temperature-mapped) for this product's range, and the mapping is in date</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+    </record>
+    <record id="checklist_tmpl_line_13" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">130</field>
+        <field name="section">temperature</field>
+        <field name="name">Reefer pre-cooled to the set-point for the time in the SOP</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+    </record>
+    <record id="checklist_tmpl_line_14" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">140</field>
+        <field name="section">temperature</field>
+        <field name="name">Cargo-space temperature at the front (calibrated probe)</field>
+        <field name="check_type">numeric</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+        <field name="limit_source">shipment</field>
+        <field name="unit">°C</field>
+        <field name="log_temperature" eval="True"/>
+    </record>
+    <record id="checklist_tmpl_line_15" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">150</field>
+        <field name="section">temperature</field>
+        <field name="name">Cargo-space temperature in the middle (calibrated probe)</field>
+        <field name="check_type">numeric</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+        <field name="limit_source">shipment</field>
+        <field name="unit">°C</field>
+        <field name="log_temperature" eval="True"/>
+    </record>
+    <record id="checklist_tmpl_line_16" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">160</field>
+        <field name="section">temperature</field>
+        <field name="name">Cargo-space temperature at the rear doors (calibrated probe)</field>
+        <field name="check_type">numeric</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+        <field name="limit_source">shipment</field>
+        <field name="unit">°C</field>
+        <field name="log_temperature" eval="True"/>
+    </record>
+    <record id="checklist_tmpl_line_17" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">170</field>
+        <field name="section">temperature</field>
+        <field name="name">Difference between the reefer display and the calibrated probe</field>
+        <field name="check_type">numeric</field>
+        <field name="severity">major</field>
+        <field name="applies_to">cold_chain</field>
+        <field name="limit_source">fixed</field>
+        <field name="min_value">-1.0</field>
+        <field name="max_value">1.0</field>
+        <field name="unit">°C</field>
+        <field name="instructions">Reefer display minus probe reading. Change the limits to your SOP tolerance.</field>
+    </record>
+    <record id="checklist_tmpl_line_18" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">180</field>
+        <field name="section">temperature</field>
+        <field name="name">Reefer backup (battery or standby unit) checked</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">major</field>
+        <field name="applies_to">cold_chain</field>
+    </record>
+    <record id="checklist_tmpl_line_19" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">190</field>
+        <field name="section">temperature</field>
+        <field name="name">Data logger ID (calibration in date, logger started and placed)</field>
+        <field name="check_type">text</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+    </record>
+    <record id="checklist_tmpl_line_20" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">200</field>
+        <field name="section">temperature</field>
+        <field name="name">Insulated shippers packed to the validated pack-out</field>
+        <field name="check_type">yes_no</field>
+        <field name="severity">critical</field>
+        <field name="applies_to">cold_chain</field>
+    </record>
+    <record id="checklist_tmpl_line_21" model="pharma.dispatch.checklist.template.line">
+        <field name="template_id" ref="checklist_template_standard"/>
+        <field name="sequence">210</field>
+        <field name="section">temperature</field>
+        <field name="name">Cargo-space temperature (ambient vehicle)</field>
+        <field name="check_type">numeric</field>
+        <field name="severity">major</field>
+        <field name="applies_to">ambient</field>
+        <field name="limit_source">fixed</field>
+        <field name="min_value">0.0</field>
+        <field name="max_value">25.0</field>
+        <field name="unit">°C</field>
+        <field name="instructions">Change the limits to the storage condition of your products, e.g. below 30 °C.</field>
+    </record>
+</odoo>

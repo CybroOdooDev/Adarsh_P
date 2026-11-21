@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_picking_form_inherit_pharma_dispatch" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.pharma.dispatch</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button[@name='button_validate'][last()]" position="after">
+                <button name="action_create_shipment" string="Dispatch" type="object"
+                        class="oe_highlight" groups="stock.group_stock_user"
+                        invisible="picking_type_code != 'outgoing' or state != 'done' or active_shipment_count"/>
+            </xpath>
+            <xpath expr="//field[@name='origin']" position="after">
+                <field name="checklist_template_id"
+                       invisible="picking_type_code != 'outgoing'"
+                       readonly="state == 'cancel' or active_shipment_count"
+                       options="{'no_create': True}"/>
+            </xpath>
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <field name="active_shipment_count" invisible="1"/>
+                <button name="action_view_shipments" type="object"
+                        class="oe_stat_button" icon="local_shipping"
+                        invisible="not shipment_count">
+                    <field name="shipment_count" string="Shipments" widget="statinfo"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+</odoo>
