@@ -40,17 +40,20 @@
                             groups="stock.group_stock_manager"/>
                     <button name="action_terminate" string="Terminate" type="object"
                             invisible="state != 'active'" groups="stock.group_stock_manager"/>
-                    <button name="action_reset_to_draft" string="Renew / Reset to Draft" type="object"
-                            invisible="state not in ('expired', 'terminated')"
+                    <button name="action_renew" string="Renew" type="object"
+                            class="oe_highlight"
+                            invisible="state not in ('active', 'expired', 'terminated') or renewal_id"
                             groups="stock.group_stock_manager"/>
                     <field name="state" widget="statusbar" statusbar_visible="draft,active,expired"/>
                 </header>
                 <div class="alert alert-warning mb-0" role="alert"
-                     invisible="state != 'active' or days_to_expiry &gt; reminder_days">
+                     invisible="state != 'active' or days_to_expiry &gt; reminder_days or renewal_id">
                     This contract expires in <field name="days_to_expiry" class="oe_inline"/> day(s).
                     Renew it before shipments with this transporter are blocked.
                 </div>
                 <sheet>
+                    <widget name="web_ribbon" title="Archived" bg_color="text-bg-danger"
+                            invisible="active"/>
                     <div class="oe_button_box" name="button_box">
                         <button name="action_view_shipments" type="object"
                                 class="oe_stat_button" icon="local_shipping"
@@ -63,8 +66,7 @@
                     </div>
                     <group>
                         <group>
-                            <field name="transporter_id" readonly="state != 'draft'"
-                                   context="{'default_is_company': True}"/>
+                            <field name="transporter_id" readonly="state != 'draft'"/>
                             <field name="partner_reference" readonly="state != 'draft'"/>
                             <field name="responsible_id" widget="many2one_avatar_user"/>
                             <field name="company_id" groups="base.group_multi_company"
@@ -74,6 +76,9 @@
                             <field name="date_start" readonly="state != 'draft'"/>
                             <field name="date_end" readonly="state != 'draft'"/>
                             <field name="reminder_days"/>
+                            <field name="renewed_from_id" invisible="not renewed_from_id"/>
+                            <field name="renewal_id" invisible="not renewal_id"/>
+                            <field name="active" invisible="1"/>
                         </group>
                         <group string="Services Covered">
                             <field name="service_ambient" readonly="state != 'draft'"/>
@@ -88,42 +93,6 @@
                         </group>
                     </group>
                     <notebook>
-                        <page string="Quality Agreement" name="quality">
-                            <p class="text-muted">
-                                Every point must be covered by the signed agreement before the
-                                contract can be activated.
-                            </p>
-                            <div class="d-flex flex-column gap-2 mt-2">
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_temperature_control" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_temperature_control" class="o_form_label mb-0 fw-normal"/>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_trained_drivers" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_trained_drivers" class="o_form_label mb-0 fw-normal"/>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_vehicle_cleaning" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_vehicle_cleaning" class="o_form_label mb-0 fw-normal"/>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_no_subcontracting" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_no_subcontracting" class="o_form_label mb-0 fw-normal"/>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_incident_reporting" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_incident_reporting" class="o_form_label mb-0 fw-normal"/>
-                                    <span invisible="not qa_incident_reporting" class="text-muted">within</span>
-                                    <field name="incident_reporting_hours" nolabel="1" class="oe_inline" style="width: 4rem;"
-                                           readonly="state != 'draft'" invisible="not qa_incident_reporting"/>
-                                    <span invisible="not qa_incident_reporting" class="text-muted">hours</span>
-                                </div>
-                                <div class="d-flex align-items-center gap-2">
-                                    <field name="qa_right_to_audit" nolabel="1" readonly="state != 'draft'"/>
-                                    <label for="qa_right_to_audit" class="o_form_label mb-0 fw-normal"/>
-                                </div>
-                            </div>
-                        </page>
                         <page string="Notes" name="notes">
                             <field name="note"/>
                             <group invisible="not termination_reason">
@@ -147,8 +116,10 @@
                 <field name="partner_reference"/>
                 <filter name="active_contracts" string="Active" domain="[('state', '=', 'active')]"/>
                 <filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
-                <filter name="ended" string="Expired / Terminated"
-                        domain="[('state', 'in', ('expired', 'terminated'))]"/>
+                <filter name="terminated" string="Terminated"
+                        domain="[('state', '=', 'terminated')]"/>
+                <separator/>
+                <filter name="archived" string="Archived" domain="[('active', '=', False)]"/>
                 <separator/>
                 <filter name="cold_chain" string="Cold Chain" domain="[('service_cold_chain', '=', True)]"/>
                 <filter name="high_security" string="High Security" domain="[('service_high_security', '=', True)]"/>

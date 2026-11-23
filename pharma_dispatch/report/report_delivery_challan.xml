@@ -34,7 +34,7 @@
             <t t-set="ship_to" t-value="o.picking_id.partner_id"/>
             <t t-set="currency" t-value="o.currency_id"/>
             <t t-set="show_tax" t-value="o._challan_shows_tax()"/>
-            <t t-set="reason" t-value="dict(o._fields['transport_reason']._description_selection(o.env)).get(o.transport_reason)"/>
+            <t t-set="reason" t-value="o.transport_reason"/>
             <t t-set="mode" t-value="dict(o._fields['transport_mode']._description_selection(o.env)).get(o.transport_mode)"/>
             <t t-set="from_code" t-value="consignor._pharma_gst_state_code()"/>
             <t t-set="to_code" t-value="(ship_to or consignee)._pharma_gst_state_code()"/>
@@ -224,7 +224,6 @@
                         <div class="o_dc_note mt-2">
                             Batches listed are QA-released. Check batch numbers, carton count and seal on receipt
                             and note any shortage or damage on this challan before signing.
-                            <t t-if="o.transport_reason != 'supply'">Movement is not a supply; no tax is charged.</t>
                         </div>
                     </div>
                     <div class="col-5">

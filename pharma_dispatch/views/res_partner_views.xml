@@ -14,14 +14,14 @@
                 </button>
             </xpath>
             <xpath expr="//div[@name='identifiers']" position="after">
-                <field name="pharma_dl_20b" invisible="not is_company and parent_id"/>
-                <field name="pharma_dl_21b" invisible="not is_company and parent_id"/>
+                <field name="pharma_dl_20b" invisible="parent_id"/>
+                <field name="pharma_dl_21b" invisible="parent_id"/>
                 <field name="pharma_dl_valid_until"
                        invisible="not (pharma_dl_20b or pharma_dl_21b)"/>
             </xpath>
             <xpath expr="//page[@name='internal_notes']" position="before">
                 <page string="Transport Qualification" name="transport_qualification"
-                      invisible="is_company or not (transport_role or parent_id)"
+                      invisible="not (transport_role or parent_id)"
                       groups="stock.group_stock_user">
                     <div class="alert alert-danger" role="alert"
                          invisible="transport_qualification_state != 'not_qualified'">
@@ -30,11 +30,12 @@
                     </div>
                     <div class="alert alert-warning" role="alert"
                          invisible="transport_qualification_state != 'expiring'">
-                        A licence or training expires within 30 days.
+                        The driving licence expires within 30 days.
                     </div>
                     <group>
                         <group>
                             <field name="transport_role"/>
+                            <field name="cold_chain_trained" invisible="not transport_role"/>
                             <field name="transport_qualification_state" invisible="not transport_role"
                                    widget="badge"
                                    decoration-success="transport_qualification_state == 'qualified'"
@@ -48,11 +49,6 @@
                             <field name="driving_licence_class" placeholder="e.g. LMV, HGMV, Transport"/>
                             <field name="driving_licence_valid_until"/>
                         </group>
-                        <group string="GDP Training">
-                            <field name="gdp_training_date"/>
-                            <field name="gdp_training_valid_until"/>
-                            <field name="cold_chain_trained"/>
-                        </group>
                         <group string="Background Verification">
                             <field name="background_check_date"/>
                             <field name="background_check_valid_until"/>
@@ -64,64 +60,6 @@
                     </group>
                 </page>
             </xpath>
-        </field>
-    </record>
-
-    <record id="view_partner_transport_crew_list" model="ir.ui.view">
-        <field name="name">res.partner.transport.crew.list</field>
-        <field name="model">res.partner</field>
-        <field name="priority">100</field>
-        <field name="arch" type="xml">
-            <list>
-                <field name="name"/>
-                <field name="parent_id" string="Transporter"/>
-                <field name="transport_role"/>
-                <field name="driving_licence_number" optional="show"/>
-                <field name="driving_licence_valid_until" optional="show"/>
-                <field name="gdp_training_valid_until" optional="show"/>
-                <field name="cold_chain_trained" optional="show"/>
-                <field name="background_check_valid_until" optional="show"/>
-                <field name="transport_qualification_state" widget="badge"
-                       decoration-success="transport_qualification_state == 'qualified'"
-                       decoration-warning="transport_qualification_state == 'expiring'"
-                       decoration-danger="transport_qualification_state == 'not_qualified'"/>
-            </list>
-        </field>
-    </record>
-
-    <record id="view_partner_transport_crew_search" model="ir.ui.view">
-        <field name="name">res.partner.transport.crew.search</field>
-        <field name="model">res.partner</field>
-        <field name="priority">100</field>
-        <field name="arch" type="xml">
-            <search>
-                <field name="name"/>
-                <field name="parent_id" string="Transporter"/>
-                <field name="driving_licence_number"/>
-                <filter name="drivers" string="Drivers" domain="[('transport_role', '=', 'driver')]"/>
-                <filter name="escorts" string="Escorts" domain="[('transport_role', '=', 'escort')]"/>
-                <separator/>
-                <filter name="cold_chain" string="Cold Chain Trained" domain="[('cold_chain_trained', '=', True)]"/>
-                <group>
-                    <filter name="group_transporter" string="Transporter" context="{'group_by': 'parent_id'}"/>
-                </group>
-            </search>
-        </field>
-    </record>
-
-    <record id="action_transport_crew" model="ir.actions.act_window">
-        <field name="name">Drivers &amp; Escorts</field>
-        <field name="res_model">res.partner</field>
-        <field name="view_mode">list,form</field>
-        <field name="domain">[('transport_role', '!=', False)]</field>
-        <field name="context">{'default_transport_role': 'driver', 'default_is_company': False}</field>
-        <field name="search_view_id" ref="view_partner_transport_crew_search"/>
-        <field name="view_ids" eval="[(5, 0, 0),
-            (0, 0, {'view_mode': 'list', 'view_id': ref('view_partner_transport_crew_list')}),
-            (0, 0, {'view_mode': 'form', 'view_id': ref('base.view_partner_form')})]"/>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">Register the drivers and escorts of your transporters</p>
-            <p>Only qualified people can be assigned to a shipment.</p>
         </field>
     </record>
 </odoo>

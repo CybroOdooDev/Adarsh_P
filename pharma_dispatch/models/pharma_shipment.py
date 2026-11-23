@@ -46,8 +46,9 @@ class PharmaShipment(models.Model):
         ('cancel', 'Cancelled'),
     ], string='Status', default='draft', required=True, readonly=True,
         copy=False, tracking=True)
-    company_id = fields.Many2one('res.company', required=True,
-                                 default=lambda self: self.env.company)
+    company_id = fields.Many2one('res.company', required=True, readonly=True,
+                                 default=lambda self: self.env.company,
+                                 help='Company of the delivery order.')
 
     # Delivery order
     picking_id = fields.Many2one(
@@ -60,9 +61,10 @@ class PharmaShipment(models.Model):
 
     # Dates
     dispatch_date = fields.Datetime(
-        string='Dispatch Date', required=True, tracking=True,
-        default=fields.Datetime.now,
-        help='Date and time the vehicle leaves the warehouse.')
+        string='Dispatch Date', required=True, readonly=True, tracking=True,
+        copy=False, default=fields.Datetime.now,
+        help='Date and time the vehicle left the warehouse, set when the '
+             'Dispatch button is clicked.')
     expected_delivery_date = fields.Datetime(
         string='Expected Delivery Date', tracking=True,
         help='Date and time the consignment is expected at the customer.')
@@ -81,12 +83,12 @@ class PharmaShipment(models.Model):
              'once the shipment is dispatched.')
     transporter_id = fields.Many2one(
         'res.partner', string='Transporter', tracking=True,
-        domain="[('is_company', '=', True)]",
+        domain="[('parent_id', '=', False)]",
         help='Transport contractor carrying the consignment.')
     driver_ids = fields.Many2many(
         'res.partner', 'pharma_shipment_driver_rel', 'shipment_id',
         'partner_id', string='Drivers / Personnel',
-        domain="[('is_company', '=', False), ('parent_id', '=', transporter_id)]",
+        domain="[('parent_id', '!=', False), ('parent_id', '=', transporter_id)]",
         help='Drivers and escorts in the vehicle. High-security consignments '
              'may carry more than one person. Pick from the contacts of the '
              'transporter; new ones are created under the transporter.')
@@ -103,16 +105,11 @@ class PharmaShipment(models.Model):
                                 string='Shipping Weight',
                                 help='Sum of the shipping weight of the packages.')
     note = fields.Html(string='Notes')
-    transport_reason = fields.Selection([
-        ('supply', 'Supply to Customer'),
-        ('branch_transfer', 'Stock Transfer to Own Branch'),
-        ('job_work', 'Job Work'),
-        ('approval', 'Supply on Approval / Sample'),
-        ('return', 'Return'),
-        ('other', 'Other (not a supply)'),
-    ], string='Reason for Transport', required=True, default='supply',
-        tracking=True,
-        help='Printed on the delivery challan. Tax is shown only for a supply.')
+    transport_reason = fields.Char(
+        string='Reason for Transport', required=True, tracking=True,
+        default=lambda self: self.env._('Supply to Customer'),
+        help='Why the goods are moving, printed on the delivery challan, '
+             'e.g. supply, job work, stock transfer, supply on approval.')
     transport_mode = fields.Selection([
         ('road', 'Road'), ('rail', 'Rail'), ('air', 'Air'), ('ship', 'Ship'),
     ], string='Mode of Transport', required=True, default='road')
@@ -236,12 +233,11 @@ class PharmaShipment(models.Model):
 
     EWAY_BILL_LIMIT = 50000.0
 
-    @api.depends('line_ids.value', 'line_ids.tax_amount', 'transport_reason')
+    @api.depends('line_ids.value', 'line_ids.tax_amount')
     def _compute_amounts(self):
         for shipment in self:
             untaxed = sum(shipment.line_ids.mapped('value'))
-            tax = sum(shipment.line_ids.mapped('tax_amount')) \
-                if shipment.transport_reason == 'supply' else 0.0
+            tax = sum(shipment.line_ids.mapped('tax_amount'))
             shipment.amount_untaxed = untaxed
             shipment.amount_tax = tax
             shipment.amount_total = untaxed + tax
@@ -251,7 +247,7 @@ class PharmaShipment(models.Model):
 
     def _challan_shows_tax(self):
         self.ensure_one()
-        return self.transport_reason == 'supply' and bool(self.line_ids.tax_ids)
+        return bool(self.line_ids.tax_ids)
 
     def _challan_tax_summary(self):
         """Tax by component for the challan (e.g. CGST 6 %, SGST 6 %):
@@ -357,9 +353,12 @@ class PharmaShipment(models.Model):
             if not shipment.transporter_id or not shipment.dispatch_date:
                 shipment.transport_contract_id = False
                 continue
+            # A draft is dispatched today at the earliest: the dispatch date
+            # is only set when the Dispatch button is clicked.
+            day = fields.Date.context_today(
+                shipment, None if shipment.state == 'draft' else shipment.dispatch_date)
             shipment.transport_contract_id = Contract._find_active(
-                shipment.transporter_id, shipment.company_id,
-                fields.Date.context_today(shipment, shipment.dispatch_date))
+                shipment.transporter_id, shipment.company_id, day)
 
     @api.onchange('checklist_template_id')
     def _onchange_checklist_template_id(self):
@@ -424,6 +423,7 @@ class PharmaShipment(models.Model):
         # Look the contract up again: it may have been activated or ended
         # since the shipment was created.
         self.filtered(lambda s: s.state == 'draft')._compute_transport_contract()
+        now = fields.Datetime.now()
         for shipment in self:
             if shipment.state != 'draft':
                 raise UserError(self.env._('Only draft shipments can be dispatched.'))
@@ -453,6 +453,10 @@ class PharmaShipment(models.Model):
             if not shipment.expected_delivery_date:
                 raise UserError(self.env._('Set the expected delivery date of %s before dispatching.',
                                            shipment.name))
+            if shipment.expected_delivery_date < now:
+                raise UserError(self.env._(
+                    'The expected delivery date of %s is already past. Update it before dispatching.',
+                    shipment.name))
             unreleased = shipment.line_ids.lot_id.filtered(
                 lambda lot: lot.lot_status != 'released')
             if unreleased:
@@ -472,7 +476,7 @@ class PharmaShipment(models.Model):
                     'but the shipment is on %(vehicle)s. Check this vehicle.',
                     name=shipment.name, checked=checklist.vehicle_number,
                     vehicle=shipment.vehicle_number))
-        self.write({'state': 'dispatched'})
+        self.write({'state': 'dispatched', 'dispatch_date': now})
         for shipment in self:
             if not shipment.challan_number:
                 shipment.challan_number = shipment._next_challan_number()

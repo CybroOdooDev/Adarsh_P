@@ -21,7 +21,7 @@
 #############################################################################
 {
     'name': 'Pharmaceutical ERP — Dispatch & Transportation',
-    'version': '20.0.1.0.0',
+    'version': '20.0.1.5.0',
     'category': 'Inventory/Inventory',
     'summary': 'Shipments from delivery orders of QA-released batches: '
                'transporter, drivers, pre-loading checklist, temperature log, '

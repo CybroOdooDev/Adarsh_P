@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Card on the portal home page listing the vendor's bids -->
+    <record id="portal_tenders_client" model="portal.entry">
+        <field name="name">Tenders</field>
+        <field name="description">Review all your submitted bids for tenders</field>
+        <field name="url">/my/tenders</field>
+        <field name="image" type="bytes" file="advanced_tender_management/static/src/img/tender.svg"/>
+        <field name="category">client_category</field>
+        <field name="sequence" eval="90"/>
+    </record>
+</odoo>
