@@ -400,7 +400,6 @@
     <!-- Demo transporter with an active contract -->
     <record id="demo_partner_transporter" model="res.partner">
         <field name="name">Demo ColdLine Logistics</field>
-        <field name="is_company" eval="True"/>
     </record>
     <record id="demo_partner_transporter_driver" model="res.partner">
         <field name="name">Demo Driver</field>
@@ -409,8 +408,6 @@
         <field name="driving_licence_number">KL07 20190012345</field>
         <field name="driving_licence_class">LMV, HGMV</field>
         <field name="driving_licence_valid_until" eval="(DateTime.today() + relativedelta(years=3)).strftime('%Y-%m-%d')"/>
-        <field name="gdp_training_date" eval="(DateTime.today() - relativedelta(months=2)).strftime('%Y-%m-%d')"/>
-        <field name="gdp_training_valid_until" eval="(DateTime.today() + relativedelta(months=10)).strftime('%Y-%m-%d')"/>
         <field name="cold_chain_trained" eval="True"/>
     </record>
     <record id="demo_transport_contract" model="pharma.transport.contract">
@@ -422,12 +419,6 @@
         <field name="service_ambient" eval="True"/>
         <field name="service_cold_chain" eval="True"/>
         <field name="coverage">Kerala, Tamil Nadu and Karnataka</field>
-        <field name="qa_temperature_control" eval="True"/>
-        <field name="qa_trained_drivers" eval="True"/>
-        <field name="qa_vehicle_cleaning" eval="True"/>
-        <field name="qa_no_subcontracting" eval="True"/>
-        <field name="qa_incident_reporting" eval="True"/>
-        <field name="qa_right_to_audit" eval="True"/>
         <field name="state">active</field>
     </record>
 </odoo>

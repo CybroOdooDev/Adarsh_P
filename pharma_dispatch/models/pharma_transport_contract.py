@@ -24,20 +24,9 @@ from datetime import timedelta
 from odoo import api, fields, models
 from odoo.exceptions import UserError, ValidationError
 
-# Points a GDP quality agreement with a carrier must cover before the
-# contract can be activated.
-QUALITY_POINTS = {
-    'qa_temperature_control': 'Temperature control and monitoring during transit',
-    'qa_trained_drivers': 'Qualified drivers trained in GDP and product handling',
-    'qa_vehicle_cleaning': 'Vehicle cleaning and pest control',
-    'qa_no_subcontracting': 'No subcontracting without written approval',
-    'qa_incident_reporting': 'Reporting of incidents, delays and excursions',
-    'qa_right_to_audit': 'Right to audit the transporter',
-}
-
 
 class PharmaTransportContract(models.Model):
-    """Contract and GDP quality agreement with a transport contractor.
+    """Contract with a transport contractor.
 
     A transporter can only be used on a shipment while it has an active
     contract covering the dispatch date and the kind of consignment.
@@ -49,9 +38,12 @@ class PharmaTransportContract(models.Model):
 
     name = fields.Char(string='Reference', required=True, copy=False,
                        readonly=True, default='New', tracking=True)
+    active = fields.Boolean(default=True,
+                            help='Expired contracts are archived.')
     transporter_id = fields.Many2one(
         'res.partner', string='Transporter', required=True, index=True,
-        tracking=True, domain="[('is_company', '=', True)]",
+        tracking=True, domain="[('parent_id', '=', False)]",
+        help='Transport contractor: a top-level contact, not a person under a company.',
         ondelete='restrict')
     partner_reference = fields.Char(
         string="Transporter's Reference",
@@ -86,25 +78,28 @@ class PharmaTransportContract(models.Model):
         help='Controlled substances and high-value consignments.')
     coverage = fields.Text(string='Routes / Regions Covered')
 
-    # Quality agreement
-    qa_temperature_control = fields.Boolean(string=QUALITY_POINTS['qa_temperature_control'])
-    qa_trained_drivers = fields.Boolean(string=QUALITY_POINTS['qa_trained_drivers'])
-    qa_vehicle_cleaning = fields.Boolean(string=QUALITY_POINTS['qa_vehicle_cleaning'])
-    qa_no_subcontracting = fields.Boolean(string=QUALITY_POINTS['qa_no_subcontracting'])
-    qa_incident_reporting = fields.Boolean(string=QUALITY_POINTS['qa_incident_reporting'])
-    incident_reporting_hours = fields.Integer(
-        string='Report Within (hours)', default=24,
-        help='Time the transporter has to report an incident or excursion.')
-    qa_right_to_audit = fields.Boolean(string=QUALITY_POINTS['qa_right_to_audit'])
     document_ids = fields.Many2many(
         'ir.attachment', 'pharma_transport_contract_attachment_rel',
         'contract_id', 'attachment_id', string='Signed Contract',
-        help='Signed contract and quality agreement.')
+        help='Signed contract with the transporter.')
     termination_reason = fields.Text(readonly=True, copy=False)
     note = fields.Html(string='Notes')
 
     shipment_count = fields.Integer(compute='_compute_shipment_count')
     days_to_expiry = fields.Integer(compute='_compute_days_to_expiry')
+
+    # Renewal
+    renewed_from_id = fields.Many2one(
+        'pharma.transport.contract', string='Renewal Of', readonly=True,
+        copy=False, index=True, ondelete='set null',
+        help='Contract this one renews.')
+    renewal_ids = fields.One2many(
+        'pharma.transport.contract', 'renewed_from_id', string='Renewals',
+        context={'active_test': False})
+    renewal_id = fields.Many2one(
+        'pharma.transport.contract', string='Renewed By',
+        compute='_compute_renewal_id',
+        help='Contract that renews this one.')
 
     @api.constrains('date_start', 'date_end')
     def _check_dates(self):
@@ -120,6 +115,12 @@ class PharmaTransportContract(models.Model):
         counts = {contract.id: count for contract, count in groups}
         for contract in self:
             contract.shipment_count = counts.get(contract.id, 0)
+
+    @api.depends('renewal_ids')
+    def _compute_renewal_id(self):
+        for contract in self:
+            contract.renewal_id = contract.renewal_ids.filtered(
+                lambda c: c.state != 'terminated').sorted('id')[-1:]
 
     @api.depends('date_end')
     def _compute_days_to_expiry(self):
@@ -148,11 +149,6 @@ class PharmaTransportContract(models.Model):
             if not (contract.service_ambient or contract.service_cold_chain
                     or contract.service_high_security):
                 raise UserError(self.env._('Select at least one service the contract covers.'))
-            missing = [label for fname, label in QUALITY_POINTS.items() if not contract[fname]]
-            if missing:
-                raise UserError(self.env._(
-                    'The quality agreement of %(name)s does not yet cover:\n%(points)s',
-                    name=contract.name, points='\n'.join('- ' + m for m in missing)))
             if not contract.document_ids:
                 raise UserError(self.env._('Attach the signed contract first.'))
             overlap = self.search([
@@ -169,6 +165,7 @@ class PharmaTransportContract(models.Model):
                     'these dates. Terminate it or adjust the dates.',
                     transporter=contract.transporter_id.name, other=overlap.name))
         self.write({'state': 'active'})
+        self.renewed_from_id._close_renewal_reminders()
 
     def action_terminate(self):
         if self.filtered(lambda c: c.state != 'active'):
@@ -182,9 +179,51 @@ class PharmaTransportContract(models.Model):
             'context': {'default_contract_ids': self.ids},
         }
 
-    def action_reset_to_draft(self):
-        self.filtered(lambda c: c.state in ('expired', 'terminated')).write({
-            'state': 'draft', 'termination_reason': False})
+    def _prepare_renewal_vals(self):
+        """Values of the draft contract renewing this one: the next term of
+        the same length and the same transporter and scope. The signed
+        contract of the new term is still to be attached."""
+        self.ensure_one()
+        today = fields.Date.context_today(self)
+        date_start = max(self.date_end + timedelta(days=1), today)
+        return {
+            'transporter_id': self.transporter_id.id,
+            'company_id': self.company_id.id,
+            'responsible_id': self.responsible_id.id,
+            'date_start': date_start,
+            'date_end': date_start + (self.date_end - self.date_start),
+            'reminder_days': self.reminder_days,
+            'service_ambient': self.service_ambient,
+            'service_cold_chain': self.service_cold_chain,
+            'service_high_security': self.service_high_security,
+            'coverage': self.coverage,
+            'renewed_from_id': self.id,
+        }
+
+    def action_renew(self):
+        """Create the draft contract for the next term and open it."""
+        self.ensure_one()
+        if self.state not in ('active', 'expired', 'terminated'):
+            raise UserError(self.env._('Only active, expired or terminated contracts can be renewed.'))
+        if self.renewal_id:
+            raise UserError(self.env._(
+                '%(name)s is already renewed by %(renewal)s.',
+                name=self.name, renewal=self.renewal_id.name))
+        renewal = self.create(self._prepare_renewal_vals())
+        self.message_post(body=self.env._('Renewal %s created.', renewal.name))
+        renewal.message_post(body=self.env._('Renewal of %s.', self.name))
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': self._name,
+            'res_id': renewal.id,
+            'view_mode': 'form',
+        }
+
+    def _close_renewal_reminders(self):
+        """Mark the renewal reminders of these contracts as done."""
+        summary = self.env._('Renew transport contract')
+        self.activity_ids.filtered(lambda a: a.summary == summary).action_feedback(
+            feedback=self.env._('Contract renewed.'))
 
     def action_view_shipments(self):
         self.ensure_one()
@@ -219,17 +258,16 @@ class PharmaTransportContract(models.Model):
 
     @api.model
     def _cron_crew_qualification(self):
-        """Remind the contract owner when a driver's licence, GDP training or
-        background check runs out within 30 days."""
+        """Remind the contract owner when a driver's licence or background
+        check runs out within 30 days."""
         today = fields.Date.context_today(self)
         soon = today + timedelta(days=30)
         activity_type = self.env.ref('mail.mail_activity_data_todo')
         summary = self.env._('Driver qualification expiring')
         people = self.env['res.partner'].search([
             ('transport_role', '!=', False),
-            '|', '|',
+            '|',
             '&', ('driving_licence_valid_until', '!=', False), ('driving_licence_valid_until', '<=', soon),
-            '&', ('gdp_training_valid_until', '!=', False), ('gdp_training_valid_until', '<=', soon),
             '&', ('background_check_valid_until', '!=', False), ('background_check_valid_until', '<=', soon),
         ])
         for person in people:
@@ -237,7 +275,7 @@ class PharmaTransportContract(models.Model):
                     lambda a: a.activity_type_id == activity_type and a.summary == summary):
                 continue
             contract = self._find_active(person.commercial_partner_id, self.env.company, today)
-            dates = [d for d in (person.driving_licence_valid_until, person.gdp_training_valid_until,
+            dates = [d for d in (person.driving_licence_valid_until,
                                  person.background_check_valid_until) if d and d <= soon]
             person.activity_schedule(
                 'mail.mail_activity_data_todo', date_deadline=min(dates), summary=summary,
@@ -247,22 +285,23 @@ class PharmaTransportContract(models.Model):
 
     @api.model
     def _cron_contract_validity(self):
-        """Expire ended contracts and remind the responsible person before
-        a contract runs out."""
+        """Expire and archive ended contracts, and remind the responsible
+        person before a contract that is not renewed yet runs out."""
         today = fields.Date.context_today(self)
         self.search([('state', '=', 'active'), ('date_end', '<', today)]).write(
-            {'state': 'expired'})
+            {'state': 'expired', 'active': False})
         self._cron_crew_qualification()
-        activity_type = self.env.ref('mail.mail_activity_data_todo')
+        summary = self.env._('Renew transport contract')
         for contract in self.search([('state', '=', 'active')]):
             if contract.date_end - timedelta(days=contract.reminder_days) > today:
                 continue
-            if contract.activity_ids.filtered(lambda a: a.activity_type_id == activity_type):
+            if contract.renewal_id or contract.activity_ids.filtered(
+                    lambda a: a.summary == summary):
                 continue
             contract.activity_schedule(
                 'mail.mail_activity_data_todo',
                 date_deadline=contract.date_end,
-                summary=self.env._('Renew transport contract'),
+                summary=summary,
                 note=self.env._('%(name)s with %(transporter)s expires on %(date)s.',
                                 name=contract.name,
                                 transporter=contract.transporter_id.name,

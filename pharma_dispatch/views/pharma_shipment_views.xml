@@ -105,22 +105,21 @@
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
                         <group string="Dates">
-                            <field name="dispatch_date" readonly="state != 'draft'"/>
+                            <field name="dispatch_date" invisible="state == 'draft'"/>
                             <field name="expected_delivery_date"
                                    readonly="state in ('delivered', 'cancel')"/>
                             <field name="delivered_date" invisible="not delivered_date"/>
                         </group>
                         <group string="Transport">
-                            <field name="transporter_id" readonly="state != 'draft'"
-                                   context="{'default_is_company': True}"/>
+                            <field name="transporter_id" readonly="state != 'draft'"/>
                             <field name="driver_ids" widget="many2many_tags"
                                    readonly="state != 'draft'"
-                                   context="{'default_parent_id': transporter_id, 'default_is_company': False, 'default_transport_role': 'driver'}"/>
+                                   context="{'default_parent_id': transporter_id, 'default_transport_role': 'driver'}"/>
                             <field name="transport_contract_id" invisible="not transporter_id"
                                    decoration-danger="not transport_contract_id"/>
                             <div class="text-danger small" colspan="2"
                                  invisible="not transporter_id or transport_contract_id or state != 'draft'">
-                                No active transport contract for this transporter on the dispatch date.
+                                No active transport contract for this transporter today.
                             </div>
                             <field name="high_security" invisible="not high_security"/>
                             <field name="vehicle_number" readonly="state != 'draft'"/>
@@ -136,7 +135,8 @@
                                    decoration-danger="checklist_state == 'rejected'"/>
                         </group>
                         <group string="Transport Documents">
-                            <field name="transport_reason" readonly="state != 'draft'"/>
+                            <field name="transport_reason" readonly="state != 'draft'"
+                                   placeholder="e.g. Supply to Customer, Job Work"/>
                             <field name="transport_mode" readonly="state != 'draft'"/>
                             <label for="lr_number"/>
                             <div class="o_row">
@@ -157,19 +157,19 @@
                             <field name="currency_id" invisible="1"/>
                             <field name="eway_bill_expected" invisible="1"/>
                             <field name="amount_untaxed"/>
-                            <field name="amount_tax" invisible="transport_reason != 'supply'"/>
+                            <field name="amount_tax"/>
                             <field name="amount_total"/>
                             <field name="package_count"/>
                             <field name="total_weight"/>
                         </group>
                         <group string="Temperature">
-                            <field name="temperature_controlled" readonly="state != 'draft'"/>
+                            <field name="temperature_controlled" readonly="state != 'draft' or checklist_count"/>
                             <label for="temp_min" string="Allowed Range (°C)"
                                    invisible="not temperature_controlled"/>
                             <div class="o_row" invisible="not temperature_controlled">
-                                <field name="temp_min" readonly="state != 'draft'"/>
+                                <field name="temp_min" readonly="state != 'draft' or checklist_count"/>
                                 <span>to</span>
-                                <field name="temp_max" readonly="state != 'draft'"/>
+                                <field name="temp_max" readonly="state != 'draft' or checklist_count"/>
                             </div>
                         </group>
                     </group>
@@ -196,9 +196,9 @@
                                            decoration-danger="shortage_qty &gt; 0"/>
                                     <field name="uom_id" readonly="1" groups="uom.group_uom"/>
                                     <field name="hsn_code" optional="hide"/>
-                                    <field name="price_unit" optional="hide"/>
+                                    <field name="price_unit" readonly="1" optional="hide"/>
                                     <field name="currency_id" column_invisible="1"/>
-                                    <field name="tax_ids" widget="many2many_tags" optional="hide"/>
+                                    <field name="tax_ids" widget="many2many_tags" readonly="1" optional="hide"/>
                                     <field name="value" optional="hide"/>
                                     <field name="receipt_note" optional="show"
                                            column_invisible="parent.state not in ('dispatched', 'delivered')"/>

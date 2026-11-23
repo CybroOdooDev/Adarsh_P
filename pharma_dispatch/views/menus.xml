@@ -15,11 +15,6 @@
               action="pharma_transport_contract_action"
               groups="stock.group_stock_user" sequence="58"/>
 
-    <menuitem id="menu_pharma_transport_crew" name="Drivers &amp; Escorts"
-              parent="stock.menu_stock_config_settings"
-              action="action_transport_crew"
-              groups="stock.group_stock_user" sequence="59"/>
-
     <menuitem id="menu_pharma_dispatch_checklist_template" name="Dispatch Checklist Templates"
               parent="stock.menu_stock_config_settings"
               action="pharma_dispatch_checklist_template_action"

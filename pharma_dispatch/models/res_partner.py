@@ -50,11 +50,6 @@ class ResPartner(models.Model):
     driving_licence_class = fields.Char(
         string='Licence Class', help='Vehicle classes the licence covers, e.g. LMV, HGMV, transport.')
     driving_licence_valid_until = fields.Date(string='Licence Valid Until', tracking=True)
-    gdp_training_date = fields.Date(string='GDP Training Date', tracking=True)
-    gdp_training_valid_until = fields.Date(
-        string='GDP Training Valid Until', tracking=True,
-        help='Good Distribution Practice training: product handling, temperature '
-             'control, security and incident reporting.')
     cold_chain_trained = fields.Boolean(
         string='Cold Chain Trained', tracking=True,
         help='Trained to handle temperature-controlled consignments '
@@ -77,8 +72,7 @@ class ResPartner(models.Model):
 
     QUALIFICATION_WARNING_DAYS = 30
 
-    @api.depends('transport_role', 'driving_licence_number', 'driving_licence_valid_until',
-                 'gdp_training_valid_until')
+    @api.depends('transport_role', 'driving_licence_number', 'driving_licence_valid_until')
     def _compute_transport_qualification(self):
         today = fields.Date.context_today(self)
         soon = today + timedelta(days=self.QUALIFICATION_WARNING_DAYS)
@@ -109,8 +103,6 @@ class ResPartner(models.Model):
                 issues.append(_('no driving licence recorded'))
             elif not self.driving_licence_valid_until or self.driving_licence_valid_until < until:
                 issues.append(_('driving licence expired or expiring before delivery'))
-        if not self.gdp_training_valid_until or self.gdp_training_valid_until < until:
-            issues.append(_('GDP training missing or expired'))
         if cold_chain and not self.cold_chain_trained:
             issues.append(_('not cold-chain trained'))
         if high_security and (not self.background_check_valid_until
