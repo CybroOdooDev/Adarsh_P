@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
-#    Copyright (C) 2025-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
+#    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
 #    You can modify it under the terms of the GNU LESSER
@@ -14,12 +14,9 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 from odoo import fields, models
+from odoo.exceptions import UserError
 
 
 class BidSelection(models.TransientModel):
@@ -40,6 +37,16 @@ class BidSelection(models.TransientModel):
         self.ensure_one()
         tender = self.current_tender_id
         tender._check_tender_state(['bid_selection'])
+        if not self.tender_bid_id:
+            raise UserError(self.env._('Select the bid to purchase.'))
+        if self.tender_bid_id.tender_id != tender:
+            raise UserError(self.env._(
+                'Bid %(bid)s does not belong to tender %(tender)s.',
+                bid=self.tender_bid_id.name, tender=tender.name))
+        if not self.vendor_id:
+            raise UserError(self.env._(
+                'Bid %s has no vendor; set one before confirming the purchase.',
+                self.tender_bid_id.name))
         purchase_order = self.env['purchase.order'].create({
             'partner_id': self.vendor_id.id,
             'partner_ref': self.tender_bid_id.name,

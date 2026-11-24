@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
@@ -14,11 +14,7 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 import json
 
 from odoo import fields
@@ -93,7 +89,9 @@ class Vendor(Controller):
         if is_auto_approval:
             Users = request.env['res.users'].sudo()
             if vendor.email and not Users.search_count([('login', '=', vendor.email)]):
-                Users.with_context(no_reset_password=True).create({
+                # Creating the user emails the vendor an invitation to set
+                # their password (auth_signup), so they can log in to bid.
+                Users.create({
                     'name': vendor.name,
                     'login': vendor.email,
                     'partner_id': vendor.id,

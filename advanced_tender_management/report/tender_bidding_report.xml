@@ -109,7 +109,7 @@
                                                     <span t-out="rec.product_code"/>
                                                 </td>
                                                 <td style="padding: 16px;">
-                                                    <span t-out="rec.product_qty"/>
+                                                    <span t-field="rec.product_qty"/>
                                                 </td>
                                                 <td style="padding: 16px;">
                                                     <span t-out="rec.product_uom_id.name"/>

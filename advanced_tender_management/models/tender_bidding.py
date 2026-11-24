@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
@@ -14,11 +14,7 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 from odoo import api, fields, models
 from odoo.exceptions import UserError
 
@@ -89,23 +85,95 @@ class TenderBidding(models.Model):
         if tenders:
             self.search([('tender_id', 'in', tenders.ids)])._compute_vendor_rank()
 
+    @api.model
+    def _prepare_bid_line_commands(self, tender, prices=None):
+        """Commands creating one bid line per line of the tender, with the
+        tender's quantity. ``prices`` maps product ids (as strings) to the
+        unit price offered."""
+        prices = prices or {}
+        return [fields.Command.create({
+            'tender_line_id': line.id,
+            'sequence': line.sequence,
+            'name': line.name,
+            'display_type': line.display_type,
+            'product_id': line.product_id.id,
+            'product_qty': line.product_qty,
+            'product_price': 0.0 if line.display_type else prices.get(
+                str(line.product_id.id), 0.0),
+        }) for line in tender.tender_product_line_ids]
+
+    @api.onchange('tender_id')
+    def _onchange_tender_id(self):
+        """Fill the bid with the lines of the chosen tender."""
+        self.tender_bid_products_ids = [fields.Command.clear()] + \
+            self._prepare_bid_line_commands(self.tender_id)
+
     @api.model_create_multi
     def create(self, vals_list):
-        """Give the bid a reference and rank the bids of its tender again."""
+        """Give the bid a reference, fill it with the lines of its tender
+        when none are given and rank the bids of its tender again."""
         for vals in vals_list:
             vals['name'] = self.env['ir.sequence'].next_by_code('tender.bidding')
+            if vals.get('tender_id') and not vals.get('tender_bid_products_ids'):
+                vals['tender_bid_products_ids'] = self._prepare_bid_line_commands(
+                    self.env['tender.management'].browse(vals['tender_id']))
         bids = super().create(vals_list)
         self._recompute_tender_ranks(bids.tender_id)
         return bids
 
     def write(self, vals):
-        """Rank the bids again when the amount, stage or tender changes."""
+        """Rebuild the lines when the tender changes, and rank the bids
+        again when the amount, stage or tender changes."""
         tenders = self.tender_id
+        if 'tender_id' in vals and 'tender_bid_products_ids' not in vals:
+            moved = self.filtered(lambda bid: bid.tender_id.id != vals['tender_id'])
+            if any(bid.bidding_state != 'pre_qualification' for bid in moved):
+                raise UserError(self.env._(
+                    'The tender of a bid can only change before the bid is submitted.'))
+        else:
+            moved = self.browse()
         res = super().write(vals)
+        for bid in moved:
+            bid.tender_bid_products_ids = [
+                fields.Command.delete(line.id) for line in bid.tender_bid_products_ids
+            ] + self._prepare_bid_line_commands(bid.tender_id)
         if {'total_bidding_amount', 'qualification_stage', 'tender_id',
                 'tender_bid_products_ids'} & set(vals):
             self._recompute_tender_ranks(tenders | self.tender_id)
         return res
+
+    def _mark_submitted(self):
+        """Record the bids as submitted: close them for editing, register
+        their vendor on the tender and confirm the submission by email."""
+        template = self.env.ref('advanced_tender_management.bid_submission_template').sudo()
+        for rec in self:
+            rec.write({
+                'bidding_state': 'bid_close',
+                'bidding_date': rec.bidding_date or fields.Date.context_today(rec),
+            })
+            rec.tender_id.registered_vendors_ids = [fields.Command.link(rec.vendor_id.id)]
+            template.send_mail(rec.id, force_send=True)
+
+    def action_submit_bid(self):
+        """Submit a bid entered in the backend, as if the vendor had sent it
+        from the website."""
+        for rec in self:
+            if rec.bidding_state != 'pre_qualification' or rec.tender_state != 'bid_submission':
+                raise UserError(self.env._(
+                    'Bid %s can only be submitted while it is in Pre Qualification and its '
+                    'tender is in Bid Submission.', rec.name))
+            if not rec.vendor_id:
+                raise UserError(self.env._('Set the vendor of bid %s first.', rec.name))
+            if not rec.tender_bid_products_ids.filtered(lambda line: not line.display_type):
+                raise UserError(self.env._('Bid %s has no product lines.', rec.name))
+            other_bid = self.search([
+                ('tender_id', '=', rec.tender_id.id), ('vendor_id', '=', rec.vendor_id.id),
+                ('id', '!=', rec.id)], limit=1)
+            if other_bid:
+                raise UserError(self.env._(
+                    '%(vendor)s already has bid %(bid)s for this tender.',
+                    vendor=rec.vendor_id.name, bid=other_bid.name))
+        self._mark_submitted()
 
     def _can_request_edit(self):
         """A submitted bid can be reopened while its tender takes bids."""

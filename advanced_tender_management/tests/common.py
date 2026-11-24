@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*-
+#############################################################################
+#
+#    Cybrosys Technologies Pvt. Ltd.
+#
+#    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
+#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
+#
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
+#
+#############################################################################
 from datetime import date, timedelta
 
 from odoo import Command
@@ -110,20 +126,13 @@ class TenderDataMixin:
             cls.product_1.id: 10,
             cls.product_2.id: 20,
         }
-        return cls.env['tender.bidding'].create({
+        Bidding = cls.env['tender.bidding']
+        return Bidding.create({
             'vendor_id': vendor.id,
             'tender_id': tender.id,
             'qualification_stage': qualification_stage,
-            'tender_bid_products_ids': [
-                Command.create({
-                    'name': line.name,
-                    'product_id': line.product_id.id,
-                    'product_qty': line.product_qty,
-                    'display_type': line.display_type,
-                    'product_price': 0 if line.display_type else prices.get(line.product_id.id, 0),
-                })
-                for line in tender.tender_product_line_ids
-            ],
+            'tender_bid_products_ids': Bidding._prepare_bid_line_commands(
+                tender, {str(product_id): price for product_id, price in prices.items()}),
         })
 
 

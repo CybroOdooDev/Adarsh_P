@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
@@ -14,11 +14,7 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 import json
 
 from werkzeug.exceptions import NotFound
@@ -89,25 +85,16 @@ class Tender(Controller):
             })
             bid = existing_record
         else:
-            bid = request.env['tender.bidding'].sudo().create({
+            Bidding = request.env['tender.bidding'].sudo()
+            bid = Bidding.create({
                 'vendor_id': partner.id,
                 'tender_id': tender_record.id,
-                'bidding_state': 'pre_qualification',
                 'bidding_date': fields.Date.context_today(tender_record),
                 'vendor_attachments_ids': [fields.Command.link(attachment.id)] if attachment else [],
-                'tender_bid_products_ids': [fields.Command.create({
-                    'name': line.name,
-                    'product_id': line.product_id.id,
-                    'product_qty': line.product_qty,
-                    'display_type': line.display_type,
-                    'product_price': 0 if line.display_type else prices.get(
-                        str(line.product_id.id), 0.0),
-                }) for line in tender_record.tender_product_line_ids],
+                'tender_bid_products_ids': Bidding._prepare_bid_line_commands(
+                    tender_record, prices),
             })
-        bid.bidding_state = 'bid_close'
-        request.env.ref('advanced_tender_management.bid_submission_template').sudo().send_mail(
-            bid.id, force_send=True)
-        tender_record.registered_vendors_ids = [fields.Command.link(partner.id)]
+        bid._mark_submitted()
         return request.render('advanced_tender_management.bid_submitted_thankyou_page')
 
     @route('/tender_management_snippet', type="jsonrpc", auth="public", website=True)

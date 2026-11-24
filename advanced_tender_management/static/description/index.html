@@ -252,7 +252,7 @@
                         <div style="border-top: 1px solid #f6eaea; margin-top: 14px; padding-top: 14px;">
                             <p
                                     style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #64748b; line-height: 1.7; margin: 0;">
-                                Move each tender from draft to bid submission, evaluation, selection and closing. Bidding opens and closes automatically on the bid start and end dates.
+                                Move each tender from draft to bid submission, evaluation, selection and closing. A daily scheduled action opens bidding on the bid start date and closes it after the bid end date.
                             </p>
                         </div>
                     </div>
@@ -530,7 +530,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            Users can evaluate all legit bids in this stage.
+                            Users qualify or disqualify the bids in this stage. For single vendor tenders, Legit Bids lists the qualified bids with a price for every product.
                         </p>
                     </div>
 
@@ -550,7 +550,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            The best bid is suggested automatically and the purchase can be confirmed.
+                            The lowest-priced bid is suggested automatically; choose the bid to buy from and confirm the purchase.
                         </p>
                     </div>
 
@@ -570,7 +570,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            On confirmation, the purchase order is confirmed to the vendor along with a confirmation email.
+                            For a single vendor tender, the purchase order is confirmed and emailed to the vendor. For a product-wise tender, a draft purchase order is created and emailed to each chosen vendor.
                         </p>
                     </div>
 
@@ -650,7 +650,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            Tenders in the Bid Submission stage are shown on the website.
+                            Tenders in the Bid Submission stage are shown on the website; portal vendors see the tenders of their categories.
                         </p>
                     </div>
 
@@ -670,7 +670,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            Vendors can register from the website; on successful registration, portal access is granted.
+                            Vendors can register from the website. With Auto Approval enabled, portal access is granted at once; otherwise the approval users are emailed to review the vendor.
                         </p>
                     </div>
 
@@ -790,7 +790,7 @@
                         </h3>
                         <p
                             style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 14px; color: #666; max-width: 720px; margin: 0 auto; line-height: 1.6;">
-                            Vendors can choose to bid for the products of their choice; only those products are considered in the bidding process.
+                            Vendors enter a price for every product of the tender. In Bids Evaluation, each product can then be awarded to a different vendor.
                         </p>
                     </div>
 
@@ -1083,7 +1083,7 @@
                                             </div>
                                             <div
                                                     style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #64748b; line-height: 1.6;">
-                                                Vendors are emailed on registration, bid submission, qualification, edit approval and purchase confirmation.
+                                                Vendors are emailed on registration, bid submission, qualification or disqualification, edit approval and purchase confirmation.
                                             </div>
                                         </td>
                                     </tr>
@@ -1549,7 +1549,7 @@
                     <!-- KANBAN CARD — edit href, icon <path>, name and note -->
                     <td width="32%" valign="top" class="mob-space"
                         style="background-color: #ffffff; border: 1px solid #f1dcdf; border-top: 3px solid #b12126; border-radius: 14px; box-shadow: 0 10px 26px rgba(177, 33, 38, 0.13);">
-                        <a href="https://apps.odoo.com/apps/modules/browse?search=cybrosys%20purchase" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
+                        <a href="https://apps.odoo.com/apps/modules/20.0/vendor_portal_odoo" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
 
                             <!-- name zone -->
                             <div
@@ -1560,7 +1560,7 @@
                                 </div>
                                 <div
                                     style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.28; letter-spacing: -0.3px;">
-                                    Purchase Apps
+                                    Odoo Vendor Portal
                                 </div>
                                 <div
                                     style="width: 34px; height: 3px; background-color: #b12126; border-radius: 2px; margin-top: 13px;">
@@ -1571,7 +1571,7 @@
                             <div style="padding: 18px 20px 20px; min-height: 124px;">
                                 <div
                                     style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #5b6472; line-height: 1.7;">
-                                    Purchase add-ons by Cybrosys to extend vendor management, purchase orders and procurement reporting.
+                                    Invite vendors to a portal where they see the RFQs sent to them, submit their quotes and follow their status.
                                 </div>
                                 <div
                                     style="border-top-width: 1px; border-top-style: solid; border-top-color: #f6e4e6; margin-top: 16px; padding-top: 14px;">
@@ -1586,7 +1586,7 @@
                     <!-- KANBAN CARD — edit href, icon <path>, name and note -->
                     <td width="32%" valign="top" class="mob-space"
                         style="background-color: #ffffff; border: 1px solid #f1dcdf; border-top: 3px solid #b12126; border-radius: 14px; box-shadow: 0 10px 26px rgba(177, 33, 38, 0.13);">
-                        <a href="https://apps.odoo.com/apps/modules/browse?search=cybrosys%20website" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
+                        <a href="https://apps.odoo.com/apps/modules/20.0/employee_purchase_requisition" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
 
                             <!-- name zone -->
                             <div
@@ -1597,7 +1597,7 @@
                                 </div>
                                 <div
                                     style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.28; letter-spacing: -0.3px;">
-                                    Website Apps
+                                    Employee Purchase Requisition
                                 </div>
                                 <div
                                     style="width: 34px; height: 3px; background-color: #b12126; border-radius: 2px; margin-top: 13px;">
@@ -1608,7 +1608,7 @@
                             <div style="padding: 18px 20px 20px; min-height: 124px;">
                                 <div
                                     style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #5b6472; line-height: 1.7;">
-                                    Website and portal add-ons by Cybrosys to give your vendors and customers more self-service.
+                                    Employees request materials, department heads and managers approve them, and the requests become purchase orders and internal transfers.
                                 </div>
                                 <div
                                     style="border-top-width: 1px; border-top-style: solid; border-top-color: #f6e4e6; margin-top: 16px; padding-top: 14px;">
@@ -1623,7 +1623,7 @@
                     <!-- KANBAN CARD — edit href, icon <path>, name and note -->
                     <td width="32%" valign="top" class="mob-space"
                         style="background-color: #ffffff; border: 1px solid #f1dcdf; border-top: 3px solid #b12126; border-radius: 14px; box-shadow: 0 10px 26px rgba(177, 33, 38, 0.13);">
-                        <a href="https://apps.odoo.com/apps/modules/browse?search=cybrosys%20inventory" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
+                        <a href="https://apps.odoo.com/apps/modules/20.0/purchase_dashboard_advanced" target="_blank" rel="noopener" style="display: block; text-decoration: none;">
 
                             <!-- name zone -->
                             <div
@@ -1634,7 +1634,7 @@
                                 </div>
                                 <div
                                     style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 19px; font-weight: 800; color: #0f172a; line-height: 1.28; letter-spacing: -0.3px;">
-                                    Inventory Apps
+                                    Advanced Purchase Dashboard
                                 </div>
                                 <div
                                     style="width: 34px; height: 3px; background-color: #b12126; border-radius: 2px; margin-top: 13px;">
@@ -1645,7 +1645,7 @@
                             <div style="padding: 18px 20px 20px; min-height: 124px;">
                                 <div
                                     style="font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #5b6472; line-height: 1.7;">
-                                    Inventory add-ons by Cybrosys to follow the goods you buy through tenders from receipt to stock.
+                                    An interactive dashboard of your purchases: spending, vendors, products and trends at a glance.
                                 </div>
                                 <div
                                     style="border-top-width: 1px; border-top-style: solid; border-top-color: #f6e4e6; margin-top: 16px; padding-top: 14px;">
