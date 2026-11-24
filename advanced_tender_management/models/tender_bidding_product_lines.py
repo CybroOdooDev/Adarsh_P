@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
@@ -14,13 +14,10 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 from odoo import api, fields, models
-from odoo.exceptions import UserError
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools import float_compare
 
 
 class TenderBiddingProductLines(models.Model):
@@ -37,6 +34,9 @@ class TenderBiddingProductLines(models.Model):
                                      help='Qualification stage of the bid.')
     tender_bidding_id = fields.Many2one('tender.bidding', help='Bid the line belongs to.',
                                         ondelete='cascade', index=True)
+    tender_line_id = fields.Many2one('tender.product.lines', ondelete='set null',
+                                     index='btree_not_null',
+                                     help='Tender line priced by this bid line.')
     product_price = fields.Float(string="Your Price", help="Unit price offered by the vendor.")
     product_total = fields.Float(help="Quantity multiplied by the offered price.",
                                  compute="_compute_product_total", store=True)
@@ -50,6 +50,20 @@ class TenderBiddingProductLines(models.Model):
         """Compute the total price of each bidding line."""
         for rec in self:
             rec.product_total = rec.product_qty * rec.product_price
+
+    @api.constrains('product_qty', 'tender_line_id', 'display_type')
+    def _check_quantity_matches_tender(self):
+        """A bid prices the quantity asked by the tender; it cannot change it."""
+        digits = self.env['decimal.precision'].precision_get('Product Unit')
+        for line in self:
+            if line.tender_line_id and not line.display_type and float_compare(
+                    line.product_qty, line.tender_line_id.product_qty,
+                    precision_digits=digits):
+                raise ValidationError(self.env._(
+                    'The quantity of "%(line)s" on bid %(bid)s must be %(qty)s, '
+                    'the quantity asked by the tender.',
+                    line=line.name, bid=line.tender_bidding_id.name,
+                    qty=line.tender_line_id.product_qty))
 
     def _other_lines_of_product(self):
         """Lines of the other vendors for the same product and tender."""

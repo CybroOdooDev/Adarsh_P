@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--    Form view for model 'delivery.route'-->
+    <record id="delivery_route_view_form" model="ir.ui.view">
+        <field name="name">delivery.route.view.form</field>
+        <field name="model">delivery.route</field>
+        <field name="arch" type="xml">
+            <form string="Delivery Route">
+                <sheet>
+                    <group>
+                        <field name="name"/>
+                    </group>
+                    <notebook>
+                        <page string="Route Lines">
+                            <field name="route_line_ids">
+                                <list string="Route Lines">
+                                    <field name="sequence" widget="handle"/>
+                                    <field name="route"/>
+                                </list>
+                                <form string="Route Line">
+                                    <sheet>
+                                        <group>
+                                            <field name="route"/>
+                                            <field name="cust_list_ids">
+                                                <list create="false" default_order="sequence, id">
+                                                    <field name="sequence" widget="handle"/>
+                                                    <field name="name"/>
+                                                </list>
+                                            </field>
+                                        </group>
+                                    </sheet>
+                                </form>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+    <!--    List view for model 'delivery.route'-->
+    <record id="delivery_route_view_list" model="ir.ui.view">
+        <field name="name">delivery.route.view.list</field>
+        <field name="model">delivery.route</field>
+        <field name="arch" type="xml">
+            <list string="Delivery Route">
+                <field name="name"/>
+            </list>
+        </field>
+    </record>
+    <!--    Action for the menu-->
+    <record id="delivery_route_action" model="ir.actions.act_window">
+        <field name="name">Delivery Routes</field>
+        <field name="res_model">delivery.route</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a delivery route
+            </p>
+            <p>
+                Split the route into areas and add the customers of each area.
+            </p>
+        </field>
+    </record>
+    <!--    Menu Item for delivery route menu-->
+    <menuitem id="delivery_route_menu_root" name="Delivery Routes"
+              web_icon="customer_route_management,static/description/icon.png"/>
+    <menuitem id="delivery_route_menu_action" name="Routes"
+              action="delivery_route_action" parent="delivery_route_menu_root"
+              sequence="1"/>
+</odoo>

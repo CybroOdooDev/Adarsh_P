@@ -25,7 +25,7 @@ export class TenderBiddingForm extends Interaction {
         let grandTotal = 0;
         const productPrices = [...tbody.querySelectorAll(".product_row")].map((row) => {
             const input = row.querySelector(".vendor_bid");
-            const qty = parseFloat(row.querySelector(".product_qty").textContent.replace(/,/g, "")) || 0;
+            const qty = parseFloat(row.querySelector(".product_qty").dataset.qty) || 0;
             const price = parseFloat(input.value) || 0;
             const rowTotal = qty * price;
             row.querySelector(".total_price").textContent = rowTotal.toFixed(2);

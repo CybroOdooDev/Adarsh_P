@@ -135,7 +135,9 @@
                                                 <t t-elif="not product['display_type']">
                                                     <tr class="product_row">
                                                         <td t-out="product['name']"/>
-                                                        <td t-out="product['product_qty']" class="product_qty"/>
+                                                        <td class="product_qty" t-att-data-qty="product['product_qty']"
+                                                            t-out="product['product_qty']"
+                                                            t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>
                                                         <td t-out="product['product_uom_id'].name"/>
                                                         <td t-out="product['product_price']"
                                                             t-options="{'widget': 'float', 'precision': 2}"/>
@@ -169,12 +171,15 @@
                                                 <t t-elif="not product['display_type']">
                                                     <tr class="product_row">
                                                         <td t-out="product['name']"/>
-                                                        <td class="product_qty" t-out="product['product_qty']"/>
+                                                        <td class="product_qty" t-att-data-qty="product['product_qty']"
+                                                            t-out="product['product_qty']"
+                                                            t-options="{'widget': 'float', 'decimal_precision': 'Product Unit'}"/>
                                                         <td t-out="product['product_uom_id'][1]"/>
                                                         <td>
                                                             <input t-att-product_id="product['product_id'][0]"
                                                                    type="number"
                                                                    min="0"
+                                                                   step="any"
                                                                    value=""
                                                                    required="required"
                                                                    placeholder="price"

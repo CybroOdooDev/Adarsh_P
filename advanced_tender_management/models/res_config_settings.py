@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-###############################################################################
+#############################################################################
 #
 #    Cybrosys Technologies Pvt. Ltd.
 #
@@ -14,11 +14,7 @@
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
-#    You should have received a copy of the GNU LESSER GENERAL PUBLIC LICENSE
-#    (LGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+#############################################################################
 import json
 
 from odoo import api, fields, models
@@ -31,7 +27,6 @@ class ResConfigSettings(models.TransientModel):
     auto_approval = fields.Boolean(
         config_parameter='advanced_tender_management.auto_approval',
         help="Automatically approves vendor and grants portal access",
-        default=True
     )
     manual_approval_users_ids = fields.Many2many(
         'res.users',

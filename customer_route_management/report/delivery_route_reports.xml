@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--    Action of the PDF route report -->
+    <record id="report_route_report" model="ir.actions.report">
+        <field name="name">Print Route Details</field>
+        <field name="model">route.report</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">customer_route_management.route_report_template</field>
+    </record>
+</odoo>

@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--    Template for pdf report -->
+    <template id="route_report_template">
+        <t t-call="web.html_container">
+            <t t-call="web.external_layout">
+                <div class="page">
+                    <t t-foreach="docs" t-as="o">
+                        <t t-set="currency" t-value="o.company_id.currency_id or res_company.currency_id"/>
+                        <h1 class="text-center">
+                            <t t-out="o.name"/>
+                        </h1>
+                        <t t-foreach="o.route_line_ids" t-as="l">
+                            <b>
+                                <span class="mt32" t-out="l.route"/>
+                            </b>
+                            <table class="table"
+                                   style="border: 2px solid black;">
+                                <t t-foreach="l._get_customers()" t-as="v">
+                                    <tr t-if="not pay">
+                                        <td style="width: 200px;">
+                                            <span t-out="v.name"/>
+                                        </td>
+                                        <td style="width: 200px;">
+                                            <span t-out="v.phone"/>
+                                        </td>
+                                        <td style="width: 200px;">
+                                            <span t-out="v.street"/>
+                                            <span t-out="v.street2"/>
+                                            <span t-out="v.city"/>
+                                            <span t-out="v.state_id.name"/>
+                                            <span t-out="v.zip"/>
+                                            <span t-out="v.country_id.name"/>
+                                            <span t-out="v.email"/>
+                                        </td>
+                                    </tr>
+                                    <t t-if="pay">
+                                        <tr style="border: 2px solid white;">
+                                            <th style="width: 200px; color:#581845;">
+                                                <span t-out="v.name"/>
+                                            </th>
+                                            <th style="width: 200px; color: #581845;">
+                                                <span t-out="v.phone"/>
+                                            </th>
+                                            <th style="width: 200px; color:#581845;">
+                                                <span t-out="v.street"/>
+                                                <span t-out="v.street2"/>
+                                                <span t-out="v.city"/>
+                                                <span t-out="v.state_id.name"/>
+                                                <span t-out="v.zip"/>
+                                                <span t-out="v.country_id.name"/>
+                                                <span t-out="v.email"/>
+                                            </th>
+                                        </tr>
+                                        <t t-set="dues_list" t-value="v.get_all_dues(o.company_id.id)"/>
+                                        <t t-if="dues_list">
+                                            <tr style="border:2px solid white; border-bottom:2px solid black;">
+                                                <td/>
+                                            </tr>
+                                            <tr style="border:2px solid black;"
+                                                t-if="not consolidated">
+                                                <th>Invoice Number</th>
+                                                <th>Due Date</th>
+                                                <th>Amount Due</th>
+                                            </tr>
+                                        </t>
+                                        <t t-set="total" t-value="0"/>
+                                        <t t-foreach="dues_list" t-as="dues">
+                                            <tr t-if="not consolidated">
+                                                <td>
+                                                    <t t-out="dues['name']"/>
+                                                </td>
+                                                <td>
+                                                    <span t-out="dues['invoice_date_due']"
+                                                          t-options="{'widget': 'date'}"/>
+                                                </td>
+                                                <td>
+                                                    <span t-out="dues['amount_residual_signed']"
+                                                          t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                                </td>
+                                            </tr>
+                                            <t t-set="total"
+                                               t-value="dues['amount_residual_signed'] + total"/>
+                                        </t>
+                                        <t t-if="dues_list">
+                                            <tr t-attf-style="{{ 'border:2px solid black;' if consolidated else 'border-bottom:2px solid black;' }}">
+                                                <td>Total</td>
+                                                <td/>
+                                                <td>
+                                                    <span t-out="total"
+                                                          t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+                                                </td>
+                                            </tr>
+                                        </t>
+                                    </t>
+                                </t>
+                            </table>
+                        </t>
+                    </t>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

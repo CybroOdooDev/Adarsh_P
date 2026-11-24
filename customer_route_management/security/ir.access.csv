@@ -1,0 +1,8 @@
+id,name,model_id,group_id/id,operation,domain
+access_delivery_route_user,delivery.route user,delivery.route,customer_route_management.group_delivery_route_user,r,
+access_delivery_route_manager,delivery.route manager,delivery.route,customer_route_management.group_delivery_route_manager,crud,
+access_route_line_user,route.line user,route.line,customer_route_management.group_delivery_route_user,r,
+access_route_line_manager,route.line manager,route.line,customer_route_management.group_delivery_route_manager,crud,
+access_route_report_user,route.report user,route.report,customer_route_management.group_delivery_route_user,crud,
+delivery_route_rule,Delivery Route multi-company,delivery.route,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"
+route_line_rule,Route Line multi-company,route.line,,crud,"['|', ('company_id', '=', False), ('company_id', 'in', company_ids)]"

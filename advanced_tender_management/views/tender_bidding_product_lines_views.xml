@@ -1,11 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-        <!-- Action to open Tender Bidding Product Lines in list view -->
-    <record id="tender_bidding_product_lines_action" model="ir.actions.act_window">
-        <field name="name">Tender Bidding Product Lines</field>
-        <field name="res_model">tender.bidding.product.lines</field>
-        <field name="view_mode">list</field>
-    </record>
         <!-- List view to display bidding product lines with actions -->
     <record id="tender_bidding_product_lines_view_list" model="ir.ui.view">
         <field name="name">tender.bidding.product.lines.view.list</field>

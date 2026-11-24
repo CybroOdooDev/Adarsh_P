@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <!--    Form view for model route.line -->
+    <record id="route_lines_view_form" model="ir.ui.view">
+        <field name="name">route.line.view.form</field>
+        <field name="model">route.line</field>
+        <field name="arch" type="xml">
+            <form string="Route Line">
+                <sheet>
+                    <group>
+                        <field name="route"/>
+                        <field name="cust_list_ids">
+                            <list create="false" default_order="sequence, id">
+                                <field name="sequence" widget="handle"/>
+                                <field name="name"/>
+                            </list>
+                        </field>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

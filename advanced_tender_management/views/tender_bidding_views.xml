@@ -31,6 +31,11 @@
                     <field name="bidding_state" widget="statusbar"
                            statusbar_visible="pre_qualification,bid,bid_close,won,lost"/>
                     <field name="tender_state" invisible="1"/>
+                    <button name="action_submit_bid" type="object" string="Submit Bid"
+                            class="oe_highlight"
+                            groups="advanced_tender_management.group_bidding_manager"
+                            invisible="bidding_state != 'pre_qualification' or tender_state != 'bid_submission'"
+                            confirm="Submit this bid for the vendor? It can then only change through an edit request."/>
                     <button name="action_qualify" type="object" class="oe_highlight qualified-btn"
                             invisible="qualification_stage == 'qualified' or tender_state not in ('bid_evaluation', 'bid_selection') or bidding_state in ('won', 'lost')">
                         Qualify Bid
@@ -65,31 +70,25 @@
                         </group>
                         <group>
                             <field name="tender_id" readonly="bidding_state != 'pre_qualification'"/>
-                            <field name="legit_bid" invisible="1"/>
                             <field name="edit_request" invisible="1"/>
                             <field name="qualification_stage" readonly="1"/>
-                            <field name="vendor_rank" invisible="1"/>
                         </group>
                         <notebook>
                             <page string="Bidding">
                                 <field name="tender_bid_products_ids" widget="section_and_note_one2many"
                                        readonly="bidding_state != 'pre_qualification'">
-                                    <list edit="1" editable="bottom">
-                                        <control>
-                                            <create name="add_product_control" string="Add a product"/>
-                                            <create name="add_section_control" string="Add a section"
-                                                    context="{'default_display_type': 'line_section'}"/>
-                                        </control>
-                                        <field name="sequence" widget="handle"/>
+                                    <list editable="bottom" create="0" delete="0">
+                                        <field name="sequence" column_invisible="True"/>
                                         <field name="display_type" column_invisible="True"/>
+                                        <field name="tender_line_id" column_invisible="True"/>
                                         <column name="product_and_description">
-                                            <field name="product_id" required="not display_type"
+                                            <field name="product_id" readonly="1" force_save="1"
                                                    invisible="display_type"/>
-                                            <field name="name"/>
+                                            <field name="name" readonly="1" force_save="1"/>
                                         </column>
                                         <field name="tender_id"/>
                                         <field name="product_code"/>
-                                        <field name="product_qty"/>
+                                        <field name="product_qty" readonly="1" force_save="1"/>
                                         <field name="product_uom_id"/>
                                         <field name="product_price"/>
                                         <field name="product_total"/>

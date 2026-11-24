@@ -82,7 +82,6 @@
     border: 1px solid yellow;
 }
 
-
 .vendor-file-upload {
     display: inline-block;
     padding: 8px 12px;
@@ -102,14 +101,6 @@
     margin-bottom: 20px;
 }
 
-.file-name-display {
-    border: none;
-    padding: 8px 12px;
-    margin-left: 10px;
-    width: auto;
-    font-family: inherit;
-    font-size: inherit;
-}
 .tender-date-group .mb-3, .tender-address-group .mb-3 {
     display: flex;
     justify-content: flex-start;

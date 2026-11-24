@@ -1,20 +1,7 @@
-.form-head {
-    padding: 20px 0;
-    margin-bottom: 30px;
-}
 .vendor-registration-form{
     padding:20px;
 
 }
-.form-head h3 {
-    font-size: 28px;
-    font-weight: bold;
-    background: #0000FF;
-    padding: 8px;
-    border-radius: 5px;
-    color: #FFF;
-}
-
 .file-upload {
     display: flex;
     align-items: center;

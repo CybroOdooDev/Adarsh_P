@@ -1,4 +1,20 @@
 # -*- coding: utf-8 -*-
+#############################################################################
+#
+#    Cybrosys Technologies Pvt. Ltd.
+#
+#    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
+#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
+#
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
+#
+#    This program is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
+#
+#############################################################################
 import base64
 import io
 import json
@@ -68,6 +84,8 @@ class TestVendorController(TenderManagementTestCommon):
         req = self._request(categories=[self.category.id, other_category.id])
 
         with patch('odoo.addons.mail.models.mail_template.MailTemplate.send_mail'), \
+                patch('odoo.addons.mail.models.mail_template.MailTemplate.send_mail_batch',
+                      autospec=True) as send_mail_batch, \
                 patch('odoo.addons.advanced_tender_management.controllers.vendor.request', req):
             result = self._register(req, 'newvendor@example.com')
 
@@ -79,6 +97,11 @@ class TestVendorController(TenderManagementTestCommon):
         self.assertEqual(vendor.tender_category_ids, self.category | other_category)
         self.assertTrue(user.has_group('base.group_portal'))
         self.assertTrue(vendor.image_1920)
+        # The vendor is invited to set a password, so the account is usable
+        self.assertEqual(vendor.sudo().signup_type, 'signup')
+        invitation = self.env.ref('auth_signup.portal_set_password_email')
+        self.assertIn((invitation, user.ids),
+                      [(call.args[0], call.args[1]) for call in send_mail_batch.call_args_list])
 
     def test_register_vendor_with_manual_approval_sends_notification(self):
         params = self.env['ir.config_parameter'].sudo()
