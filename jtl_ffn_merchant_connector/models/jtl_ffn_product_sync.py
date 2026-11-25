@@ -22,6 +22,11 @@ from odoo.exceptions import UserError
 
 _logger = logging.getLogger(__name__)
 
+# Page size used by the FFN API for list endpoints, and a safety cap on how
+# many pages a product lookup reads (200 pages = 10,000 products).
+FFN_PAGE_SIZE = 50
+FFN_LOOKUP_MAX_PAGES = 200
+
 
 class JtlFfnProductSync(models.Model):
     """
@@ -112,13 +117,35 @@ class JtlFfnProductSync(models.Model):
         return pushed
 
     def _find_ffn_product_by_sku(self, config, sku):
-        """Search JTL FFN for a product by its merchantSku and return its jfsku."""
+        """Search JTL FFN for a product by its merchantSku and return its jfsku.
+
+        The FFN API ignores the ``merchantSku`` filter and returns the whole
+        catalogue, oldest first, 50 products per page, so every page has to be
+        scanned: a product created recently is on the last page.
+        """
+        offset = 0
         try:
-            result = config._api_request('GET', '/v1/products', params={'merchantSku': sku})
-            items = result if isinstance(result, list) else (result.get('items') or [])
-            for item in items:
-                if item.get('merchantSku') == sku:
-                    return item.get('jfsku') or item.get('id')
+            for _page in range(FFN_LOOKUP_MAX_PAGES):
+                result = config._api_request('GET', '/v1/products', params={
+                    'merchantSku': sku,
+                    '$top': FFN_PAGE_SIZE,
+                    '$skip': offset,
+                })
+                if isinstance(result, list):
+                    items, total = result, None
+                else:
+                    items = result.get('items') or []
+                    total = (result.get('_page') or {}).get('total')
+                for item in items:
+                    if item.get('merchantSku') == sku:
+                        return item.get('jfsku') or item.get('id')
+                offset += len(items)
+                if (isinstance(result, list) or len(items) < FFN_PAGE_SIZE
+                        or (total is not None and offset >= total)):
+                    break
+            else:
+                _logger.warning(
+                    "FFN: stopped looking up SKU %s after %d pages", sku, FFN_LOOKUP_MAX_PAGES)
         except Exception as exc:
             _logger.warning("FFN: could not look up product by SKU %s: %s", sku, exc)
         return None
