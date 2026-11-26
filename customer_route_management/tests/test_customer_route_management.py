@@ -19,6 +19,7 @@
 #    THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #
 #############################################################################
+import html
 import io
 import json
 
@@ -27,6 +28,7 @@ from openpyxl.utils import get_column_letter
 
 from odoo import Command
 from odoo.tests import HttpCase, new_test_user, tagged
+from odoo.tools import mute_logger
 
 from odoo.addons.account.tests.common import AccountTestInvoicingCommon
 
@@ -277,13 +279,14 @@ class TestRouteReports(RouteTestCommon):
 class TestXlsxReportController(HttpCase):
     """Download of the XLSX report through /xlsx_report."""
 
-    def _post(self, model):
+    def _post(self, model, options=None):
         self.authenticate('admin', 'admin')
         route = self.env['delivery.route'].create({'name': 'Download Route'})
+        if options is None:
+            options = {'route_ids': route.ids, 'payment': False, 'consolidated': False}
         return self.url_open('/xlsx_report', data={
             'model': model,
-            'options': json.dumps({'route_ids': route.ids, 'payment': False,
-                                   'consolidated': False}),
+            'options': json.dumps(options),
             'output_format': 'xlsx',
             'report_name': 'Routes',
             'csrf_token': self.csrf_token(),
@@ -298,6 +301,18 @@ class TestXlsxReportController(HttpCase):
 
     def test_other_models_are_refused(self):
         self.assertEqual(self._post('res.partner').status_code, 404)
+
+    @mute_logger('odoo.addons.customer_route_management.controllers.customer_route_management')
+    def test_report_error_is_returned_to_the_client(self):
+        """A failure while building the file returns the error the way the
+        web client's download() expects it (as Odoo's report controller
+        does): an HTML body holding the JSON error, without a file name."""
+        response = self._post('route.report', options={'route_ids': []})
+        self.assertTrue(response.headers['Content-Type'].startswith('text/html'))
+        self.assertNotIn('Content-Disposition', response.headers)
+        error = json.loads(html.unescape(response.text))
+        self.assertEqual(error['message'], 'Odoo Server Error')
+        self.assertEqual(error['data']['name'], 'builtins.KeyError')
 
     def test_route_and_excel_report_in_browser(self):
         self.start_tour('/odoo/action-customer_route_management.delivery_route_action',

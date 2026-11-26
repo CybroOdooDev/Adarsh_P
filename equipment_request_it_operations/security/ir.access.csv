@@ -1,0 +1,7 @@
+id,name,model_id,group_id/id,operation,domain
+access_equipment_request_user,equipment.request user,equipment.request,base.group_user,cru,
+access_equipment_detail_user,equipment.detail user,equipment.detail,base.group_user,cru,
+access_damage_detail_user,damage.detail user,damage.detail,base.group_user,cru,
+access_equipment_request_manager,equipment.request manager,equipment.request,equipment_request_it_operations.equipment_request_it_operations_group_admin,crud,
+access_equipment_detail_manager,equipment.detail manager,equipment.detail,equipment_request_it_operations.equipment_request_it_operations_group_admin,crud,
+access_damage_detail_manager,damage.detail manager,damage.detail,equipment_request_it_operations.equipment_request_it_operations_group_admin,crud,
