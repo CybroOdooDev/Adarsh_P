@@ -150,6 +150,18 @@ class TestJtlFfnOAuth(HttpCase):
         self.assertTrue(post.called)
         self.assertEqual(self._reload().connection_state, 'ok')
 
+    def test_root_page_without_oauth_code_behaves_normally(self):
+        """The ``/`` override must leave the normal homepage alone: no code,
+        a short code or a debug request all fall through to the web client
+        redirect without calling JTL."""
+        state_before = self._reload().connection_state
+        with patch(MAIN_MOD + '.requests.post') as post:
+            for path in ('/', '/?code=short', '/?code=abcdefghijk123&debug=1'):
+                location = self._get(path)
+                self.assertIn('/odoo', location, path)
+        post.assert_not_called()
+        self.assertEqual(self._reload().connection_state, state_before)
+
     def test_public_user_cannot_start_flow(self):
         self.logout()
         res = self.url_open('/jtl_ffn/connect/%d' % self.config.id, allow_redirects=False)

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <!--    Form view for model route.line -->
+    <!--    Form view of 'route.line' -->
     <record id="route_lines_view_form" model="ir.ui.view">
         <field name="name">route.line.view.form</field>
         <field name="model">route.line</field>

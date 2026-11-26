@@ -197,6 +197,53 @@ class TestJtlFfnReturn(JtlFfnCommon):
         rec._update_from_ffn_data({'state': 'Open'})
         validate.assert_not_called()
 
+    def test_update_from_ffn_data_restocks_real_return(self):
+        """End to end, without mocks: an 'Arrived' return validates the real
+        return picking with the returned quantity and puts it back in stock."""
+        self._deliver_order()
+        stock = self.odoo_wh.lot_stock_id
+        self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product, stock), 0)
+        rec = self.returns.create({
+            'config_id': self.config.id,
+            'sale_order_id': self.order.id,
+            'line_ids': [(0, 0, {
+                'product_id': self.product.id,
+                'sku': 'FFN-SKU-1',
+                'quantity': 1,
+            })],
+        })
+        rec._create_odoo_return_picking()
+        picking = rec.odoo_return_picking_id
+        self.assertEqual(rec.state, 'pending')
+
+        rec._update_from_ffn_data({'state': 'Arrived'})
+
+        self.assertEqual(picking.state, 'done')
+        self.assertEqual(picking.move_ids.quantity, 1)
+        self.assertTrue(all(picking.move_ids.mapped('picked')))
+        self.assertFalse(picking.backorder_ids)
+        self.assertEqual(rec.state, 'restocked')
+        self.assertEqual(self.env['stock.quant']._get_available_quantity(self.product, stock), 1)
+
+    def test_update_from_ffn_data_skips_done_picking(self):
+        """A return that is already restocked is not validated a second time."""
+        self._deliver_order()
+        rec = self.returns.create({
+            'config_id': self.config.id,
+            'sale_order_id': self.order.id,
+            'line_ids': [(0, 0, {
+                'product_id': self.product.id,
+                'sku': 'FFN-SKU-1',
+                'quantity': 1,
+            })],
+        })
+        rec._create_odoo_return_picking()
+        rec._update_from_ffn_data({'state': 'Arrived'})
+        self.assertEqual(rec.state, 'restocked')
+        validate = self.patch_model('stock.picking', 'button_validate', return_value=True)
+        rec._update_from_ffn_data({'state': 'Completed'})
+        validate.assert_not_called()
+
     def test_compute_state_follows_picking(self):
         picking = self._empty_picking()
         rec = self.returns.create({'config_id': self.config.id})

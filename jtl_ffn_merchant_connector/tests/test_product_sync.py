@@ -15,10 +15,14 @@
 #    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
 #
 #############################################################################
+from unittest.mock import patch
+
 from odoo.exceptions import UserError
 from odoo.tests import tagged
 
 from .common import JtlFfnCommon
+
+MODEL_MOD = 'odoo.addons.jtl_ffn_merchant_connector.models.jtl_ffn_product_sync'
 
 
 @tagged('post_install', '-at_install')
@@ -140,6 +144,76 @@ class TestJtlFfnProductSync(JtlFfnCommon):
         self.assertEqual(
             self.sync._find_ffn_product_by_sku(self.config, 'FFN-SKU-1'), 'JF-ID')
         self.assertIsNone(self.sync._find_ffn_product_by_sku(self.config, 'OTHER'))
+
+    def _paged_catalogue(self, total, target_index=None):
+        """Fake ``GET /v1/products`` that behaves like the real FFN API: it
+        ignores the merchantSku filter and pages the whole catalogue."""
+        catalogue = [{'merchantSku': 'OTHER-%d' % i, 'jfsku': 'JF-%d' % i}
+                     for i in range(total)]
+        if target_index is not None:
+            catalogue[target_index] = {'merchantSku': 'FFN-SKU-1', 'jfsku': 'JF-TARGET'}
+
+        def fake_api(method, path, json=None, params=None):
+            top, skip = params['$top'], params['$skip']
+            return {
+                '_page': {'total': total, 'limit': top, 'offset': skip},
+                'items': catalogue[skip:skip + top],
+                'count': len(catalogue[skip:skip + top]),
+            }
+        return fake_api
+
+    def test_find_product_by_sku_reads_later_pages(self):
+        """Regression: with 72 products the newest one is on page 2, which
+        the lookup used to never read."""
+        api = self.patch_api(side_effect=self._paged_catalogue(72, target_index=71))
+        self.assertEqual(
+            self.sync._find_ffn_product_by_sku(self.config, 'FFN-SKU-1'), 'JF-TARGET')
+        self.assertEqual(
+            [call.kwargs['params']['$skip'] for call in api.call_args_list], [0, 50])
+
+    def test_find_product_by_sku_stops_at_first_match(self):
+        api = self.patch_api(side_effect=self._paged_catalogue(150, target_index=10))
+        self.assertEqual(
+            self.sync._find_ffn_product_by_sku(self.config, 'FFN-SKU-1'), 'JF-TARGET')
+        self.assertEqual(api.call_count, 1)
+
+    def test_find_product_by_sku_missing_reads_every_page_once(self):
+        """An unknown SKU scans the catalogue exactly once, including when
+        the total is an exact multiple of the page size."""
+        for total, pages in ((72, 2), (100, 2), (0, 1)):
+            api = self.patch_api(side_effect=self._paged_catalogue(total))
+            self.assertIsNone(self.sync._find_ffn_product_by_sku(self.config, 'FFN-SKU-1'))
+            self.assertEqual(api.call_count, pages, total)
+
+    def test_find_product_by_sku_page_cap(self):
+        """A misbehaving API that always returns a full page cannot loop forever."""
+        full_page = {'items': [{'merchantSku': 'OTHER', 'jfsku': 'X'}] * 50}
+        api = self.patch_api(return_value=full_page)
+        with patch(MODEL_MOD + '.FFN_LOOKUP_MAX_PAGES', 3):
+            self.assertIsNone(self.sync._find_ffn_product_by_sku(self.config, 'FFN-SKU-1'))
+        self.assertEqual(api.call_count, 3)
+
+    def test_push_recovers_stale_jfsku_from_later_page(self):
+        """End to end: a stale JFSKU is recovered even when the real product
+        is beyond the first page of the catalogue."""
+        rec = self.sync.create({
+            'config_id': self.config.id,
+            'product_id': self.product.id,
+            'ffn_product_id': 'STALE',
+        })
+        catalogue_api = self._paged_catalogue(72, target_index=71)
+
+        def fake_api(method, path, json=None, params=None):
+            if method == 'PATCH' and path.endswith('/STALE'):
+                raise UserError(self.env._('Products_ProductNotFound'))
+            if method == 'GET':
+                return catalogue_api(method, path, json=json, params=params)
+            return {}
+
+        self.patch_api(side_effect=fake_api)
+        self.sync._push_single_product(self.config, self.product)
+        self.assertEqual(rec.ffn_product_id, 'JF-TARGET')
+        self.assertEqual(rec.sync_state, 'synced')
 
     def test_find_product_by_sku_handles_errors(self):
         self.patch_api(side_effect=UserError('down'))

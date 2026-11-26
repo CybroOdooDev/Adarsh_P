@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!--    Form view of wizard-->
+    <!--    Form view of the route report wizard -->
     <record id="route_report_view_form" model="ir.ui.view">
         <field name="name">route.report.view.form</field>
         <field name="model">route.report</field>
@@ -26,7 +26,7 @@
             </form>
         </field>
     </record>
-    <!--    Action for the menu item-->
+    <!--    Action of the Report menu -->
     <record id="route_report_action" model="ir.actions.act_window">
         <field name="name">Routes</field>
         <field name="res_model">route.report</field>
@@ -34,7 +34,7 @@
         <field name="view_id" ref="route_report_view_form"/>
         <field name="target">new</field>
     </record>
-    <!--    Menu item for wizard to print report-->
+    <!--    Report menu opening the wizard -->
     <menuitem id="route_report_menu" name="Report"
               parent="customer_route_management.delivery_route_menu_root"
               action="route_report_action"/>
