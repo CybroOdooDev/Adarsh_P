@@ -1,0 +1,200 @@
+<templates xml:space="preserve">
+    <!-- Fleet Dashboard -->
+    <t t-name="FleetDashboard">
+        <div class="vh-100 overflow-auto" style="background-color: #f8fafc; padding: 24px 32px;">
+            <div style="max-width: 1240px; margin: 0 auto;">
+
+                <!-- Dashboard Heading -->
+                <div class="text-center mb-4">
+                    <h2 style="font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-weight: 800; font-size: 26px; color: #0f172a; letter-spacing: 0.5px; margin: 0;">
+                        FLEET DASHBOARD
+                    </h2>
+                </div>
+
+                <!-- 1. Top 6 Metric Cards (2 rows of 3 columns) -->
+                <div class="row g-3 mb-4">
+                    <!-- Total Vehicles -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onClickVehicles()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #a8e6cf 0%, #a1dffb 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.1;">
+                                <t t-out="this.state.data.total_vehicles"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 4px;">
+                                Total Vehicles
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Available Vehicles -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onClickAvailableVehicles()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #9ae2e6 0%, #b8e6f0 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.1;">
+                                <t t-out="this.state.data.operational"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 4px;">
+                                Available Vehicles
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Under Maintenance -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onClickUnderMaintenanceVehicles()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #5b92cb 0%, #173f6b 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #ffffff; line-height: 1.1;">
+                                <t t-out="this.state.data.under_maintenance"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #ffffff; margin-top: 4px;">
+                                Under Maintenance
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Customers -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onClickAllCustomers()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #c2beea 0%, #ebdada 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.1;">
+                                <t t-out="this.state.data.all_customers"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 4px;">
+                                All Customers
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- All Invoices -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onClickInvoices()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #d3d1f8 0%, #7d84ee 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.1;">
+                                <t t-out="this.state.data.all_invoices"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 4px;">
+                                All Invoices
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Pending Invoices -->
+                    <div class="col-12 col-md-4">
+                        <div t-on-click="() => this.onPendingInvoices()"
+                             class="fleet-metric-card"
+                             style="background: linear-gradient(108deg, #b8b9d8 0%, #dcd6df 100%); height: 96px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                            <div style="font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1.1;">
+                                <t t-out="this.state.data.pending_invoices"/>
+                            </div>
+                            <div style="font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 4px;">
+                                Pending Invoices
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 2. Contracts Details Section -->
+                <div class="mb-4">
+                    <h5 class="fw-bold mb-3" style="color: #2563eb; font-size: 18px;">
+                        Contracts Details
+                    </h5>
+                    <div class="row g-3">
+                        <!-- Contracts -->
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div t-on-click="() => this.onAllContract()"
+                                 class="fleet-contract-card"
+                                 style="background: linear-gradient(135deg, #c2e8ef 0%, #d8f1f5 100%); border: 1px solid #a8dce5; height: 135px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                                <img src="/advanced_fleet_rental/static/src/img/car-insurance.svg"
+                                     style="height: 38px; width: 38px; margin-bottom: 6px;"/>
+                                <div style="font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">
+                                    Contracts
+                                </div>
+                                <div style="font-size: 18px; font-weight: 700; color: #0f172a;">
+                                    <t t-out="this.state.data.total_contracts"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- In Progress -->
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div t-on-click="() => this.onInProgressContract()"
+                                 class="fleet-contract-card"
+                                 style="background: linear-gradient(135deg, #fdf0be 0%, #fef7d9 100%); border: 1px solid #f6e4a2; height: 135px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                                <img src="/advanced_fleet_rental/static/src/img/car.svg"
+                                     style="height: 38px; width: 38px; margin-bottom: 6px;"/>
+                                <div style="font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">
+                                    In Progress
+                                </div>
+                                <div style="font-size: 18px; font-weight: 700; color: #0f172a;">
+                                    <t t-out="this.state.data.total_contract_working"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Return -->
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div t-on-click="() => this.onReturnContract()"
+                                 class="fleet-contract-card"
+                                 style="background: linear-gradient(135deg, #c2f1df 0%, #dff8ee 100%); border: 1px solid #a8e8ce; height: 135px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                                <img src="/advanced_fleet_rental/static/src/img/return.svg"
+                                     style="height: 38px; width: 38px; margin-bottom: 6px;"/>
+                                <div style="font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">
+                                    Return
+                                </div>
+                                <div style="font-size: 18px; font-weight: 700; color: #0f172a;">
+                                    <t t-out="this.state.data.total_contract_return"/>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Cancelled -->
+                        <div class="col-12 col-sm-6 col-md-3">
+                            <div t-on-click="() => this.onCancelContract()"
+                                 class="fleet-contract-card"
+                                 style="background: linear-gradient(135deg, #fdd8d8 0%, #feebeb 100%); border: 1px solid #f8bebe; height: 135px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer;">
+                                <img src="/advanced_fleet_rental/static/src/img/transport.svg"
+                                     style="height: 38px; width: 38px; margin-bottom: 6px;"/>
+                                <div style="font-size: 15px; font-weight: 600; color: #0f172a; margin-bottom: 2px;">
+                                    Cancelled
+                                </div>
+                                <div style="font-size: 18px; font-weight: 700; color: #0f172a;">
+                                    <t t-out="this.state.data.total_contract_cancel"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3. Monthly Contract Invoices Chart -->
+                <div class="card shadow-sm border mb-4 bg-white" style="border-radius: 14px; border-color: #e2e8f0;">
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-3" style="color: #2563eb; font-size: 16px;">
+                            Monthly Contract Invoices
+                        </h5>
+                        <div style="min-height: 250px; width: 100%;">
+                            <canvas t-ref="this.invoiceChart.ref" style="max-height: 300px; width: 100%;"/>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 4. Vehicle Status Chart -->
+                <div class="card shadow-sm border mb-4 bg-white" style="border-radius: 14px; border-color: #e2e8f0;">
+                    <div class="card-body p-4 d-flex flex-column align-items-center">
+                        <h5 class="fw-bold mb-3 align-self-start" style="color: #2563eb; font-size: 16px;">
+                            Vehicle Status
+                        </h5>
+                        <div style="max-width: 450px; width: 100%; min-height: 280px;">
+                            <canvas t-ref="this.durationChart.ref" style="max-height: 350px; width: 100%;"/>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </t>
+</templates>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Template for mo overview report -->
+    <template id="mrp_cost_per_employee_report" inherit_id="mrp.mo_overview_content">
+        <xpath expr="//table[@name='overview']" position="inside">
+            <tr t-if="data.get('cost_per_employ')">
+                <td class="text-end" t-att-colspan="data.get('footer_colspan', 1)">Total Cost per Employee</td>
+                <td class="text-end" t-out="data['cost_per_employ']" t-options="{'widget': 'monetary', 'display_currency': currency}"/>
+            </tr>
+        </xpath>
+    </template>
+</odoo>

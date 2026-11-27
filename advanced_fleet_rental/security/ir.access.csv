@@ -1,0 +1,8 @@
+id,name,model_id,group_id/id,operation,domain
+access_fleet_rental_contract,access.fleet.rental.contract.user,fleet.rental.contract,base.group_user,crud,
+access_rental_payment_plan,access.rental.payment.plan.user,rental.payment.plan,base.group_user,crud,
+access_extra_service,access.extra.service.user,extra.service,base.group_user,crud,
+access_insurance_policy,access.insurance.policy.user,insurance.policy,base.group_user,crud,
+access_multi_image,access.multi.image.user,multi.image,base.group_user,crud,
+access_damage_invoice,access.damage.invoice.user,damage.invoice,base.group_user,crud,
+access_cancellation_policy,access.cancellation.policy.user,cancellation.policy,base.group_user,crud,

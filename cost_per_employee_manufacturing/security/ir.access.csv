@@ -1,0 +1,2 @@
+id,name,model_id,group_id/id,operation,domain
+access_cost_per_employee_user,cost.per.employee user,cost.per.employee,base.group_user,crud,

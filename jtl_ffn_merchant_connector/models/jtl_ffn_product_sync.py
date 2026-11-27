@@ -6,13 +6,13 @@
 #    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
 #############################################################################
 import logging
@@ -325,7 +325,7 @@ class JtlFfnProductSync(models.Model):
         self.cron_sync_all()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Product Sync Register',
+            'name': self.env._('Product Sync Register'),
             'res_model': 'jtl.ffn.product.sync',
             'view_mode': 'list,form',
             'target': 'current',

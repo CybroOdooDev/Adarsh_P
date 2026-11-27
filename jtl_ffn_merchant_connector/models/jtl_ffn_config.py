@@ -6,13 +6,13 @@
 #    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
 #############################################################################
 import logging
@@ -319,8 +319,8 @@ class JtlFfnConfig(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Exchange Successful',
-                    'message': 'Refresh token received and saved.',
+                    'title': self.env._('Exchange Successful'),
+                    'message': self.env._('Refresh token received and saved.'),
                     'type': 'success',
                     'sticky': False,
                     'next': {
@@ -338,7 +338,7 @@ class JtlFfnConfig(models.Model):
                 'type': 'ir.actions.client',
                 'tag': 'display_notification',
                 'params': {
-                    'title': 'Exchange Failed',
+                    'title': self.env._('Exchange Failed'),
                     'message': str(exc.args[0] if hasattr(exc, 'args') and exc.args else exc),
                     'type': 'danger',
                     'sticky': True,
@@ -358,8 +358,8 @@ class JtlFfnConfig(models.Model):
                 'type':   'ir.actions.client',
                 'tag':    'display_notification',
                 'params': {
-                    'title':   'Connection Successful',
-                    'message': 'Token retrieved and cached. Profile "%s" is ready.' % self.name,
+                    'title':   self.env._('Connection Successful'),
+                    'message': self.env._('Token retrieved and cached. Profile "%s" is ready.') % self.name,
                     'type':    'success',
                     'sticky':  False,
                     'next': {
@@ -373,7 +373,7 @@ class JtlFfnConfig(models.Model):
                 'type':   'ir.actions.client',
                 'tag':    'display_notification',
                 'params': {
-                    'title':   'Connection Failed',
+                    'title':   self.env._('Connection Failed'),
                     'message': str(exc.args[0] if hasattr(exc, 'args') and exc.args else exc),
                     'type':    'danger',
                     'sticky':  True,
@@ -411,7 +411,7 @@ class JtlFfnConfig(models.Model):
             _run("Returns synced", lambda: self.env['jtl.ffn.return'].pull_returns(self))
 
         if not results and not errors:
-            msg = "Nothing to sync — all sync options are disabled."
+            msg = self.env._("Nothing to sync — all sync options are disabled.")
             notif_type = "warning"
         elif errors:
             msg = " | ".join(results + errors)
@@ -424,7 +424,7 @@ class JtlFfnConfig(models.Model):
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
-                'title': 'Full Sync Complete',
+                'title': self.env._('Full Sync Complete'),
                 'message': msg,
                 'type': notif_type,
                 'sticky': bool(errors),
