@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<templates xml:space="preserve">
+    <t t-name="cost_per_employee_manufacturing.mrp_cost_per_employee"
+       t-inherit="mrp.MoOverview" t-inherit-mode="extension">
+        <xpath expr="//tr[@t-if='this.hasOperations']" position="after">
+            <tr t-if="this.state.data.cost_per_employ">
+                <td class="text-end" t-att-colspan="this.totalColspan">Total Cost per Employee</td>
+                <td class="text-end" t-out="this.formatCost(this.state.data.cost_per_employ)"/>
+            </tr>
+        </xpath>
+    </t>
+</templates>

@@ -21,7 +21,7 @@ import requests
 TIMEOUT = 20
 SEARCH_PAGE_SIZE = 100
 USER_PAGE_SIZE = 100
-USER_AGENT = 'OdooJiraConnector/19.0'
+USER_AGENT = 'OdooJiraConnector/20.0'
 JSON_HEADERS = {
     'Accept': 'application/json',
     'Content-Type': 'application/json',

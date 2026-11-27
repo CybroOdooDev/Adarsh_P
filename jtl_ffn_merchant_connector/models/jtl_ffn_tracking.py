@@ -6,13 +6,13 @@
 #    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
 #############################################################################
 import logging
@@ -228,7 +228,7 @@ class JtlFfnTracking(models.Model):
         self.cron_pull_tracking()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Shipment Tracking',
+            'name': self.env._('Shipment Tracking'),
             'res_model': 'jtl.ffn.tracking',
             'view_mode': 'list,form',
             'target': 'current',

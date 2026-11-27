@@ -6,13 +6,13 @@
 #    Copyright (C) 2026-TODAY Cybrosys Technologies(<https://www.cybrosys.com>)
 #    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
 #
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
+#    You can modify it under the terms of the GNU LESSER
+#    GENERAL PUBLIC LICENSE (LGPL v3), Version 3.
 #
 #    This program is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
+#    GNU LESSER GENERAL PUBLIC LICENSE (LGPL v3) for more details.
 #
 #############################################################################
 import logging
@@ -249,8 +249,7 @@ class JtlFfnReturn(models.Model):
             picking.action_assign()
             for move in picking.move_ids:
                 move.quantity = move.product_uom_qty
-                if hasattr(move, 'picked'):
-                    move.picked = True
+                move.picked = True
             picking.with_context(skip_backorder=True).button_validate()
             _logger.info("FFN return %s marked as Arrived/Completed in FFN. Auto-validated Odoo picking %s.", self.name, picking.name)
 
@@ -323,7 +322,7 @@ class JtlFfnReturn(models.Model):
         self.cron_pull_returns()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Returns',
+            'name': self.env._('Returns'),
             'res_model': 'jtl.ffn.return',
             'view_mode': 'list,form',
             'target': 'current',
